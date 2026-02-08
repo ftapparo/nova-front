@@ -48,8 +48,8 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
             <Select value={selectedDoor} onValueChange={setSelectedDoor}>
               <SelectTrigger id="door-select"><SelectValue placeholder="Selecione uma porta" /></SelectTrigger>
               <SelectContent>
-                {doors.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                {(doors || []).map((d) => (
+                  <SelectItem key={d.sequencia} value={String(d.sequencia)}>{d.nome}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -74,8 +74,8 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
             <Select value={selectedGate} onValueChange={setSelectedGate}>
               <SelectTrigger id="gate-select"><SelectValue placeholder="Selecione um portão" /></SelectTrigger>
               <SelectContent>
-                {gates.map((g) => (
-                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                {(gates || []).map((g) => (
+                  <SelectItem key={g.sequencia} value={String(g.sequencia)}>{g.nome}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
