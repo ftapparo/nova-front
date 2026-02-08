@@ -4,8 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { DashboardProvider } from "@/contexts/DashboardContext";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+import PainelOperacional from "./pages/dashboard/PainelOperacional";
+import ControleAcesso from "./pages/dashboard/ControleAcesso";
+import Exaustores from "./pages/dashboard/Exaustores";
 
 const queryClient = new QueryClient();
 
@@ -30,7 +34,20 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardProvider>
+                    <DashboardLayout />
+                  </DashboardProvider>
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<PainelOperacional />} />
+              <Route path="acesso" element={<ControleAcesso />} />
+              <Route path="exaustores" element={<Exaustores />} />
+            </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
