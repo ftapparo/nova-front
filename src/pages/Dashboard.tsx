@@ -17,8 +17,8 @@ export default function Dashboard() {
     setApiError(null);
     try {
       const [d, g] = await Promise.all([api.listDoors(), api.listGates()]);
-      setDoors(d);
-      setGates(g);
+      setDoors(d || []);
+      setGates(g || []);
       setLastAction("Dispositivos atualizados com sucesso.");
     } catch (err: unknown) {
       setApiError(`Falha ao carregar dispositivos: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
@@ -33,7 +33,7 @@ export default function Dashboard() {
     setApiError(null);
     try {
       await api.openDoor(id);
-      const name = doors.find((d) => d.id === id)?.name ?? id;
+      const name = doors.find((d) => String(d.sequencia) === id)?.nome ?? id;
       setLastAction(`Porta "${name}" aberta com sucesso.`);
     } catch (err: unknown) {
       setApiError(`Erro ao abrir porta: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
@@ -44,7 +44,7 @@ export default function Dashboard() {
     setApiError(null);
     try {
       await api.openGate(id, autoClose);
-      const name = gates.find((g) => g.id === id)?.name ?? id;
+      const name = gates.find((g) => String(g.sequencia) === id)?.nome ?? id;
       setLastAction(`Portão "${name}" aberto (fechamento em ${autoClose}s).`);
     } catch (err: unknown) {
       setApiError(`Erro ao abrir portão: ${err instanceof Error ? err.message : "Erro desconhecido"}`);

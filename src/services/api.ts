@@ -1,5 +1,11 @@
 const BASE_URL = "https://api.condominionovaresidence.com/v2/api";
 
+interface ApiResponse<T> {
+  data: T;
+  message: string | null;
+  errors: string | null;
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
@@ -10,11 +16,24 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     const text = await res.text().catch(() => "");
     throw new Error(text || `Erro ${res.status}`);
   }
-  return res.json();
+  const json: ApiResponse<T> = await res.json();
+  return json.data;
 }
 
-export interface DoorItem { id: string; name: string }
-export interface GateItem { id: string; name: string }
+export interface DoorItem { 
+  sequencia: number;
+  ip: string;
+  nome: string;
+  deviceId: number;
+  ativo: string;
+}
+
+export interface GateItem { 
+  sequencia: number;
+  nome: string;
+  numeroDispositivo: number;
+  ativo: string;
+}
 
 export const api = {
   listDoors: () => request<DoorItem[]>("GET", "/control/door/list"),
