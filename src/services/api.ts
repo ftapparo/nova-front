@@ -1,5 +1,4 @@
-const BASE_URL = "https://api.condominionovaresidence.com/v2/api";
-
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://192.168.0.252:3030/v2/api").replace(/\/+$/, "");
 interface ApiResponse<T> {
   data: T;
   message: string | null;
