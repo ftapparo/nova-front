@@ -10,7 +10,7 @@ export default function DashboardLayout() {
         <AppSidebar />
         <SidebarInset>
           <AppBar>
-            <SidebarTrigger className="-ml-1" />
+            <SidebarTrigger className="-ml-1 text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15" />
           </AppBar>
           <main className="flex-1 p-4 md:p-6">
             <Outlet />

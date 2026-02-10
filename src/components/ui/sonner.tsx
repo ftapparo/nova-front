@@ -26,7 +26,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           error:
             "group-[.toaster]:bg-rose-50 group-[.toaster]:text-rose-900 group-[.toaster]:border-rose-200",
           warning:
-            "group-[.toaster]:bg-amber-50 group-[.toaster]:text-amber-900 group-[.toaster]:border-amber-200",
+            "group-[.toaster]:bg-orange-50 group-[.toaster]:text-orange-900 group-[.toaster]:border-orange-200",
           info:
             "group-[.toaster]:bg-slate-100 group-[.toaster]:text-slate-900 group-[.toaster]:border-slate-300",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",

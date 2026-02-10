@@ -9,7 +9,7 @@ type FilterType = "all" | "door" | "gate" | "exhaust";
 
 type DeviceRow = {
   id: string;
-  tipo: "Porta" | "Portao" | "Exaustor";
+  tipo: "Porta" | "Portão" | "Exaustor";
   nome: string;
   ip: string;
   porta: number | null;
@@ -53,7 +53,7 @@ export default function Equipamentos() {
 
     const gateRows: DeviceRow[] = gates.map((g) => ({
       id: `gate-${g.id}`,
-      tipo: "Portao",
+      tipo: "Portão",
       nome: g.nome,
       ip: g.ip || "--",
       porta: g.porta ?? null,
@@ -100,16 +100,17 @@ export default function Equipamentos() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Equipamentos</h1>
-          <p className="text-muted-foreground">Tabela unica de dispositivos com filtro por tipo.</p>
+          <p className="text-muted-foreground">Tabela única de dispositivos com filtro por tipo.</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={() => void onRefresh()}
             disabled={refreshIconLoading}
             aria-label="Atualizar equipamentos"
             title="Atualizar equipamentos"
+            className="text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15"
           >
             <RefreshCw className={`h-4 w-4 ${refreshIconLoading ? "animate-spin" : ""}`} />
           </Button>
@@ -123,13 +124,13 @@ export default function Equipamentos() {
         <TabsList className="h-9">
           <TabsTrigger value="all">Todos</TabsTrigger>
           <TabsTrigger value="door" className="gap-1"><DoorOpen className="h-3.5 w-3.5" />Portas</TabsTrigger>
-          <TabsTrigger value="gate" className="gap-1"><Warehouse className="h-3.5 w-3.5" />Portoes</TabsTrigger>
+          <TabsTrigger value="gate" className="gap-1"><Warehouse className="h-3.5 w-3.5" />Portões</TabsTrigger>
           <TabsTrigger value="exhaust" className="gap-1"><Fan className="h-3.5 w-3.5" />Exaustores</TabsTrigger>
         </TabsList>
       </Tabs>
 
       <div className="overflow-hidden rounded-lg border bg-white">
-        <div className="grid grid-cols-7 gap-3 border-b bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
+        <div className="grid grid-cols-7 gap-3 border-b bg-muted px-4 py-3 text-xs font-medium text-muted-foreground">
           <span>Tipo</span>
           <span className="col-span-2">Equipamento</span>
           <span>IP</span>
@@ -140,7 +141,7 @@ export default function Equipamentos() {
 
         {initialLoading ? (
           <div className="px-4 py-8">
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Carregando equipamentos...
             </div>
@@ -150,14 +151,14 @@ export default function Equipamentos() {
         ) : (
           filteredDevices.map((device, index) => (
             <div key={device.id} className={`grid grid-cols-7 items-center gap-3 px-4 py-3 text-sm ${index !== filteredDevices.length - 1 ? "border-b" : ""}`}>
-              <div className="text-slate-600">{device.tipo}</div>
+              <div className="text-muted-foreground">{device.tipo}</div>
               <div className="col-span-2">
-                <p className="font-semibold text-slate-800">{device.nome}</p>
+                <p className="font-semibold text-foreground">{device.nome}</p>
                 {device.error ? <p className="text-xs text-rose-700">Erro: {device.error}</p> : null}
               </div>
-              <div className="text-slate-700">{device.ip}</div>
-              <div className="text-slate-700">{device.porta ?? "--"}</div>
-              <div className="text-slate-700">{device.statusCode ?? "--"}</div>
+              <div className="text-foreground">{device.ip}</div>
+              <div className="text-foreground">{device.porta ?? "--"}</div>
+              <div className="text-foreground">{device.statusCode ?? "--"}</div>
               <div>
                 <Badge
                   className={

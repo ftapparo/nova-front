@@ -90,7 +90,12 @@ export default function ExhaustControl({ onTurnOn, onTurnOff, onStatus }: Props)
           {onLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
           Ligar Exaustor
         </Button>
-        <Button variant="outline" onClick={handleOff} disabled={!valid || offLoading}>
+        <Button
+          variant="ghost"
+          onClick={handleOff}
+          disabled={!valid || offLoading}
+          className="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
+        >
           {offLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
           Desligar Exaustor
         </Button>
@@ -104,7 +109,12 @@ export default function ExhaustControl({ onTurnOn, onTurnOff, onStatus }: Props)
             <Label htmlFor="status-id" className="sr-only">ID do exaustor</Label>
             <Input id="status-id" placeholder="Ex: A1" value={statusId} onChange={(e) => setStatusId(e.target.value)} />
           </div>
-          <Button variant="outline" onClick={handleStatus} disabled={!statusId.trim() || statusLoading}>
+          <Button
+            variant="ghost"
+            onClick={handleStatus}
+            disabled={!statusId.trim() || statusLoading}
+            className="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
+          >
             {statusLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Search className="h-4 w-4 mr-1" />}
             Consultar
           </Button>

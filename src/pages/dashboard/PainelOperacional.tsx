@@ -14,7 +14,7 @@ import { notify } from "@/lib/notify";
 import { useDashboard } from "@/contexts/DashboardContext";
 
 type FailureItem = {
-  kind: "Porta" | "Portao" | "Exaustor";
+  kind: "Porta" | "Portão" | "Exaustor";
   name: string;
   ip: string;
   port: number | null;
@@ -101,7 +101,7 @@ export default function PainelOperacional() {
       online: d.online,
     })),
     ...gates.map((g) => ({
-      kind: "Portao" as const,
+      kind: "Portão" as const,
       name: g.nome,
       ip: g.ip || "--",
       port: g.porta ?? null,
@@ -342,39 +342,39 @@ export default function PainelOperacional() {
         <Card className="bg-white shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-slate-700">Portas</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-slate-900">
+              <CardTitle className="text-base font-semibold text-foreground">Portas</CardTitle>
+              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeDoors}/${doors.length}`}
               </div>
-              <p className="mt-3 text-xs text-slate-500">portas online agora</p>
+              <p className="mt-3 text-xs text-muted-foreground">portas online agora</p>
             </div>
-            <DoorOpen className="h-[77px] w-[77px] text-emerald-600" />
+            <DoorOpen className="h-[77px] w-[77px] text-primary" />
           </CardContent>
         </Card>
 
         <Card className="bg-white shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-slate-700">Portoes</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-slate-900">
+              <CardTitle className="text-base font-semibold text-foreground">Portões</CardTitle>
+              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeGates}/${gates.length}`}
               </div>
-              <p className="mt-3 text-xs text-slate-500">portoes online agora</p>
+              <p className="mt-3 text-xs text-muted-foreground">portões online agora</p>
             </div>
-            <Warehouse className="h-[77px] w-[77px] text-sky-600" />
+            <Warehouse className="h-[77px] w-[77px] text-primary" />
           </CardContent>
         </Card>
 
         <Card className="bg-white shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-slate-700">Exaustores</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-slate-900">
+              <CardTitle className="text-base font-semibold text-foreground">Exaustores</CardTitle>
+              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeExhaustDevices}/${exhaustDevices.length}`}
               </div>
-              <p className="mt-3 text-xs text-slate-500">exaustores online agora</p>
+              <p className="mt-3 text-xs text-muted-foreground">exaustores online agora</p>
             </div>
-            <Fan className="h-[77px] w-[77px] text-violet-600" />
+            <Fan className="h-[77px] w-[77px] text-primary" />
           </CardContent>
         </Card>
       </div>
@@ -383,26 +383,26 @@ export default function PainelOperacional() {
         <Card className="min-w-0 xl:col-span-1 h-[357px] flex flex-col">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Dispositivos em Falha</CardTitle>
-            <CardDescription className="text-xs">Log rapido de equipamentos offline, com HTTP diferente de 200 ou com erro.</CardDescription>
+            <CardDescription className="text-xs">Log rápido de equipamentos offline, com HTTP diferente de 200 ou com erro.</CardDescription>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto">
             {initialLoading ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+              <div className="rounded-lg border border-border bg-muted p-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Carregando falhas...
                 </div>
               </div>
             ) : failures.length === 0 ? (
-              <div className="rounded-lg border bg-emerald-50 p-4 text-sm text-emerald-700">Nenhuma falha no momento.</div>
+              <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">Nenhuma falha no momento.</div>
             ) : (
               <div className="space-y-3">
                 {failures.map((item, index) => (
                   <div key={`${item.kind}-${item.name}-${index}`} className="rounded-lg bg-rose-50 px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-slate-800">{item.kind}: {item.name}</p>
-                        <p className="text-xs text-slate-500">IP {item.ip} - Porta {item.port ?? "--"} - HTTP {item.statusCode ?? "--"}</p>
+                        <p className="text-sm font-semibold text-foreground">{item.kind}: {item.name}</p>
+                        <p className="text-xs text-muted-foreground">IP {item.ip} - Porta {item.port ?? "--"} - HTTP {item.statusCode ?? "--"}</p>
                       </div>
                       <Badge className="rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-50">
                         <span className="mr-2 inline-block h-2 w-2 rounded-full bg-rose-600" />
@@ -420,28 +420,28 @@ export default function PainelOperacional() {
         <Card className="min-w-0 xl:col-span-1 h-[357px] flex flex-col pb-[42px]">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base font-semibold">Ultimos Acessos</CardTitle>
+              <CardTitle className="text-base font-semibold">Últimos Acessos</CardTitle>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Auto</span>
+                <span className="text-xs text-muted-foreground">Auto</span>
                 <Switch
                   checked={latestAccessAutoRefresh}
                   onCheckedChange={setLatestAccessAutoRefresh}
-                  aria-label="Atualizacao automatica de ultimos acessos"
+                  aria-label="Atualização automática de últimos acessos"
                 />
               </div>
             </div>
-            <CardDescription className="text-xs">Ultimos acessos dos portoes (ate 20 itens) via access/list.</CardDescription>
+            <CardDescription className="text-xs">Últimos acessos dos portões (até 20 itens) via access/list.</CardDescription>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pl-6 pr-4" onScroll={handleLatestAccessesScroll}>
             {initialLoading ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+              <div className="rounded-lg border border-border bg-muted p-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Carregando últimos acessos...
                 </div>
               </div>
             ) : latestGateAccesses.length === 0 ? (
-              <div className="rounded-lg border bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">
                 Sem acessos recentes para exibir.
               </div>
             ) : (
@@ -449,7 +449,7 @@ export default function PainelOperacional() {
                 {latestGateAccesses.map((access, index) => {
                   const isExit = isExitAccess(access.sentido);
                   return (
-                    <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="flex w-full items-center overflow-hidden rounded-md bg-slate-100 px-3 py-2 text-slate-900">
+                    <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="flex w-full items-center overflow-hidden rounded-md bg-muted px-3 py-2 text-foreground">
                       <span className="mr-2 inline-flex shrink-0 align-middle">
                         {isExit ? (
                           <LogOut className="h-[18px] w-[18px] text-rose-600" />
@@ -471,8 +471,8 @@ export default function PainelOperacional() {
 
       <div className="space-y-2">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Acessos Rapidos</h2>
-          <p className="text-xs text-muted-foreground">Atalhos para abrir porta ou portao com 1 clique.</p>
+          <h2 className="text-base font-semibold text-foreground">Acessos Rápidos</h2>
+          <p className="text-xs text-muted-foreground">Atalhos para abrir porta ou portão com 1 clique.</p>
         </div>
         <div className="flex flex-wrap gap-5">
           {shortcuts.map((shortcut) => {
@@ -484,19 +484,19 @@ export default function PainelOperacional() {
                   type="button"
                   onClick={() => void runShortcut(shortcut)}
                   disabled={isRunning}
-                  className="flex h-full w-full items-center justify-between rounded-lg px-3 text-left transition-colors hover:bg-slate-50 disabled:opacity-60"
+                  className="flex h-full w-full items-center justify-between rounded-lg px-3 text-left transition-colors hover:bg-muted disabled:opacity-60"
                 >
                   <div className="pr-6">
-                    <div className="text-sm font-semibold leading-tight text-slate-800">{shortcut.label}</div>
-                    <div className="mt-1 text-xs text-slate-500">{shortcut.type === "door" ? "Porta" : `Portao ${shortcut.autoClose}s`}</div>
+                    <div className="text-sm font-semibold leading-tight text-foreground">{shortcut.label}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{shortcut.type === "door" ? "Porta" : `Portão ${shortcut.autoClose}s`}</div>
                   </div>
-                  <ShortcutIcon className="h-7 w-7 shrink-0 text-slate-700" />
+                  <ShortcutIcon className="h-7 w-7 shrink-0 text-foreground" />
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="absolute right-1 top-1 rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                      className="absolute right-1 top-1 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       aria-label="Acoes do atalho"
                     >
                       <EllipsisVertical className="h-3.5 w-3.5" />
@@ -519,7 +519,7 @@ export default function PainelOperacional() {
           <button
             type="button"
             onClick={() => setDialogOpen(true)}
-            className="flex h-[106px] w-[210px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-sky-300/45 bg-sky-50/35 text-sky-600/55 transition-colors hover:border-sky-300/60 hover:bg-sky-100/45 hover:text-sky-600/70"
+            className="flex h-[106px] w-[210px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/35 bg-primary/10 text-primary/55 transition-colors hover:border-primary/55 hover:bg-primary/15 hover:text-primary/80"
           >
             <Plus className="mb-2 h-8 w-8" />
             <span className="text-xs font-medium">Adicionar</span>
@@ -528,11 +528,11 @@ export default function PainelOperacional() {
       </div>
 
       {lastAction && (
-        <div className="flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 p-4">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
-            <p className="text-sm font-medium text-sky-800">Ultima operacao</p>
-            <p className="text-sm text-sky-700">{lastAction}</p>
+            <p className="text-sm font-medium text-primary-dark">Última operação</p>
+            <p className="text-sm text-primary">{lastAction}</p>
           </div>
         </div>
       )}
@@ -553,14 +553,14 @@ export default function PainelOperacional() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Novo atalho rapido</DialogTitle>
-            <DialogDescription>Crie um acesso de 1 clique para porta ou portao.</DialogDescription>
+            <DialogTitle>Novo atalho rápido</DialogTitle>
+            <DialogDescription>Crie um acesso de 1 clique para porta ou portão.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-xs">Nome do atalho</Label>
-              <Input value={shortcutLabel} onChange={(e) => setShortcutLabel(e.target.value)} placeholder="Ex: Portao Veiculos" className="h-9 text-sm" />
+              <Input value={shortcutLabel} onChange={(e) => setShortcutLabel(e.target.value)} placeholder="Ex: Portão Veículos" className="h-9 text-sm" />
             </div>
 
             <div className="space-y-1">
@@ -572,7 +572,7 @@ export default function PainelOperacional() {
                 <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="door">Porta</SelectItem>
-                  <SelectItem value="gate">Portao</SelectItem>
+                  <SelectItem value="gate">Portão</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -591,7 +591,7 @@ export default function PainelOperacional() {
 
             {shortcutType === "gate" ? (
               <div className="space-y-1">
-                <Label className="text-xs">Fechamento automatico (s)</Label>
+                <Label className="text-xs">Fechamento automático (s)</Label>
                 <Input
                   type="number"
                   min={1}
@@ -604,7 +604,13 @@ export default function PainelOperacional() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setDialogOpen(false)}
+              className="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
+            >
+              Cancelar
+            </Button>
             <Button onClick={saveShortcut} disabled={!shortcutLabel.trim() || !shortcutTargetId}>Salvar atalho</Button>
           </DialogFooter>
         </DialogContent>
@@ -653,10 +659,10 @@ export default function PainelOperacional() {
                 />
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => void verifyGateCpf()}
                   disabled={sanitizeDigits(gateCpf).length < 11 || gateVerifyLoading}
-                  className="h-9 px-3"
+                  className="h-9 px-3 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
                 >
                   {gateVerifyLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </Button>
@@ -666,7 +672,7 @@ export default function PainelOperacional() {
             <div
               className={`min-h-[120px] rounded-md border px-3 py-2 text-sm ${
                 !gateVerifyMessage && !gateVerifiedPerson
-                  ? "border-slate-200 bg-slate-100 text-slate-700"
+                  ? "border-border bg-muted text-muted-foreground"
                   : gateAllowed
                     ? "border-emerald-200 bg-emerald-100 text-emerald-900"
                     : "border-rose-200 bg-rose-100 text-rose-900"
@@ -693,7 +699,14 @@ export default function PainelOperacional() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setGateAuthModalOpen(false)} disabled={gateOpenLoading}>Cancelar</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setGateAuthModalOpen(false)}
+              disabled={gateOpenLoading}
+              className="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
+            >
+              Cancelar
+            </Button>
             <Button onClick={() => void confirmGateShortcutOpen()} disabled={!gateAllowed || !gateVerifiedPerson || gateVerifyLoading || gateOpenLoading}>
               {gateOpenLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Abrir o portão

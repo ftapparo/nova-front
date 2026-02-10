@@ -18,7 +18,7 @@ export default function Dashboard() {
   const loadDevices = useCallback(async () => {
     setRefreshing(true);
     setApiError(null);
-    notify.info("Atualizando dispositivos", { description: "Consultando portas e portoes." });
+    notify.info("Atualizando dispositivos", { description: "Consultando portas e portões." });
 
     try {
       const status = await api.controlStatus();
@@ -31,7 +31,7 @@ export default function Dashboard() {
       if ((d?.length ?? 0) === 0 && (g?.length ?? 0) === 0) {
         notify.warning("Atualizacao concluida", { description: "Nenhum dispositivo foi retornado pela API." });
       } else {
-        notify.success("Dispositivos atualizados", { description: `${d?.length ?? 0} porta(s) e ${g?.length ?? 0} portao(oes).` });
+        notify.success("Dispositivos atualizados", { description: `${d?.length ?? 0} porta(s) e ${g?.length ?? 0} portão(ões).` });
       }
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
@@ -64,17 +64,17 @@ export default function Dashboard() {
 
   const handleOpenGate = async (id: string, autoClose: number) => {
     setApiError(null);
-    notify.info("Enviando comando", { description: "Solicitando abertura do portao." });
+    notify.info("Enviando comando", { description: "Solicitando abertura do portão." });
 
     try {
       await api.openGate(id, autoClose);
       const name = gates.find((g) => String(g.numeroDispositivo) === id)?.nome ?? id;
-      setLastAction(`Portao "${name}" aberto (fechamento em ${autoClose}s).`);
-      notify.success("Portao aberto", { description: `${name} com fechamento em ${autoClose}s.` });
+      setLastAction(`Portão "${name}" aberto (fechamento em ${autoClose}s).`);
+      notify.success("Portão aberto", { description: `${name} com fechamento em ${autoClose}s.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Erro ao abrir portao: ${errorMessage}`);
-      notify.error("Erro ao abrir portao", { description: errorMessage });
+      setApiError(`Erro ao abrir portão: ${errorMessage}`);
+      notify.error("Erro ao abrir portão", { description: errorMessage });
     }
   };
 
@@ -129,7 +129,7 @@ export default function Dashboard() {
           description: `${normalizedId} com ${result.remainingMinutes ?? "--"} min restante(s).`,
         });
       } else {
-        notify.warning("Exaustor desligado", { description: `${normalizedId} nao consta na memoria de acionamentos.` });
+        notify.warning("Exaustor desligado", { description: `${normalizedId} não consta na memória de acionamentos.` });
       }
 
       return result;

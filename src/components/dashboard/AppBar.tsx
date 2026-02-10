@@ -28,7 +28,7 @@ export default function AppBar({ children }: Props) {
           variant="ghost"
           size="sm"
           onClick={handleLogout}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15"
         >
           <LogOut className="h-4 w-4 mr-1" />
           <span className="hidden sm:inline">Sair</span>

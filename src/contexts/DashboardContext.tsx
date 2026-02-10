@@ -143,7 +143,7 @@ export function DashboardProvider({ children }: Props) {
 
       setLatestGateAccesses(loadedLatestGateAccesses);
     } catch {
-      // Ignora falhas pontuais do card de acessos para nao impactar o restante do painel.
+      // Ignora falhas pontuais do card de acessos para não impactar o restante do painel.
     }
   }, [gates]);
 
@@ -154,7 +154,7 @@ export function DashboardProvider({ children }: Props) {
     setApiError(null);
 
     if (!silent) {
-      notify.info("Atualizando dispositivos", { description: "Consultando portas e portoes." });
+      notify.info("Atualizando dispositivos", { description: "Consultando portas e portões." });
     }
 
     try {
@@ -181,7 +181,7 @@ export function DashboardProvider({ children }: Props) {
           });
         } else {
           notify.success("Dispositivos atualizados", {
-            description: `${loadedDoors.length} porta(s), ${loadedGates.length} portao(oes) e ${loadedExhaustDevices.length} exaustor(es).`,
+            description: `${loadedDoors.length} porta(s), ${loadedGates.length} portão(ões) e ${loadedExhaustDevices.length} exaustor(es).`,
           });
         }
       }
@@ -247,17 +247,17 @@ export function DashboardProvider({ children }: Props) {
 
   const handleOpenGate = useCallback(async (id: string, autoClose: number) => {
     setApiError(null);
-    notify.info("Enviando comando", { description: "Solicitando abertura do portao." });
+    notify.info("Enviando comando", { description: "Solicitando abertura do portão." });
 
     try {
       await api.openGate(id, autoClose);
       const name = gates.find((g) => String(g.numeroDispositivo) === id)?.nome ?? id;
-      setLastAction(`Portao "${name}" aberto (fechamento em ${autoClose}s).`);
-      notify.success("Portao aberto", { description: `${name} com fechamento em ${autoClose}s.` });
+      setLastAction(`Portão "${name}" aberto (fechamento em ${autoClose}s).`);
+      notify.success("Portão aberto", { description: `${name} com fechamento em ${autoClose}s.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Erro ao abrir portao: ${errorMessage}`);
-      notify.error("Erro ao abrir portao", { description: errorMessage });
+      setApiError(`Erro ao abrir portão: ${errorMessage}`);
+      notify.error("Erro ao abrir portão", { description: errorMessage });
       throw err;
     }
   }, [gates]);
@@ -317,7 +317,7 @@ export function DashboardProvider({ children }: Props) {
         });
       } else {
         notify.warning("Exaustor desligado", {
-          description: `${normalizedId} nao consta na memoria de acionamentos.`,
+          description: `${normalizedId} não consta na memória de acionamentos.`,
         });
       }
 

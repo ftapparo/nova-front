@@ -159,16 +159,17 @@ export default function Exaustores() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Controle de Exaustores</h1>
-          <p className="text-muted-foreground">Gerencie os exaustores das areas comuns por bloco e apartamento.</p>
+          <p className="text-muted-foreground">Gerencie os exaustores das áreas comuns por bloco e apartamento.</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={loadProcessStatus}
             disabled={processLoading}
             aria-label="Atualizar status dos exaustores"
             title="Atualizar status dos exaustores"
+            className="text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15"
           >
             <RefreshCw className={`h-4 w-4 ${processLoading ? "animate-spin" : ""}`} />
           </Button>
@@ -254,16 +255,16 @@ export default function Exaustores() {
 
             <div className="mt-4 flex items-end justify-between gap-4">
               <div className="space-y-1">
-                <p className="text-xs text-slate-600">{previewText()}</p>
+                <p className="text-xs text-muted-foreground">{previewText()}</p>
                 {processError && <p className="text-xs text-destructive">Erro ao atualizar</p>}
               </div>
               <div className="mb-1 flex items-center gap-2">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={onClearFields}
                   disabled={onLoading}
-                  className="h-11 px-5"
+                  className="h-11 px-5 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
                 >
                   Limpar
                 </Button>
@@ -303,15 +304,15 @@ export default function Exaustores() {
 
           <CardContent className="p-0 mt-5">
             {!hasLoadedInitialData && processLoading ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8">
-                <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+              <div className="rounded-lg border border-border bg-muted px-4 py-8">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Carregando status dos módulos...
                 </div>
               </div>
             ) : sortedModuleEntries.length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-sm text-slate-500">Nenhum módulo retornado.</p>
+              <div className="rounded-lg border border-border bg-muted px-4 py-3">
+                <p className="text-sm text-muted-foreground">Nenhum módulo retornado.</p>
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -321,7 +322,7 @@ export default function Exaustores() {
                   const moduleIp = moduleStatus.host || "--";
 
                   return (
-                    <div key={moduleId} className="relative rounded-xl border border-slate-200/80 bg-white px-4 py-4">
+                    <div key={moduleId} className="relative rounded-xl border border-border bg-card px-4 py-4">
                       <Badge
                         className={
                           isOnline
@@ -332,15 +333,15 @@ export default function Exaustores() {
                         {isOnline ? "Online" : "Offline"}
                       </Badge>
 
-                      <div className="space-y-1 pr-20 text-xs text-slate-600">
+                      <div className="space-y-1 pr-20 text-xs text-muted-foreground">
                         <p>
-                          Modulo: <span className="font-semibold text-slate-800">{moduleId}</span>
+                          Módulo: <span className="font-semibold text-foreground">{moduleId}</span>
                         </p>
                         <p>
-                          Dispositivo: <span className="font-semibold text-slate-800">{deviceName || "--"}</span>
+                          Dispositivo: <span className="font-semibold text-foreground">{deviceName || "--"}</span>
                         </p>
                         <p>
-                          IP: <span className="font-semibold text-slate-800">{moduleIp}</span>
+                          IP: <span className="font-semibold text-foreground">{moduleIp}</span>
                         </p>
                       </div>
                     </div>
@@ -363,24 +364,24 @@ export default function Exaustores() {
 
         {sortedActiveExhausts.length === 0 ? (
           !hasLoadedInitialData && processLoading ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8">
-              <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+            <div className="rounded-lg border border-border bg-muted px-4 py-8">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Carregando exaustores...
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-sm text-slate-500">Não há nenhum exaustor ligado no momento.</p>
+            <div className="rounded-lg border border-border bg-muted px-4 py-3">
+              <p className="text-sm text-muted-foreground">Não há nenhum exaustor ligado no momento.</p>
             </div>
           )
         ) : (
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(260px,292px))]">
             {sortedActiveExhausts.map((exhaust) => (
-              <Card key={exhaust.id} className="rounded-2xl border-slate-200/90 shadow-sm">
+              <Card key={exhaust.id} className="rounded-2xl border-border shadow-sm">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
-                    <CardTitle className="text-3xl font-bold leading-none tracking-tight text-slate-800">
+                    <CardTitle className="text-3xl font-bold leading-none tracking-tight text-foreground">
                       {exhaust.tower}-{exhaust.final}
                     </CardTitle>
 
@@ -395,7 +396,7 @@ export default function Exaustores() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 cursor-pointer text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                            className="h-8 w-8 cursor-pointer text-muted-foreground hover:bg-muted hover:text-foreground"
                             aria-label="Acoes do exhaust"
                           >
                             <EllipsisVertical className="h-4 w-4" />
@@ -421,35 +422,35 @@ export default function Exaustores() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  <div className="h-px w-full bg-slate-200/70" />
+                  <div className="h-px w-full bg-border/80" />
 
                   <div className="grid grid-cols-2 divide-x divide-slate-200/70 text-sm">
                     <div className="space-y-2 pr-4">
-                      <p className="text-xs text-slate-600">
-                        Torre: <span className="font-semibold text-slate-800">{exhaust.tower}</span>
+                      <p className="text-xs text-muted-foreground">
+                        Torre: <span className="font-semibold text-foreground">{exhaust.tower}</span>
                       </p>
-                      <p className="text-xs text-slate-600">
-                        Prumada: <span className="font-semibold text-slate-800">{exhaust.final}</span>
+                      <p className="text-xs text-muted-foreground">
+                        Prumada: <span className="font-semibold text-foreground">{exhaust.final}</span>
                       </p>
                     </div>
 
                     <div className="space-y-2 pl-4">
-                      <p className="text-xs text-slate-600">
-                        Módulo: <span className="font-semibold text-slate-800">{exhaust.group}</span>
+                      <p className="text-xs text-muted-foreground">
+                        Módulo: <span className="font-semibold text-foreground">{exhaust.group}</span>
                       </p>
-                      <p className="text-xs text-slate-600">
-                        Relê: <span className="font-semibold text-slate-800">{exhaust.relay}</span>
+                      <p className="text-xs text-muted-foreground">
+                        Relê: <span className="font-semibold text-foreground">{exhaust.relay}</span>
                       </p>
                     </div>
                   </div>
 
-                  <div className="h-px w-full bg-slate-200/70" />
+                  <div className="h-px w-full bg-border/80" />
 
                   <div className="pb-1 text-center">
-                    <p className="text-2xl font-bold leading-none tracking-tight text-slate-800">
+                    <p className="text-2xl font-bold leading-none tracking-tight text-foreground">
                       {formatRemainingTime(exhaust.remainingMinutes)}
                     </p>
-                    <p className="mt-1.5 text-xs text-slate-500">Tempo restante</p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">Tempo restante</p>
                   </div>
                 </CardContent>
               </Card>
@@ -475,9 +476,10 @@ export default function Exaustores() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setExhaustToConfirmOff(null)}
               disabled={Boolean(offLoadingId)}
+              className="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
             >
               Cancelar
             </Button>
