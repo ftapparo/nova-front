@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import type { DoorItem, GateItem } from "@/services/api";
+import { humanizeLabel } from "@/lib/utils";
 
 interface Props {
   doors: DoorItem[];
@@ -49,7 +50,7 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
               <SelectTrigger id="door-select"><SelectValue placeholder="Selecione uma porta" /></SelectTrigger>
               <SelectContent>
                 {(doors || []).map((d) => (
-                  <SelectItem key={d.sequencia} value={String(d.sequencia)}>{d.nome}</SelectItem>
+                  <SelectItem key={d.id} value={String(d.id)}>{humanizeLabel(d.nome)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -75,7 +76,7 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
               <SelectTrigger id="gate-select"><SelectValue placeholder="Selecione um portão" /></SelectTrigger>
               <SelectContent>
                 {(gates || []).map((g) => (
-                  <SelectItem key={g.sequencia} value={String(g.sequencia)}>{g.nome}</SelectItem>
+                  <SelectItem key={g.id} value={String(g.numeroDispositivo)}>{humanizeLabel(g.nome)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

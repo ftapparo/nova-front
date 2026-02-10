@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import type { ExhaustRunningStatus } from "@/contexts/DashboardContext";
+import { humanizeLabel } from "@/lib/utils";
 
 interface Props {
   onTurnOn: (block: string, apartment: string, duration: number) => Promise<void>;
   onTurnOff: (block: string, apartment: string) => Promise<void>;
-  onStatus: (id: string) => Promise<unknown>;
+  onStatus: (id: string) => Promise<ExhaustRunningStatus>;
 }
 
 const BLOCKS = ["A", "B", "C"];
@@ -22,7 +25,8 @@ export default function ExhaustControl({ onTurnOn, onTurnOff, onStatus }: Props)
 
   const [statusId, setStatusId] = useState("");
   const [statusLoading, setStatusLoading] = useState(false);
-  const [statusResult, setStatusResult] = useState<string | null>(null);
+  const [statusResult, setStatusResult] = useState<ExhaustRunningStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const valid = block && apartment.trim();
 
@@ -42,11 +46,12 @@ export default function ExhaustControl({ onTurnOn, onTurnOff, onStatus }: Props)
     if (!statusId.trim()) return;
     setStatusLoading(true);
     setStatusResult(null);
+    setStatusError(null);
     try {
       const data = await onStatus(statusId.trim());
-      setStatusResult(JSON.stringify(data, null, 2));
+      setStatusResult(data);
     } catch (err: unknown) {
-      setStatusResult(`Erro: ${err instanceof Error ? err.message : "Desconhecido"}`);
+      setStatusError(`Erro: ${err instanceof Error ? err.message : "Desconhecido"}`);
     } finally {
       setStatusLoading(false);
     }
@@ -66,7 +71,7 @@ export default function ExhaustControl({ onTurnOn, onTurnOff, onStatus }: Props)
           <Select value={block} onValueChange={setBlock}>
             <SelectTrigger id="ex-block"><SelectValue placeholder="Bloco" /></SelectTrigger>
             <SelectContent>
-              {BLOCKS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+              {BLOCKS.map((b) => <SelectItem key={b} value={b}>{humanizeLabel(b)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -104,10 +109,22 @@ export default function ExhaustControl({ onTurnOn, onTurnOff, onStatus }: Props)
             Consultar
           </Button>
         </div>
+        {statusError && <p className="text-sm text-destructive">{statusError}</p>}
         {statusResult && (
-          <pre className="rounded-md bg-foreground/95 text-primary-foreground p-4 text-xs overflow-auto max-h-48 font-mono">
-            {statusResult}
-          </pre>
+          <div className="rounded-md border bg-muted/20 p-4 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">Exaustor {statusResult.id}</p>
+              <Badge variant={statusResult.isRunning ? "default" : "secondary"}>
+                {statusResult.isRunning ? "Em funcionamento" : "Desligado"}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Tempo restante: {statusResult.remainingMinutes ? `${statusResult.remainingMinutes} min` : "--"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Atualizado em: {new Date(statusResult.generatedAt).toLocaleString("pt-BR")}
+            </p>
+          </div>
         )}
       </div>
     </div>

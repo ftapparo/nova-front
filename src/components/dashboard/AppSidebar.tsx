@@ -1,4 +1,4 @@
-import { LayoutDashboard, DoorOpen, Fan } from "lucide-react";
+import { LayoutDashboard, DoorOpen, Fan, Server } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -22,10 +22,16 @@ const menuItems = [
     description: "Status geral do sistema",
   },
   {
+    title: "Equipamentos",
+    url: "/dashboard/equipamentos",
+    icon: Server,
+    description: "Status detalhado",
+  },
+  {
     title: "Controle de Acesso",
     url: "/dashboard/acesso",
     icon: DoorOpen,
-    description: "Portas e Portões",
+    description: "Portas e Portoes",
   },
   {
     title: "Exaustores",
@@ -41,14 +47,14 @@ export default function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+      <SidebarHeader className="h-14 border-b border-sidebar-border p-0">
+        <div className="flex h-full items-center gap-3 px-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
             NR
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="font-semibold text-sidebar-foreground text-sm">Nova Residence</span>
+              <span className="text-sm font-semibold text-sidebar-foreground">Nova Residence</span>
               <span className="text-xs text-sidebar-foreground/60">Portaria</span>
             </div>
           )}
@@ -63,8 +69,8 @@ export default function AppSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
-                      to={item.url} 
+                    <NavLink
+                      to={item.url}
                       end={item.url === "/dashboard"}
                       className="flex items-center gap-3"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
@@ -83,9 +89,7 @@ export default function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border">
         {!isCollapsed && (
           <div className="px-2 py-3">
-            <p className="text-xs text-sidebar-foreground/50">
-              Portal Administrativo v1.0
-            </p>
+            <p className="text-xs text-sidebar-foreground/50">Portal Administrativo v1.0</p>
           </div>
         )}
       </SidebarFooter>

@@ -9,7 +9,8 @@ import Login from "./pages/Login";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import PainelOperacional from "./pages/dashboard/PainelOperacional";
 import ControleAcesso from "./pages/dashboard/ControleAcesso";
-import Exaustores from "./pages/dashboard/Exaustores";
+import Exhausts from "./pages/dashboard/Exhausts";
+import Equipamentos from "./pages/dashboard/Equipamentos";
 
 const queryClient = new QueryClient();
 
@@ -45,8 +46,9 @@ const App = () => (
               }
             >
               <Route index element={<PainelOperacional />} />
+              <Route path="equipamentos" element={<Equipamentos />} />
               <Route path="acesso" element={<ControleAcesso />} />
-              <Route path="exaustores" element={<Exaustores />} />
+              <Route path="exaustores" element={<Exhausts />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

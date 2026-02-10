@@ -20,29 +20,170 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return json.data;
 }
 
-export interface DoorItem { 
-  sequencia: number;
-  ip: string;
+export interface DoorItem {
+  id: number;
   nome: string;
-  deviceId: number;
-  ativo: string;
+  ip: string;
+  porta: number;
+  url: string | null;
+  online: boolean;
+  statusCode: number | null;
+  error: string | null;
 }
 
-export interface GateItem { 
-  sequencia: number;
+export interface GateItem {
+  id: number;
   nome: string;
   numeroDispositivo: number;
-  ativo: string;
+  ip: string;
+  porta: number;
+  healthcheckUrl: string;
+  online: boolean;
+  statusCode: number | null;
+  error: string | null;
+}
+
+export interface ControlStatusResponse {
+  updatedAt: string | null;
+  gates: GateItem[];
+  doors: DoorItem[];
+  error: string | null;
+}
+
+export interface ExhaustProcessMemoryItem {
+  id: string;
+  tower: string;
+  final: number;
+  group: string;
+  relay: number;
+  moduleId: string;
+  expiresAt: number | null;
+  remainingMinutes: number | null;
+}
+
+export interface ExhaustProcessStatus {
+  total: number;
+  memory: ExhaustProcessMemoryItem[];
+  generatedAt: string;
+}
+
+export interface ExhaustModuleStatusDetail {
+  Status?: {
+    Module?: number;
+    DeviceName?: string;
+    FriendlyName?: string[];
+    Topic?: string;
+    ButtonTopic?: string;
+    Power?: string;
+    PowerLock?: string;
+    PowerOnState?: number;
+    LedState?: number;
+    LedMask?: string;
+    SaveData?: number;
+    SaveState?: number;
+    SwitchTopic?: string;
+    SwitchMode?: number[];
+    ButtonRetain?: number;
+    SwitchRetain?: number;
+    SensorRetain?: number;
+    PowerRetain?: number;
+    InfoRetain?: number;
+    StateRetain?: number;
+    StatusRetain?: number;
+  };
+}
+
+export interface ExhaustModulePulseTime {
+  PulseTime?: {
+    Set?: number[];
+    Remaining?: number[];
+  };
+}
+
+export interface ExhaustModuleStatus {
+  status?: ExhaustModuleStatusDetail;
+  pulseTime?: ExhaustModulePulseTime;
+  updatedAt?: number;
+  host?: string | null;
+  port?: number | null;
+  statusCode?: number | null;
+  errorCode?: string | null;
+  error?: string | null;
+}
+
+export interface ExhaustStatusResponse {
+  modules: Record<string, ExhaustModuleStatus>;
+  memory: ExhaustProcessMemoryItem[];
+}
+
+export interface AccessListItem {
+  NOME: string;
+  TORRE: string;
+  APARTAMENTO: string;
+  DATAHORA: string;
+  DISPOSITIVO: number;
+  SENTIDO: string;
+  DESCRICAO: string;
+  IDACESSO: string;
+  VEICULO: number | null;
+}
+
+export interface AccessVerifyItem {
+  IDENT: string;
+  NUMDISPOSITIVO: number;
+  SEQPESSOA?: number | null;
+  SEQCLASSIFICACAO?: number | null;
+  CLASSIFAUTORIZADA?: string | null;
+  AUTORIZACAOLANC?: string | null;
+  TIPO?: string | null;
+  SEQIDACESSO?: number | null;
+  PANICO?: string | null;
+  MIDIA?: string | null;
+  DESCMIDIA?: string | null;
+  SEQVEICULO?: number | null;
+  NOME: string;
+  PERMITIDO: string;
+  PROP: string;
+  LOC: string;
+  MOR: string;
+  QUADRA: string;
+  LOTE: string;
+  DESCRICAO: string;
+}
+
+export interface AccessRegisterPayload {
+  dispositivo: number;
+  pessoa: number;
+  classificacao: number;
+  classAutorizado: string;
+  autorizacaoLanc: string;
+  origem: string;
+  seqIdAcesso: number;
+  sentido: string;
+  quadra: string;
+  lote: string;
+  panico: string;
+  formaAcesso: string;
+  idAcesso: string;
+  seqVeiculo: number;
 }
 
 export const api = {
-  listDoors: () => request<DoorItem[]>("GET", "/control/door/list"),
+  controlStatus: () => request<ControlStatusResponse>("GET", "/control/status"),
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
-  listGates: () => request<GateItem[]>("GET", "/control/gate/list"),
-  openGate: (id: string, autoClose: number) => request<unknown>("POST", "/control/gate/open", { id, autoClose }),
-  exhaustorOn: (block: string, apartment: string, duration: number) =>
-    request<unknown>("POST", "/exaustors/on", { block, apartment, duration }),
-  exhaustorOff: (block: string, apartment: string) =>
-    request<unknown>("POST", "/exaustors/off", { block, apartment }),
-  exhaustorStatus: (id: string) => request<unknown>("GET", `/exaustors/status/${id}`),
+  openGate: (id: string, autoClose: number) =>
+    request<unknown>("POST", "/control/gate/open", { id, autoCloseTime: autoClose }),
+  exhaustOn: (block: string, apartment: string, duration: number) =>
+    request<unknown>("POST", "/exhausts/on", { bloco: block, apartamento: apartment, tempo: duration }),
+  exhaustOff: (block: string, apartment: string) =>
+    request<unknown>("POST", "/exhausts/off", { bloco: block, apartamento: apartment }),
+  exhaustStatus: (id: string) => request<unknown>("GET", `/exhausts/status/${id}`),
+  accessList: (device: number, limit = 10) =>
+    request<AccessListItem[]>("GET", `/access/list?device=${device}&limit=${limit}`),
+  accessVerify: (id: string, dispositivo: number, sentido: "E" | "S" = "E") =>
+    request<AccessVerifyItem[]>("GET", `/access/verify?id=${id}&dispositivo=${dispositivo}&sentido=${sentido}`),
+  accessRegister: (payload: AccessRegisterPayload) =>
+    request<unknown>("POST", "/access/register", payload),
+  exhaustProcessStatus: () => request<ExhaustProcessStatus>("GET", "/exhausts/process/status"),
+  exhaustStatusAll: () => request<ExhaustStatusResponse>("GET", "/exhausts/status"),
 };
