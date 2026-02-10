@@ -104,6 +104,7 @@ export default function AppSidebar() {
         {!isCollapsed && (
           <div className="px-2 py-3">
             <p className="text-xs text-sidebar-foreground/50">Portal Administrativo v1.0</p>
+            <p className="mt-1 text-[11px] text-sidebar-foreground/45">Desenvolvido por: Flavio Eduardo Tapparo</p>
           </div>
         )}
       </SidebarFooter>

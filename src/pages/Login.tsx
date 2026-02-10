@@ -44,7 +44,7 @@ export default function Login() {
           }}
         />
         <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2E0F44]/70 via-[#45207A]/25 to-[#2E0F44]/75" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#040008]/70 via-[#0a0115]/25 to-[#080113]/75" />
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
@@ -63,7 +63,7 @@ export default function Login() {
                   }}
                 />
               </div>
-              <p className="mb-0 text-lg font-bold text-[#4B1E6D]">Portal Administrativo</p>
+              <p className="mb-0 text-lg font-bold text-[#381569]">Portal Administrativo</p>
               <p className="text-xs text-[#6B7280]">Portaria e Zeladoria</p>
             </div>
 
@@ -116,3 +116,4 @@ export default function Login() {
     </div>
   );
 }
+

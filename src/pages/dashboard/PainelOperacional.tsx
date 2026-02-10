@@ -383,7 +383,7 @@ export default function PainelOperacional() {
         <Card className="min-w-0 xl:col-span-1 h-[357px] flex flex-col">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Dispositivos em Falha</CardTitle>
-            <CardDescription className="text-xs">Log rápido de equipamentos offline, com HTTP diferente de 200 ou com erro.</CardDescription>
+            <CardDescription className="text-xs">Lista de dispositivos offline, ou em falha.</CardDescription>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto">
             {initialLoading ? (
@@ -430,7 +430,7 @@ export default function PainelOperacional() {
                 />
               </div>
             </div>
-            <CardDescription className="text-xs">Últimos acessos dos portões (até 20 itens) via access/list.</CardDescription>
+            <CardDescription className="text-xs">Últimos acessos dos portões veiculares (até 20 itens).</CardDescription>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pl-6 pr-4" onScroll={handleLatestAccessesScroll}>
             {initialLoading ? (
@@ -457,11 +457,11 @@ export default function PainelOperacional() {
                           <LogIn className="h-[18px] w-[18px] text-emerald-600" />
                         )}
                       </span>
-                    <span className="block min-w-0 truncate whitespace-nowrap">
-                      {access.tag} - {access.nome} - {access.descricao} - {access.quadra} {access.lote} - {formatApiDateTimeNoTimezone(access.validatedAt)}
-                    </span>
-                  </div>
-                );
+                      <span className="block min-w-0 truncate whitespace-nowrap">
+                        {access.tag} - {access.nome} - {access.descricao} - {access.quadra} {access.lote} - {formatApiDateTimeNoTimezone(access.validatedAt)}
+                      </span>
+                    </div>
+                  );
                 })}
               </div>
             )}
@@ -670,13 +670,12 @@ export default function PainelOperacional() {
             </div>
 
             <div
-              className={`min-h-[120px] rounded-md border px-3 py-2 text-sm ${
-                !gateVerifyMessage && !gateVerifiedPerson
-                  ? "border-border bg-muted text-muted-foreground"
-                  : gateAllowed
-                    ? "border-emerald-200 bg-emerald-100 text-emerald-900"
-                    : "border-rose-200 bg-rose-100 text-rose-900"
-              }`}
+              className={`min-h-[120px] rounded-md border px-3 py-2 text-sm ${!gateVerifyMessage && !gateVerifiedPerson
+                ? "border-border bg-muted text-muted-foreground"
+                : gateAllowed
+                  ? "border-emerald-200 bg-emerald-100 text-emerald-900"
+                  : "border-rose-200 bg-rose-100 text-rose-900"
+                }`}
             >
               {gateVerifiedPerson ? (
                 <>

@@ -25,25 +25,32 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
   const handleOpenDoor = async () => {
     if (!selectedDoor) return;
     setDoorLoading(true);
-    try { await onOpenDoor(selectedDoor); } finally { setDoorLoading(false); }
+    try {
+      await onOpenDoor(selectedDoor);
+    } finally {
+      setDoorLoading(false);
+    }
   };
 
   const handleOpenGate = async () => {
     if (!selectedGate || autoClose <= 0) return;
     setGateLoading(true);
-    try { await onOpenGate(selectedGate, autoClose); } finally { setGateLoading(false); }
+    try {
+      await onOpenGate(selectedGate, autoClose);
+    } finally {
+      setGateLoading(false);
+    }
   };
 
   return (
-    <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+    <div className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
       <h2 className="text-lg font-semibold text-card-foreground">Controle de Portas e Portões</h2>
 
-      {/* Doors */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <DoorOpen className="h-4 w-4 text-primary" /> Portas
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1">
             <Label htmlFor="door-select" className="sr-only">Porta</Label>
             <Select value={selectedDoor} onValueChange={setSelectedDoor}>
@@ -56,7 +63,7 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
             </Select>
           </div>
           <Button onClick={handleOpenDoor} disabled={!selectedDoor || doorLoading}>
-            {doorLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+            {doorLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
             Abrir Porta
           </Button>
         </div>
@@ -64,12 +71,11 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
 
       <Separator />
 
-      {/* Gates */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Warehouse className="h-4 w-4 text-secondary" /> Portões
+          <Warehouse className="h-4 w-4 text-primary" /> Portões
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1">
             <Label htmlFor="gate-select" className="sr-only">Portão</Label>
             <Select value={selectedGate} onValueChange={setSelectedGate}>
@@ -91,8 +97,8 @@ export default function DoorGateControl({ doors, gates, onOpenDoor, onOpenGate }
               onChange={(e) => setAutoClose(Number(e.target.value))}
             />
           </div>
-          <Button variant="secondary" onClick={handleOpenGate} disabled={!selectedGate || autoClose <= 0 || gateLoading} className="self-end">
-            {gateLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+          <Button onClick={handleOpenGate} disabled={!selectedGate || autoClose <= 0 || gateLoading} className="self-end">
+            {gateLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
             Abrir Portão
           </Button>
         </div>
