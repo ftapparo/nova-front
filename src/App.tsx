@@ -11,6 +11,7 @@ import PainelOperacional from "./pages/dashboard/PainelOperacional";
 import ControleAcesso from "./pages/dashboard/ControleAcesso";
 import Exhausts from "./pages/dashboard/Exhausts";
 import Equipamentos from "./pages/dashboard/Equipamentos";
+import Veiculos from "./pages/dashboard/Veiculos";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="equipamentos" element={<Equipamentos />} />
               <Route path="acesso" element={<ControleAcesso />} />
               <Route path="exaustores" element={<Exhausts />} />
+              <Route path="veiculos" element={<Veiculos />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -13,7 +13,22 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(text || `Erro ${res.status}`);
+    let payload: unknown = null;
+    try {
+      payload = text ? JSON.parse(text) : null;
+    } catch {
+      payload = null;
+    }
+
+    const message =
+      (payload && typeof payload === "object" && "message" in payload && typeof (payload as { message?: unknown }).message === "string"
+        ? (payload as { message: string }).message
+        : text) || `Erro ${res.status}`;
+
+    const error = new Error(message) as Error & { status?: number; payload?: unknown };
+    error.status = res.status;
+    error.payload = payload;
+    throw error;
   }
   const json: ApiResponse<T> = await res.json();
   return json.data;
@@ -168,6 +183,104 @@ export interface AccessRegisterPayload {
   seqVeiculo: number;
 }
 
+export interface CpfQueryLink {
+  pessoaVinculo: {
+    seqUnidade: number | null;
+  };
+  unidade: {
+    sequencia: number;
+    quadra: string | null;
+    lote: string | null;
+  };
+}
+
+export interface CpfQueryPerson {
+  sequencia: number;
+  nome: string | null;
+  cpf: string | null;
+}
+
+export interface CpfQueryResponse {
+  cpf: string;
+  isValid: boolean;
+  exists: boolean;
+  person: CpfQueryPerson | null;
+  links: CpfQueryLink[];
+}
+
+export interface VehicleSummary {
+  SEQUENCIA: number;
+  PLACA: string;
+  MARCA: string | null;
+  MODELO: string | null;
+  COR: string | null;
+  SEQUNIDADE: number | null;
+  PROPRIETARIO: number | null;
+  TAGVEICULO: string | null;
+}
+
+export interface VehicleDetailsResponse {
+  exists: boolean;
+  vehicle: VehicleSummary | null;
+  accessTag: {
+    SEQUENCIA: number;
+    ID: string | null;
+    ID2: string | null;
+    VEICULO: number | null;
+    SEQPESSOA: number | null;
+  } | null;
+}
+
+export interface VehicleUpsertPayload {
+  plate: string;
+  brand: string;
+  model: string;
+  color: string;
+  ownerSeq: number;
+  unitSeq: number | null;
+}
+
+export interface VehicleTagLinkPayload {
+  cpf: string;
+  tag: string;
+  dispositivo: number;
+  forceSwap?: boolean;
+  user?: string;
+}
+
+export interface VehicleUpsertResponse {
+  created: boolean;
+  vehicle: VehicleSummary;
+}
+
+export interface VehicleLookupSourceResult {
+  name: string;
+  success: boolean;
+  durationMs: number;
+  message: string;
+  data: {
+    brand: string | null;
+    model: string | null;
+    color: string | null;
+  } | null;
+}
+
+export interface VehicleLookupResponse {
+  plate: string;
+  sources: VehicleLookupSourceResult[];
+  consolidated: {
+    brand: string | null;
+    model: string | null;
+    color: string | null;
+    sourceUsedByField: {
+      brand: string | null;
+      model: string | null;
+      color: string | null;
+    };
+  };
+  overallSuccess: boolean;
+}
+
 export const api = {
   controlStatus: () => request<ControlStatusResponse>("GET", "/control/status"),
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
@@ -184,6 +297,21 @@ export const api = {
     request<AccessVerifyItem[]>("GET", `/access/verify?id=${id}&dispositivo=${dispositivo}&sentido=${sentido}`),
   accessRegister: (payload: AccessRegisterPayload) =>
     request<unknown>("POST", "/access/register", payload),
+  queryCpf: (cpf: string) => request<CpfQueryResponse>("GET", `/queries/cpf/${cpf}`),
+  vehicleListByOwner: (personSeq: number) =>
+    request<VehicleSummary[]>("GET", `/vehicles/owner/${personSeq}`),
+  vehicleByPlate: (plate: string) =>
+    request<VehicleDetailsResponse>("GET", `/vehicles/plate/${plate}/details`),
+  vehicleLookupPlate: (plate: string) =>
+    request<VehicleLookupResponse>("POST", "/vehicles/plate/lookup", { plate }),
+  vehicleUpsertByPlate: (payload: VehicleUpsertPayload) =>
+    request<VehicleUpsertResponse>("POST", "/vehicles/upsert-by-plate", payload),
+  vehicleLinkTag: (vehicleSeq: number, payload: VehicleTagLinkPayload) =>
+    request<{ status: "linked" | "swapped"; vehicleSeq: number; tag: string }>("POST", `/vehicles/${vehicleSeq}/tag`, payload),
+  vehicleRemoveTag: (vehicleSeq: number) =>
+    request<{ vehicleSeq: number; tagRemoved: boolean }>("DELETE", `/vehicles/${vehicleSeq}/tag`),
+  vehicleUnlinkOwner: (vehicleSeq: number) =>
+    request<{ vehicleSeq: number; ownerUnlinked: boolean; tagRemoved: boolean }>("PATCH", `/vehicles/${vehicleSeq}/unlink-owner`),
   exhaustProcessStatus: () => request<ExhaustProcessStatus>("GET", "/exhausts/process/status"),
   exhaustStatusAll: () => request<ExhaustStatusResponse>("GET", "/exhausts/status"),
 };

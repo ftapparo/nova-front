@@ -1,4 +1,4 @@
-import { LayoutDashboard, DoorOpen, Fan, Server } from "lucide-react";
+import { LayoutDashboard, DoorOpen, Fan, Server, CarFront } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import BrandLogo from "@/components/BrandLogo";
 import {
@@ -39,6 +39,12 @@ const menuItems = [
     url: "/dashboard/exaustores",
     icon: Fan,
     description: "Controle de exaustores",
+  },
+  {
+    title: "Veiculos",
+    url: "/dashboard/veiculos",
+    icon: CarFront,
+    description: "Gestao de veiculos",
   },
 ];
 
