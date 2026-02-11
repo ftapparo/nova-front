@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEventHandler } from "react";
+import { useEffect, useMemo, useState, type KeyboardEventHandler } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Pencil, Plus, Search, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,8 @@ type ApiErrorWithPayload = Error & {
     } | null;
   } | null;
 };
+
+const WIDE_VIEWPORT_MIN_WIDTH = 1200;
 
 const normalizePlate = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
 const normalizeDigits = (value: string) => value.replace(/\D/g, "");
@@ -68,6 +70,19 @@ export default function Veiculos() {
   const [pendingRemoveTagVehicle, setPendingRemoveTagVehicle] = useState<VehicleSummary | null>(null);
   const [unlinkVehicleConfirmOpen, setUnlinkVehicleConfirmOpen] = useState(false);
   const [pendingUnlinkVehicle, setPendingUnlinkVehicle] = useState<VehicleSummary | null>(null);
+  const [isWideViewport, setIsWideViewport] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const evaluateViewport = () => {
+      setIsWideViewport(window.innerWidth >= WIDE_VIEWPORT_MIN_WIDTH);
+    };
+
+    evaluateViewport();
+    window.addEventListener("resize", evaluateViewport);
+    return () => window.removeEventListener("resize", evaluateViewport);
+  }, []);
 
   const hasOwner = Boolean(ownerData?.person?.sequencia);
   const validationDevice = entryGates[0]?.numeroDispositivo ?? null;
@@ -346,13 +361,25 @@ export default function Veiculos() {
     setPendingUnlinkVehicle(null);
   };
 
+  const renderButtonLabel = (label: string) => (isWideViewport ? label : <span className="sr-only">{label}</span>);
+  const iconSpacingClass = isWideViewport ? "mr-2" : "";
+  const compactIconSizeClass = isWideViewport ? "h-4 w-4" : "!h-6 !w-6";
+  type CompactButtonStyle = "primary" | "outline" | "destructive";
+  const compactButtonClassMap: Record<CompactButtonStyle, string> = {
+    primary: "bg-transparent text-primary hover:bg-primary/10 border-none shadow-none px-2",
+    outline: "bg-transparent text-muted-foreground hover:bg-muted/40 border-none shadow-none px-2",
+    destructive: "bg-transparent text-rose-600 hover:bg-rose-50 border-none shadow-none px-2",
+  };
+  const getCompactButtonClasses = (style: CompactButtonStyle): string => (isWideViewport ? "" : compactButtonClassMap[style]);
+  const addVehicleIconOnlyClasses = "h-12 w-12 min-w-[3rem] rounded-full bg-primary text-primary-foreground p-0 shadow-md hover:bg-primary/90 focus-visible:ring-primary";
+
   return (
     // ✅ 1) Container com max-width e centralizado (evita esticar em ultra-wide)
     <PageContainer>
       <PageHeader title="Veiculos" description="Cadastro, tag e desvinculo de veiculos por proprietario." />
 
       <Card>
-        <SectionCardHeader title="Buscar Proprietario" description="Digite o CPF para carregar dados e veiculos cadastrados." />
+        <SectionCardHeader title="Buscar Pessoa" description="Digite o CPF para carregar os dados cadatrais." />
 
         <CardContent className="space-y-3">
           {/* ✅ 2) Input + ação juntos, com largura controlada */}
@@ -375,10 +402,15 @@ export default function Veiculos() {
               type="button"
               onClick={() => void onSearchCpf()}
               disabled={normalizeDigits(cpf).length < 11 || loadingOwner}
-              className="h-9"
+              className={`h-9 ${getCompactButtonClasses("primary")}`}
+              aria-label="Buscar Pessoa"
             >
-              {loadingOwner ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-              Buscar
+              {loadingOwner ? (
+                <Loader2 className={`${iconSpacingClass} ${compactIconSizeClass} animate-spin`} />
+              ) : (
+                <Search className={`${iconSpacingClass} ${compactIconSizeClass}`} />
+              )}
+              {renderButtonLabel("Buscar")}
             </Button>
           </div>
 
@@ -419,12 +451,18 @@ export default function Veiculos() {
 
       <Card>
         <SectionCardHeader
-          title="Veiculos do Proprietario"
-          description="Gerencie tag, edicao e desvinculo de propriedade."
+          title="Veiculos"
+          description="Gerencie e edite os veiculos vinculados."
           action={
-            <Button type="button" onClick={openAddVehicleModal} disabled={!hasOwner}>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar veiculo
+            <Button
+              type="button"
+              onClick={openAddVehicleModal}
+              disabled={!hasOwner}
+              aria-label="Adicionar veiculo"
+              className={isWideViewport ? "" : addVehicleIconOnlyClasses}
+            >
+              <Plus className={`${iconSpacingClass} ${compactIconSizeClass}`} />
+              {renderButtonLabel("Adicionar veiculo")}
             </Button>
           }
         />
@@ -444,41 +482,41 @@ export default function Veiculos() {
                 return (
                   // ✅ 3) Item com layout mais “card-like” e responsivo
                   <div key={vehicle.SEQUENCIA} className="rounded-md border p-4 text-sm">
-                    <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                       <div className="space-y-1">
                         <p>
                           <strong>Placa:</strong> {vehicle.PLACA}
                         </p>
                         <p>
-                          <strong>Modelo:</strong> {vehicle.MARCA || "--"} {vehicle.MODELO || "--"}
+                          <strong>Tag:</strong> {vehicle.TAGVEICULO || "--"}
+                        </p>
+                        <p>
+                          <strong>Marca:</strong> {vehicle.MARCA || "--"}
+                        </p>
+                        <p>
+                          <strong>Modelo:</strong> {vehicle.MODELO || "--"}
                         </p>
                         <p>
                           <strong>Cor:</strong> {vehicle.COR || "--"}
                         </p>
-                        <p>
-                          <strong>Tag:</strong> {vehicle.TAGVEICULO || "--"}
-                        </p>
                       </div>
 
                       {/* ações ficam “perto” e alinhadas; no desktop vão para a direita */}
-                      <div className="flex flex-wrap gap-2 sm:justify-end">
-                        <Button type="button" size="sm" onClick={() => openTagModal(vehicle)}>
-                          {hasTag ? <Pencil className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
-                          {hasTag ? "Editar tag" : "Adicionar tag"}
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => openTagModal(vehicle)}
+                          aria-label={hasTag ? "Editar tag" : "Adicionar tag"}
+                          className={getCompactButtonClasses("primary")}
+                        >
+                          {hasTag ? (
+                            <Pencil className={`${iconSpacingClass} ${compactIconSizeClass}`} />
+                          ) : (
+                            <Plus className={`${iconSpacingClass} ${compactIconSizeClass}`} />
+                          )}
+                          {renderButtonLabel(hasTag ? "Editar tag" : "Adicionar tag")}
                         </Button>
-
-                        {hasTag ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => requestRemoveTag(vehicle)}
-                            disabled={removingTag}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir tag
-                          </Button>
-                        ) : null}
 
                         <Button
                           type="button"
@@ -486,13 +524,15 @@ export default function Veiculos() {
                           variant="destructive"
                           onClick={() => requestUnlinkVehicle(vehicle)}
                           disabled={unlinkingVehicleSeq === Number(vehicle.SEQUENCIA)}
+                          aria-label="Excluir veiculo"
+                          className={getCompactButtonClasses("destructive")}
                         >
                           {unlinkingVehicleSeq === Number(vehicle.SEQUENCIA) ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className={`${iconSpacingClass} ${compactIconSizeClass} animate-spin`} />
                           ) : (
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className={`${iconSpacingClass} ${compactIconSizeClass}`} />
                           )}
-                          Excluir veiculo
+                          {renderButtonLabel("Excluir veiculo")}
                         </Button>
                       </div>
                     </div>
@@ -523,9 +563,19 @@ export default function Veiculos() {
                   className="h-9"
                 />
               </div>
-              <Button type="button" onClick={() => void onLookupPlate()} disabled={lookupLoading} className="h-9">
-                {lookupLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                Consultar
+              <Button
+                type="button"
+                onClick={() => void onLookupPlate()}
+                disabled={lookupLoading}
+                className={`h-9 ${getCompactButtonClasses("primary")}`}
+                aria-label="Consultar placa"
+              >
+                {lookupLoading ? (
+                  <Loader2 className={`${iconSpacingClass} ${compactIconSizeClass} animate-spin`} />
+                ) : (
+                  <Search className={`${iconSpacingClass} ${compactIconSizeClass}`} />
+                )}
+                {renderButtonLabel("Consultar")}
               </Button>
             </div>
 
@@ -653,7 +703,7 @@ export default function Veiculos() {
               Cancelar
             </Button>
             <Button variant="destructive" onClick={() => void confirmRemoveTag()} disabled={removingTag}>
-              {removingTag ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {removingTag ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Excluir tag
             </Button>
           </DialogFooter>
@@ -675,7 +725,7 @@ export default function Veiculos() {
               Cancelar
             </Button>
             <Button variant="destructive" onClick={() => void confirmUnlinkVehicle()} disabled={Boolean(unlinkingVehicleSeq)}>
-              {unlinkingVehicleSeq ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {unlinkingVehicleSeq ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Excluir veiculo
             </Button>
           </DialogFooter>

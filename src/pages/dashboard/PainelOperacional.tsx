@@ -13,7 +13,6 @@ import { api, type AccessVerifyItem } from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useDashboard } from "@/contexts/DashboardContext";
 import PageContainer from "@/components/layout/PageContainer";
-import PageHeader from "@/components/layout/PageHeader";
 
 type FailureItem = {
   kind: "Porta" | "Portão" | "Exaustor";
@@ -29,6 +28,7 @@ type ShortcutType = "door" | "gate";
 
 type QuickShortcut = {
   id: string;
+
   label: string;
   type: ShortcutType;
   targetId: string;
@@ -36,6 +36,8 @@ type QuickShortcut = {
 };
 
 const SHORTCUTS_STORAGE_KEY = "nr.quick-access.v1";
+const WIDE_VIEWPORT_MIN_WIDTH = 1560;
+const MAX_QUICK_SHORTCUTS = 6;
 
 const isExitAccess = (direction: string): boolean => {
   const normalized = (direction || "").trim().toUpperCase();
@@ -83,10 +85,24 @@ export default function PainelOperacional() {
   const [gateVerifiedPerson, setGateVerifiedPerson] = useState<AccessVerifyItem | null>(null);
   const [gateVerifyMessage, setGateVerifyMessage] = useState<string | null>(null);
   const [gateAllowed, setGateAllowed] = useState(false);
+  const [failuresDialogOpen, setFailuresDialogOpen] = useState(false);
+  const [isWideViewport, setIsWideViewport] = useState(false);
 
   useEffect(() => {
     if (!refreshing) setHasLoadedInitialData(true);
   }, [refreshing]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const evaluateViewport = () => {
+      setIsWideViewport(window.innerWidth >= WIDE_VIEWPORT_MIN_WIDTH);
+    };
+
+    evaluateViewport();
+    window.addEventListener("resize", evaluateViewport);
+    return () => window.removeEventListener("resize", evaluateViewport);
+  }, []);
 
   const activeDoors = doors.filter((d) => d.online).length;
   const activeGates = gates.filter((g) => g.online).length;
@@ -125,6 +141,7 @@ export default function PainelOperacional() {
     if (item.statusCode === null) return false;
     return item.statusCode !== 200 || Boolean(item.error);
   });
+  const failureCount = failures.length;
 
   const doorOptions = useMemo(
     () => doors.map((d) => ({ id: String(d.id), name: d.nome })),
@@ -142,7 +159,7 @@ export default function PainelOperacional() {
       if (!stored) return;
       const parsed = JSON.parse(stored) as QuickShortcut[];
       if (Array.isArray(parsed)) {
-        setShortcuts(parsed.filter((s) => s && typeof s.id === "string"));
+        setShortcuts(parsed.filter((s) => s && typeof s.id === "string").slice(0, MAX_QUICK_SHORTCUTS));
       }
     } catch {
       setShortcuts([]);
@@ -161,6 +178,7 @@ export default function PainelOperacional() {
   };
 
   const saveShortcut = () => {
+    if (shortcuts.length >= MAX_QUICK_SHORTCUTS) return;
     const label = shortcutLabel.trim();
     if (!label || !shortcutTargetId) return;
     const autoClose = Number.isFinite(shortcutAutoClose) && shortcutAutoClose > 0 ? shortcutAutoClose : 15;
@@ -173,7 +191,7 @@ export default function PainelOperacional() {
       autoClose,
     };
 
-    setShortcuts((prev) => [next, ...prev].slice(0, 12));
+    setShortcuts((prev) => [next, ...prev].slice(0, MAX_QUICK_SHORTCUTS));
     setDialogOpen(false);
     resetDialog();
   };
@@ -337,11 +355,16 @@ export default function PainelOperacional() {
     };
   }, []);
   const initialLoading = !hasLoadedInitialData && refreshing;
+  const autoRefreshSwitchId = "latest-access-auto-refresh";
+
+  const handleOpenFailuresModal = () => {
+    setFailuresDialogOpen(true);
+  };
 
   return (
-    <PageContainer>
-      <PageHeader title="Painel Operacional" description="Visao geral, falhas, ultimos acessos e atalhos de operacao." />
-      <div className="grid gap-4 md:grid-cols-3">
+    <PageContainer size={isWideViewport ? "wide" : "default"}>
+      <h1 className="sr-only">Painel Operacional</h1>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
@@ -349,7 +372,7 @@ export default function PainelOperacional() {
               <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeDoors}/${doors.length}`}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">portas online agora</p>
+              <p className="mt-3 text-xs text-muted-foreground">online agora</p>
             </div>
             <DoorOpen className="h-[77px] w-[77px] text-primary" />
           </CardContent>
@@ -362,7 +385,7 @@ export default function PainelOperacional() {
               <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeGates}/${gates.length}`}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">portões online agora</p>
+              <p className="mt-3 text-xs text-muted-foreground">online agora</p>
             </div>
             <Warehouse className="h-[77px] w-[77px] text-primary" />
           </CardContent>
@@ -375,20 +398,193 @@ export default function PainelOperacional() {
               <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeExhaustDevices}/${exhaustDevices.length}`}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">exaustores online agora</p>
+              <p className="mt-3 text-xs text-muted-foreground">online agora</p>
             </div>
             <Fan className="h-[77px] w-[77px] text-primary" />
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,5fr)]">
-        <Card className="min-w-0 xl:col-span-1 h-[357px] flex flex-col">
+        <Card
+          className="bg-card shadow-sm transition cursor-pointer hover:border-primary/30"
+          onClick={handleOpenFailuresModal}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleOpenFailuresModal();
+            }
+          }}
+        >
+          <CardContent className="flex min-h-[131px] items-center justify-between p-5">
+            <div>
+              <CardTitle className="text-base font-semibold text-foreground">Falhas</CardTitle>
+              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
+                {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : failureCount}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">dispositivos</p>
+            </div>
+            <AlertTriangle className="h-[77px] w-[77px] text-destructive" />
+          </CardContent>
+        </Card>
+      </div>
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <Card className="flex h-[400px] min-w-0 flex-1 flex-col pb-[20px]">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Dispositivos em Falha</CardTitle>
-            <CardDescription className="text-xs">Lista de dispositivos offline, ou em falha.</CardDescription>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base font-semibold">Últimos Acessos</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Auto</span>
+                <Switch
+                  id={autoRefreshSwitchId}
+                  checked={latestAccessAutoRefresh}
+                  onCheckedChange={setLatestAccessAutoRefresh}
+                  aria-label="Ativar atualização automática dos últimos acessos"
+                />
+              </div>
+            </div>
+            <CardDescription className="text-xs">Últimos acessos dos portões veiculares (até 20 itens).</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-0 flex-1 overflow-y-auto">
+          <CardContent className="min-h-0 flex-1 overflow-y-auto" onScroll={handleLatestAccessesScroll}>
+            {initialLoading ? (
+              <div className="rounded-lg border border-border bg-muted p-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Carregando últimos acessos...
+                </div>
+              </div>
+            ) : latestGateAccesses.length === 0 ? (
+              <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">
+                Sem acessos recentes para exibir.
+              </div>
+            ) : (
+              <div className="space-y-2 text-sm">
+                {latestGateAccesses.map((access, index) => {
+                  const isExit = isExitAccess(access.sentido);
+                  const formattedDate = formatApiDateTimeNoTimezone(access.validatedAt);
+                  const locationSummary = `${access.quadra} ${access.lote}`;
+                  const accessSummary = `${access.tag} — ${access.nome} • ${access.descricao} • ${locationSummary} • ${formattedDate}`;
+                  const compactPrimaryLine = `${access.tag} — ${access.nome} • ${locationSummary}`;
+                  const compactSecondaryLine = `${access.descricao} • ${formattedDate}`;
+                  return (
+                    <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="rounded-lg border border-border/60 bg-muted/50 p-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`inline-flex rounded-full bg-background/80 p-1 ${isExit ? "text-rose-600" : "text-emerald-600"}`}>
+                          {isExit ? (
+                            <LogOut className="h-4 w-4" />
+                          ) : (
+                            <LogIn className="h-4 w-4" />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1" title={accessSummary}>
+                          {isWideViewport ? (
+                            <p className="truncate text-sm font-semibold leading-tight text-foreground">{accessSummary}</p>
+                          ) : (
+                            <>
+                              <p className="truncate text-[0.75rem] font-semibold leading-tight text-foreground">{compactPrimaryLine}</p>
+                              <p className="truncate text-[0.68rem] font-normal text-muted-foreground">{compactSecondaryLine}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="w-full space-y-2 xl:max-w-[460px] xl:shrink-0">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Acessos Rápidos</h2>
+            <p className="text-xs text-muted-foreground">Atalhos para abrir porta ou portão com 1 clique.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {shortcuts.map((shortcut) => {
+              const isRunning = runningShortcutId === shortcut.id;
+              const ShortcutIcon = shortcut.type === "door" ? DoorOpen : Warehouse;
+              return (
+                <div key={shortcut.id} className="relative h-[104px] rounded-xl border bg-card">
+                  <button
+                    type="button"
+                    onClick={() => void runShortcut(shortcut)}
+                    disabled={isRunning}
+                    className="flex h-full w-full items-center justify-between rounded-lg px-3 text-left transition-colors hover:bg-muted disabled:opacity-60"
+                  >
+                    <div className="pr-6">
+                      <div className="text-sm font-semibold leading-tight text-foreground">{shortcut.label}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{shortcut.type === "door" ? "Porta" : `Portão ${shortcut.autoClose}s`}</div>
+                    </div>
+                    <ShortcutIcon className="h-7 w-7 shrink-0 text-foreground" />
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        aria-label="Acoes do atalho"
+                      >
+                        <EllipsisVertical className="h-3.5 w-3.5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onSelect={() => removeShortcut(shortcut.id)}
+                        className="cursor-pointer text-rose-600 hover:bg-rose-50 hover:text-rose-700 focus:bg-rose-50 focus:text-rose-700"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            })}
+
+            {shortcuts.length < MAX_QUICK_SHORTCUTS ? (
+              <button
+                type="button"
+                onClick={() => setDialogOpen(true)}
+                className="flex h-[104px] w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/35 bg-primary/10 text-primary/55 transition-colors hover:border-primary/55 hover:bg-primary/15 hover:text-primary/80"
+              >
+                <Plus className="mb-2 h-8 w-8" />
+                <span className="text-xs font-medium">Adicionar</span>
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+      {lastAction && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div>
+            <p className="text-sm font-medium text-primary-dark">Última operação</p>
+            <p className="text-sm text-primary">{lastAction}</p>
+          </div>
+        </div>
+      )}
+
+      {apiError && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-destructive">Erro</p>
+            <p className="text-sm text-destructive/80">{apiError}</p>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={failuresDialogOpen} onOpenChange={setFailuresDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Dispositivos em Falha</DialogTitle>
+            <DialogDescription>
+              {failureCount > 0 ? "Lista atualizada de dispositivos offline ou com erro." : "Nenhuma falha registrada neste momento."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[420px] overflow-y-auto pr-1">
             {initialLoading ? (
               <div className="rounded-lg border border-border bg-muted p-4">
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -396,7 +592,7 @@ export default function PainelOperacional() {
                   Carregando falhas...
                 </div>
               </div>
-            ) : failures.length === 0 ? (
+            ) : failureCount === 0 ? (
               <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">Nenhuma falha no momento.</div>
             ) : (
               <div className="space-y-3">
@@ -417,138 +613,9 @@ export default function PainelOperacional() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-0 xl:col-span-1 h-[357px] flex flex-col pb-[42px]">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base font-semibold">Últimos Acessos</CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Auto</span>
-                <Switch
-                  checked={latestAccessAutoRefresh}
-                  onCheckedChange={setLatestAccessAutoRefresh}
-                  aria-label="Atualização automática de últimos acessos"
-                />
-              </div>
-            </div>
-            <CardDescription className="text-xs">Últimos acessos dos portões veiculares (até 20 itens).</CardDescription>
-          </CardHeader>
-          <CardContent className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pl-6 pr-4" onScroll={handleLatestAccessesScroll}>
-            {initialLoading ? (
-              <div className="rounded-lg border border-border bg-muted p-4">
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Carregando últimos acessos...
-                </div>
-              </div>
-            ) : latestGateAccesses.length === 0 ? (
-              <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">
-                Sem acessos recentes para exibir.
-              </div>
-            ) : (
-              <div className="space-y-2 text-sm">
-                {latestGateAccesses.map((access, index) => {
-                  const isExit = isExitAccess(access.sentido);
-                  return (
-                    <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="flex w-full items-center overflow-hidden rounded-md bg-muted px-3 py-2 text-foreground">
-                      <span className="mr-2 inline-flex shrink-0 align-middle">
-                        {isExit ? (
-                          <LogOut className="h-[18px] w-[18px] text-rose-600" />
-                        ) : (
-                          <LogIn className="h-[18px] w-[18px] text-emerald-600" />
-                        )}
-                      </span>
-                      <span className="block min-w-0 truncate whitespace-nowrap">
-                        {access.tag} - {access.nome} - {access.descricao} - {access.quadra} {access.lote} - {formatApiDateTimeNoTimezone(access.validatedAt)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-2">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">Acessos Rápidos</h2>
-          <p className="text-xs text-muted-foreground">Atalhos para abrir porta ou portão com 1 clique.</p>
-        </div>
-        <div className="flex flex-wrap gap-5">
-          {shortcuts.map((shortcut) => {
-            const isRunning = runningShortcutId === shortcut.id;
-            const ShortcutIcon = shortcut.type === "door" ? DoorOpen : Warehouse;
-            return (
-              <div key={shortcut.id} className="relative h-[106px] w-[210px] rounded-xl border bg-card p-2">
-                <button
-                  type="button"
-                  onClick={() => void runShortcut(shortcut)}
-                  disabled={isRunning}
-                  className="flex h-full w-full items-center justify-between rounded-lg px-3 text-left transition-colors hover:bg-muted disabled:opacity-60"
-                >
-                  <div className="pr-6">
-                    <div className="text-sm font-semibold leading-tight text-foreground">{shortcut.label}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{shortcut.type === "door" ? "Porta" : `Portão ${shortcut.autoClose}s`}</div>
-                  </div>
-                  <ShortcutIcon className="h-7 w-7 shrink-0 text-foreground" />
-                </button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="absolute right-1 top-1 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Acoes do atalho"
-                    >
-                      <EllipsisVertical className="h-3.5 w-3.5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onSelect={() => removeShortcut(shortcut.id)}
-                      className="cursor-pointer text-rose-600 hover:bg-rose-50 hover:text-rose-700 focus:bg-rose-50 focus:text-rose-700"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            );
-          })}
-
-          <button
-            type="button"
-            onClick={() => setDialogOpen(true)}
-            className="flex h-[106px] w-[210px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/35 bg-primary/10 text-primary/55 transition-colors hover:border-primary/55 hover:bg-primary/15 hover:text-primary/80"
-          >
-            <Plus className="mb-2 h-8 w-8" />
-            <span className="text-xs font-medium">Adicionar</span>
-          </button>
-        </div>
-      </div>
-
-      {lastAction && (
-        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <div>
-            <p className="text-sm font-medium text-primary-dark">Última operação</p>
-            <p className="text-sm text-primary">{lastAction}</p>
           </div>
-        </div>
-      )}
-
-      {apiError && (
-        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-destructive">Erro</p>
-            <p className="text-sm text-destructive/80">{apiError}</p>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         setDialogOpen(open);

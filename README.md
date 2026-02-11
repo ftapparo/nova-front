@@ -29,8 +29,8 @@ As paginas devem seguir o mesmo conceito visual da tela de veiculos.
 ### 1) Estrutura de pagina
 
 - Use `PageContainer` (`@/components/layout/PageContainer`) como raiz da pagina.
-- Use `density="default"` (`max-w-5xl`) por padrao.
-- Use `density="wide"` (`max-w-6xl`) apenas para conteudo naturalmente denso (tabelas/relatorios).
+- Use `size="default"` (`max-w-5xl`) por padrao.
+- Use `size="wide"` (`max-w-6xl` e `2xl:max-w-7xl`) apenas para conteudo naturalmente denso (tabelas/relatorios).
 - Espacamento vertical principal: `space-y-6`.
 
 ### 2) Cabecalho

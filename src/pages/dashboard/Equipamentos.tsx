@@ -98,7 +98,7 @@ export default function Equipamentos() {
   };
 
   return (
-    <PageContainer density="wide">
+    <PageContainer size="wide">
       <PageHeader
         title="Equipamentos"
         description="Tabela unica de dispositivos com filtro por tipo."
