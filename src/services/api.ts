@@ -34,6 +34,7 @@ export interface GateItem {
   id: number;
   nome: string;
   numeroDispositivo: number;
+  sentido: string;
   ip: string;
   porta: number;
   healthcheckUrl: string;

@@ -1,4 +1,4 @@
-import { useState, type KeyboardEventHandler } from "react";
+﻿import { useState, type KeyboardEventHandler } from "react";
 import { DoorOpen, Warehouse, Loader2, Search, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,8 +26,13 @@ export default function ControleAcesso() {
   const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
   const [gateAllowed, setGateAllowed] = useState(false);
   const sortedDoors = [...(doors || [])].sort((a, b) => humanizeLabel(a.nome).localeCompare(humanizeLabel(b.nome), "pt-BR"));
+  const selectedGateItem = (gates || []).find((gate) => String(gate.numeroDispositivo) === selectedGate);
 
   const sanitizeDigits = (value: string) => value.replace(/\D/g, "");
+  const resolveGateSentido = (value: unknown): "E" | "S" => {
+    const normalized = String(value ?? "").trim().toUpperCase();
+    return normalized === "S" ? "S" : "E";
+  };
   const normalizeNumber = (value: unknown): number => {
     const num = Number(value);
     return Number.isFinite(num) ? num : 0;
@@ -66,6 +71,7 @@ export default function ControleAcesso() {
     setGateLoading(true);
     try {
       await handleOpenGate(selectedGate, autoClose);
+      const gateSentido = resolveGateSentido(selectedGateItem?.sentido);
       if (verifiedPerson) {
         const registerPayload = {
           dispositivo: Number(selectedGate),
@@ -75,7 +81,7 @@ export default function ControleAcesso() {
           autorizacaoLanc: normalizeChar(verifiedPerson.AUTORIZACAOLANC),
           origem: normalizeChar(verifiedPerson.TIPO),
           seqIdAcesso: normalizeNumber(verifiedPerson.SEQIDACESSO),
-          sentido: "E",
+          sentido: gateSentido,
           quadra: normalizeText(verifiedPerson.QUADRA),
           lote: normalizeText(verifiedPerson.LOTE),
           panico: normalizeChar(verifiedPerson.PANICO),
@@ -99,7 +105,7 @@ export default function ControleAcesso() {
   const onVerifyCpf = async () => {
     const cpfDigits = sanitizeDigits(cpf);
     if (cpfDigits.length < 11) {
-      setVerifyMessage("Informe um CPF válido.");
+      setVerifyMessage("Informe um CPF vÃ¡lido.");
       setVerifiedPerson(null);
       setGateAllowed(false);
       return;
@@ -112,20 +118,28 @@ export default function ControleAcesso() {
       const availableDevices = Array.from(
         new Set((gates || []).map((g) => g.numeroDispositivo)),
       );
-      const devicesToQuery = selectedGate
-        ? [Number(selectedGate)]
-        : (availableDevices.length ? availableDevices : DEFAULT_GATE_DEVICES);
+      let responses: PromiseSettledResult<AccessVerifyItem[]>[] = [];
 
-      if (!devicesToQuery.length) {
-        setVerifyMessage("Nenhum portão disponível para validação.");
-        setVerifiedPerson(null);
-        setGateAllowed(false);
-        return;
+      if (selectedGate) {
+        const gateDevice = Number(selectedGate);
+        const gateSentido = resolveGateSentido(selectedGateItem?.sentido);
+        responses = await Promise.allSettled([
+          api.accessVerify(cpfDigits, gateDevice, gateSentido),
+        ]);
+      } else {
+        const devicesToQuery = availableDevices.length ? availableDevices : DEFAULT_GATE_DEVICES;
+
+        if (!devicesToQuery.length) {
+          setVerifyMessage("Nenhum portao disponivel para validacao.");
+          setVerifiedPerson(null);
+          setGateAllowed(false);
+          return;
+        }
+
+        responses = await Promise.allSettled(
+          devicesToQuery.map((device) => api.accessVerify(cpfDigits, device, "E")),
+        );
       }
-
-      const responses = await Promise.allSettled(
-        devicesToQuery.map((device) => api.accessVerify(cpfDigits, device, "E")),
-      );
       const person = responses
         .filter((response): response is PromiseFulfilledResult<AccessVerifyItem[]> => response.status === "fulfilled")
         .flatMap((response) => response.value || [])[0] ?? null;
@@ -143,7 +157,7 @@ export default function ControleAcesso() {
 
       setVerifiedPerson(person);
       setGateAllowed(allowed);
-      setVerifyMessage(allowed ? "Acesso liberado para abertura do portão." : "Acesso não autorizado para abertura do portão.");
+      setVerifyMessage(allowed ? "Acesso liberado para abertura do portÃ£o." : "Acesso nÃ£o autorizado para abertura do portÃ£o.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Falha ao consultar CPF.";
       setVerifyMessage(message);
@@ -172,7 +186,7 @@ export default function ControleAcesso() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Controle de Acesso</h1>
-        <p className="text-muted-foreground">Gerencie a abertura de portas e portões do condomínio.</p>
+        <p className="text-muted-foreground">Gerencie a abertura de portas e portÃµes do condomÃ­nio.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -182,7 +196,7 @@ export default function ControleAcesso() {
               <DoorOpen className="h-5 w-5 text-primary" />
               <CardTitle className="text-base font-semibold">Portas</CardTitle>
             </div>
-            <CardDescription className="text-xs">Painel rápido de abertura por porta</CardDescription>
+            <CardDescription className="text-xs">Painel rÃ¡pido de abertura por porta</CardDescription>
           </CardHeader>
           <CardContent className="h-[calc(100%-78px)]">
             <div className="grid h-full auto-rows-fr grid-cols-2 gap-4 lg:grid-cols-3">
@@ -211,9 +225,9 @@ export default function ControleAcesso() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Warehouse className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base font-semibold">Portões</CardTitle>
+              <CardTitle className="text-base font-semibold">PortÃµes</CardTitle>
             </div>
-            <CardDescription className="text-xs">Selecione um portão e configure o fechamento</CardDescription>
+            <CardDescription className="text-xs">Selecione um portÃ£o e configure o fechamento</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -257,7 +271,7 @@ export default function ControleAcesso() {
                   <p className="font-medium">{humanizeLabel(verifiedPerson.NOME)}</p>
                   <p>Unidade: {verifiedPerson.QUADRA?.trim() || "--"} {verifiedPerson.LOTE?.trim() || "--"}</p>
                   <p>Tipo: {humanizeLabel(verifiedPerson.DESCRICAO || "--")}</p>
-                  <p>Permitido: {(verifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "Não"}</p>
+                  <p>Permitido: {(verifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "NÃ£o"}</p>
                 </>
               ) : (
                 <p className="pt-2 text-xs">Insira um CPF e pressione Enter, Tab ou a lupa para validar o acesso.</p>
@@ -274,12 +288,12 @@ export default function ControleAcesso() {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="gate-select" className="text-xs">Portão</Label>
+              <Label htmlFor="gate-select" className="text-xs">PortÃ£o</Label>
               <Select value={selectedGate} onValueChange={(value) => {
                 setSelectedGate(value);
               }}>
                 <SelectTrigger id="gate-select" className="h-9 text-sm">
-                  <SelectValue placeholder="Selecione um portão" />
+                  <SelectValue placeholder="Selecione um portÃ£o" />
                 </SelectTrigger>
                 <SelectContent>
                   {(gates || []).map((g) => (
@@ -292,7 +306,7 @@ export default function ControleAcesso() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="auto-close" className="text-xs">Fechamento automático (segundos)</Label>
+              <Label htmlFor="auto-close" className="text-xs">Fechamento automÃ¡tico (segundos)</Label>
               <Input
                 id="auto-close"
                 type="number"
@@ -301,7 +315,7 @@ export default function ControleAcesso() {
                 onChange={(e) => setAutoClose(Number(e.target.value))}
                 className="h-9 text-sm"
               />
-              <p className="text-xs text-muted-foreground">O portão fechará automaticamente após este tempo</p>
+              <p className="text-xs text-muted-foreground">O portÃ£o fecharÃ¡ automaticamente apÃ³s este tempo</p>
             </div>
 
             <Button
@@ -311,7 +325,7 @@ export default function ControleAcesso() {
               size="lg"
             >
               {gateLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Warehouse className="mr-2 h-4 w-4" />}
-              Abrir Portão
+              Abrir PortÃ£o
             </Button>
 
             <Button
