@@ -17,15 +17,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useDashboard } from "@/contexts/DashboardContext";
-import { api, type ExhaustModuleStatus, type ExhaustProcessMemoryItem } from "@/services/api";
+import { api, type ExhaustProcessMemoryItem } from "@/services/api";
 import { humanizeLabel } from "@/lib/utils";
+import PageContainer from "@/components/layout/PageContainer";
+import PageHeader from "@/components/layout/PageHeader";
+import { notify } from "@/lib/notify";
 
 const BLOCKS = ["A", "B", "C"];
 const DEFAULT_DURATION_MINUTES = 180;
 const MIN_CUSTOM_DURATION_MINUTES = 30;
 
 export default function Exaustores() {
-  const { handleExhaustOn, handleExhaustOff } = useDashboard();
+  const { handleExhaustOn, handleExhaustOff, exhaustDevices } = useDashboard();
 
   const [block, setBlock] = useState("");
   const [apartment, setApartment] = useState("");
@@ -36,7 +39,6 @@ export default function Exaustores() {
   const [exhaustToConfirmOff, setExhaustToConfirmOff] = useState<ExhaustProcessMemoryItem | null>(null);
 
   const [activeExhausts, setActiveExhausts] = useState<ExhaustProcessMemoryItem[]>([]);
-  const [moduleStatuses, setModuleStatuses] = useState<Record<string, ExhaustModuleStatus>>({});
   const [processLoading, setProcessLoading] = useState(false);
   const [processError, setProcessError] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<number | null>(null);
@@ -52,35 +54,25 @@ export default function Exaustores() {
     [activeExhausts],
   );
 
-  const sortedModuleEntries = useMemo(
-    () => Object.entries(moduleStatuses).sort((a, b) => a[0].localeCompare(b[0], "pt-BR")),
-    [moduleStatuses],
-  );
-
-  const onlineModulesCount = useMemo(
-    () => sortedModuleEntries.filter(([, moduleStatus]) => Boolean(moduleStatus.status) && !moduleStatus.error).length,
-    [sortedModuleEntries],
-  );
-
-  const offlineModulesCount = useMemo(
-    () => sortedModuleEntries.length - onlineModulesCount,
-    [sortedModuleEntries.length, onlineModulesCount],
-  );
+  const resolveModuleIdBySelection = (towerValue: string, apartmentValue: string): string | null => {
+    const tower = towerValue.trim().toUpperCase();
+    const lastDigitMatch = apartmentValue.trim().match(/(\d)\D*$/);
+    if (!tower || !lastDigitMatch) return null;
+    const final = Number(lastDigitMatch[1]);
+    if (!Number.isFinite(final) || final < 1 || final > 8) return null;
+    const group = final <= 4 ? "14" : "58";
+    return `${tower}_${group}`;
+  };
 
   const loadProcessStatus = useCallback(async () => {
     setProcessLoading(true);
     setProcessError(null);
 
     try {
-      const statusResponse = await api.exhaustStatusAll();
-      setActiveExhausts(statusResponse.memory || []);
-      setModuleStatuses(statusResponse.modules || {});
-      const latestUpdatedAt = Object.values(statusResponse.modules || {}).reduce<number | null>((latest, moduleStatus) => {
-        if (!moduleStatus.updatedAt) return latest;
-        if (!latest || moduleStatus.updatedAt > latest) return moduleStatus.updatedAt;
-        return latest;
-      }, null);
-      setGeneratedAt(latestUpdatedAt);
+      const processStatus = await api.exhaustProcessStatus();
+      setActiveExhausts(processStatus.memory || []);
+      const timestamp = processStatus.generatedAt ? new Date(processStatus.generatedAt).getTime() : null;
+      setGeneratedAt(typeof timestamp === "number" && Number.isFinite(timestamp) ? timestamp : null);
     } catch (err: unknown) {
       setProcessError(`Erro ao carregar status: ${err instanceof Error ? err.message : "Desconhecido"}`);
     } finally {
@@ -105,6 +97,30 @@ export default function Exaustores() {
 
   const onTurnOn = async () => {
     if (!canTurnOn) return;
+
+    const moduleId = resolveModuleIdBySelection(block, apartment);
+    if (!moduleId) {
+      notify.warning("Apartamento invalido", { description: "Informe um apartamento com final de 1 a 8." });
+      return;
+    }
+
+    const cachedModule = exhaustDevices.find((device) => device.id.trim().toUpperCase() === moduleId);
+    if (!cachedModule) {
+      notify.warning("Modulo nao encontrado no cache", {
+        description: `Nao foi possivel localizar o modulo ${moduleId}. Atualize os equipamentos e tente novamente.`,
+      });
+      return;
+    }
+
+    if (!cachedModule.online) {
+      notify.error("Modulo offline", {
+        description: `${cachedModule.nome || moduleId} esta offline. Comando de ligar nao foi enviado.`,
+      });
+      return;
+    }
+
+    notify.success("Modulo online", { description: `${cachedModule.nome || moduleId} pronto para acionamento.` });
+
     setOnLoading(true);
 
     try {
@@ -155,31 +171,22 @@ export default function Exaustores() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Controle de Exaustores</h1>
-          <p className="text-muted-foreground">Gerencie os exaustores das áreas comuns por bloco e apartamento.</p>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={loadProcessStatus}
-            disabled={processLoading}
-            aria-label="Atualizar status dos exaustores"
-            title="Atualizar status dos exaustores"
-            className="text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15"
-          >
-            <RefreshCw className={`h-4 w-4 ${processLoading ? "animate-spin" : ""}`} />
+    <PageContainer>
+      <PageHeader
+        title="Controle de Exaustores"
+        description="Gerencie os exaustores das areas comuns por bloco e apartamento."
+        actions={(
+          <Button variant="outline" onClick={loadProcessStatus} disabled={processLoading} className="h-9">
+            <RefreshCw className={`mr-2 h-4 w-4 ${processLoading ? "animate-spin" : ""}`} />
+            Atualizar
           </Button>
-          <span className="text-xs text-muted-foreground">
-            {generatedAt ? `Atualizado em: ${new Date(generatedAt).toLocaleString("pt-BR")}` : "Atualizado em: --"}
-          </span>
-        </div>
-      </div>
+        )}
+      />
+      <p className="text-xs text-muted-foreground">
+        {generatedAt ? `Atualizado em: ${new Date(generatedAt).toLocaleString("pt-BR")}` : "Atualizado em: --"}
+      </p>
 
-      <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+      <div>
         <Card className="h-full w-full p-5">
           <CardHeader className="p-0">
             <div className="flex items-center gap-2">
@@ -278,77 +285,6 @@ export default function Exaustores() {
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="h-full w-full p-5">
-          <CardHeader className="p-0">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Power className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle className="text-base font-semibold">Status dos módulos</CardTitle>
-                  <CardDescription className="text-xs">Online quando retorna status</CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
-                  Online: {onlineModulesCount}
-                </Badge>
-                <Badge className="rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50">
-                  Offline: {offlineModulesCount}
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-0 mt-5">
-            {!hasLoadedInitialData && processLoading ? (
-              <div className="rounded-lg border border-border bg-muted px-4 py-8">
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Carregando status dos módulos...
-                </div>
-              </div>
-            ) : sortedModuleEntries.length === 0 ? (
-              <div className="rounded-lg border border-border bg-muted px-4 py-3">
-                <p className="text-sm text-muted-foreground">Nenhum módulo retornado.</p>
-              </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedModuleEntries.map(([moduleId, moduleStatus]) => {
-                  const isOnline = Boolean(moduleStatus.status) && !moduleStatus.error;
-                  const deviceName = moduleStatus.status?.Status?.DeviceName || moduleStatus.status?.Status?.FriendlyName?.[0];
-                  const moduleIp = moduleStatus.host || "--";
-
-                  return (
-                    <div key={moduleId} className="relative rounded-xl border border-border bg-card px-4 py-4">
-                      <Badge
-                        className={
-                          isOnline
-                            ? "absolute right-4 top-3 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"
-                            : "absolute right-4 top-3 rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-50"
-                        }
-                      >
-                        {isOnline ? "Online" : "Offline"}
-                      </Badge>
-
-                      <div className="space-y-1 pr-20 text-xs text-muted-foreground">
-                        <p>
-                          Módulo: <span className="font-semibold text-foreground">{moduleId}</span>
-                        </p>
-                        <p>
-                          Dispositivo: <span className="font-semibold text-foreground">{deviceName || "--"}</span>
-                        </p>
-                        <p>
-                          IP: <span className="font-semibold text-foreground">{moduleIp}</span>
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -494,6 +430,6 @@ export default function Exaustores() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

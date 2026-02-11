@@ -10,6 +10,8 @@ import { useDashboard } from "@/contexts/DashboardContext";
 import { humanizeLabel } from "@/lib/utils";
 import { notify } from "@/lib/notify";
 import { api, type AccessVerifyItem } from "@/services/api";
+import PageContainer from "@/components/layout/PageContainer";
+import PageHeader from "@/components/layout/PageHeader";
 
 const DEFAULT_GATE_DEVICES = [9, 10];
 
@@ -183,13 +185,10 @@ export default function ControleAcesso() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Controle de Acesso</h1>
-        <p className="text-muted-foreground">Gerencie a abertura de portas e portÃµes do condomÃ­nio.</p>
-      </div>
+    <PageContainer className="max-w-8xl">
+      <PageHeader title="Controle de Acesso" description="Gerencie a abertura de portas e portoes do condominio." />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)]">
         <Card className="h-full min-h-[520px] pb-8">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -232,39 +231,41 @@ export default function ControleAcesso() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="gate-cpf" className="text-xs">CPF</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="gate-cpf"
-                  inputMode="numeric"
-                  placeholder="Digite o CPF"
-                  value={cpf}
-                  onChange={(e) => {
-                    setCpf(e.target.value);
-                    resetGateValidation();
-                  }}
-                  onKeyDown={onCpfKeyDown}
-                  className="h-9 text-sm"
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative w-full">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="gate-cpf"
+                    inputMode="numeric"
+                    placeholder="Digite o CPF"
+                    value={cpf}
+                    onChange={(e) => {
+                      setCpf(e.target.value);
+                      resetGateValidation();
+                    }}
+                    onKeyDown={onCpfKeyDown}
+                    className="h-9 pl-9 text-sm"
+                  />
+                </div>
                 <Button
                   type="button"
-                  variant="ghost"
                   onClick={onVerifyCpf}
                   disabled={sanitizeDigits(cpf).length < 11 || verifyLoading}
-                  className="h-9 px-3 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
+                  className="h-9"
                 >
-                  {verifyLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {verifyLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+                  Buscar
                 </Button>
               </div>
             </div>
 
             <div
-              className={`min-h-[132px] rounded-md border px-3 py-2 text-sm ${
-                !verifyMessage && !verifiedPerson
-                  ? "border-border bg-muted text-muted-foreground"
-                  : gateAllowed
-                    ? "border-emerald-200 bg-emerald-100 text-emerald-900"
-                    : "border-rose-200 bg-rose-100 text-rose-900"
-              }`}
+              className={`min-h-[132px] rounded-md border px-3 py-2 text-sm ${!verifyMessage && !verifiedPerson
+                ? "border-border bg-muted text-muted-foreground"
+                : gateAllowed
+                  ? "border-emerald-200 bg-emerald-100 text-emerald-900"
+                  : "border-rose-200 bg-rose-100 text-rose-900"
+                }`}
             >
               {verifiedPerson ? (
                 <>
@@ -340,6 +341,6 @@ export default function ControleAcesso() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

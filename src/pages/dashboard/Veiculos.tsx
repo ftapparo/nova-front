@@ -1,13 +1,16 @@
 import { useMemo, useState, type KeyboardEventHandler } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Pencil, Plus, Search, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, type AccessVerifyItem, type CpfQueryResponse, type VehicleLookupResponse, type VehicleSummary } from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useDashboard } from "@/contexts/DashboardContext";
+import PageContainer from "@/components/layout/PageContainer";
+import PageHeader from "@/components/layout/PageHeader";
+import SectionCardHeader from "@/components/layout/SectionCardHeader";
 
 type ApiErrorWithPayload = Error & {
   status?: number;
@@ -345,17 +348,11 @@ export default function Veiculos() {
 
   return (
     // ✅ 1) Container com max-width e centralizado (evita esticar em ultra-wide)
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Veiculos</h1>
-        <p className="text-muted-foreground">Cadastro, tag e desvinculo de veiculos por proprietario.</p>
-      </div>
+    <PageContainer>
+      <PageHeader title="Veiculos" description="Cadastro, tag e desvinculo de veiculos por proprietario." />
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Buscar Proprietario</CardTitle>
-          <CardDescription>Digite o CPF para carregar dados e veiculos cadastrados.</CardDescription>
-        </CardHeader>
+        <SectionCardHeader title="Buscar Proprietario" description="Digite o CPF para carregar dados e veiculos cadastrados." />
 
         <CardContent className="space-y-3">
           {/* ✅ 2) Input + ação juntos, com largura controlada */}
@@ -421,16 +418,16 @@ export default function Veiculos() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-base">Veiculos do Proprietario</CardTitle>
-            <CardDescription>Gerencie tag, edicao e desvinculo de propriedade.</CardDescription>
-          </div>
-          <Button type="button" onClick={openAddVehicleModal} disabled={!hasOwner} className="shrink-0">
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar veiculo
-          </Button>
-        </CardHeader>
+        <SectionCardHeader
+          title="Veiculos do Proprietario"
+          description="Gerencie tag, edicao e desvinculo de propriedade."
+          action={
+            <Button type="button" onClick={openAddVehicleModal} disabled={!hasOwner}>
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar veiculo
+            </Button>
+          }
+        />
 
         <CardContent>
           {loadingList ? (
@@ -684,6 +681,6 @@ export default function Veiculos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { api, type AccessVerifyItem } from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useDashboard } from "@/contexts/DashboardContext";
+import PageContainer from "@/components/layout/PageContainer";
+import PageHeader from "@/components/layout/PageHeader";
 
 type FailureItem = {
   kind: "Porta" | "Portão" | "Exaustor";
@@ -337,9 +339,10 @@ export default function PainelOperacional() {
   const initialLoading = !hasLoadedInitialData && refreshing;
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
+      <PageHeader title="Painel Operacional" description="Visao geral, falhas, ultimos acessos e atalhos de operacao." />
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
               <CardTitle className="text-base font-semibold text-foreground">Portas</CardTitle>
@@ -352,7 +355,7 @@ export default function PainelOperacional() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
               <CardTitle className="text-base font-semibold text-foreground">Portões</CardTitle>
@@ -365,7 +368,7 @@ export default function PainelOperacional() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
               <CardTitle className="text-base font-semibold text-foreground">Exaustores</CardTitle>
@@ -479,7 +482,7 @@ export default function PainelOperacional() {
             const isRunning = runningShortcutId === shortcut.id;
             const ShortcutIcon = shortcut.type === "door" ? DoorOpen : Warehouse;
             return (
-              <div key={shortcut.id} className="relative h-[106px] w-[210px] rounded-xl border bg-white p-2">
+              <div key={shortcut.id} className="relative h-[106px] w-[210px] rounded-xl border bg-card p-2">
                 <button
                   type="button"
                   onClick={() => void runShortcut(shortcut)}
@@ -713,6 +716,6 @@ export default function PainelOperacional() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

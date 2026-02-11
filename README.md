@@ -1,73 +1,65 @@
-# Welcome to your Lovable project
+# Nova Residence Frontend
 
-## Project info
+Frontend web do portal administrativo da portaria.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Stack
 
-## How can I edit this code?
+- Vite
+- React + TypeScript
+- Tailwind CSS
+- shadcn/ui
 
-There are several ways of editing your application.
+## Execucao local
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+```bash
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Build
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+```
 
-**Use GitHub Codespaces**
+## UI/UX Guidelines (padrao global)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+As paginas devem seguir o mesmo conceito visual da tela de veiculos.
 
-## What technologies are used for this project?
+### 1) Estrutura de pagina
 
-This project is built with:
+- Use `PageContainer` (`@/components/layout/PageContainer`) como raiz da pagina.
+- Use `density="default"` (`max-w-5xl`) por padrao.
+- Use `density="wide"` (`max-w-6xl`) apenas para conteudo naturalmente denso (tabelas/relatorios).
+- Espacamento vertical principal: `space-y-6`.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 2) Cabecalho
 
-## How can I deploy this project?
+- Use `PageHeader` (`@/components/layout/PageHeader`) com:
+  - titulo: `text-2xl font-bold text-foreground`
+  - descricao: `text-muted-foreground`
+- Acoes globais da pagina devem entrar na prop `actions`.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### 3) Secoes em card
 
-## Can I connect a custom domain to my Lovable project?
+- Use `Card` + `SectionCardHeader` (`@/components/layout/SectionCardHeader`) para secoes principais.
+- Titulos de secao devem usar `text-base`.
+- Acoes da secao devem ficar ao lado direito no header do card.
 
-Yes, you can!
+### 4) Formularios e acoes
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Campos e selects com altura padrao `h-9`.
+- Botoes principais de formulario com altura `h-9` (ou `h-11` quando semantica pedir CTA maior).
+- Em buscas, manter input e botao juntos e evitar acao primaria somente por icone.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### 5) Cores e superficies
+
+- Use tokens de tema (`bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `border-*`).
+- Evite hex inline em paginas (`#...`).
+- Estados de feedback devem seguir tokens semanticos (`destructive`, tons `emerald/rose` quando aplicavel).
+
+## Componentes de layout compartilhados
+
+- `src/components/layout/PageContainer.tsx`
+- `src/components/layout/PageHeader.tsx`
+- `src/components/layout/SectionCardHeader.tsx`
