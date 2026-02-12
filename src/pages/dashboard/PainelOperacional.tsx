@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Switch } from "@/components/ui/switch";
 import { api, type AccessVerifyItem } from "@/services/api";
 import { notify } from "@/lib/notify";
-import { useDashboard } from "@/contexts/DashboardContext";
+import { useDashboard, type LatestGateAccessItem } from "@/contexts/DashboardContext";
 import PageContainer from "@/components/layout/PageContainer";
 
 type FailureItem = {
@@ -37,6 +37,7 @@ type QuickShortcut = {
 
 const SHORTCUTS_STORAGE_KEY = "nr.quick-access.v1";
 const WIDE_VIEWPORT_MIN_WIDTH = 1560;
+const MOBILE_VIEWPORT_MAX_WIDTH = 639;
 const MAX_QUICK_SHORTCUTS = 6;
 
 const isExitAccess = (direction: string): boolean => {
@@ -93,6 +94,8 @@ export default function PainelOperacional() {
   const [gateAllowed, setGateAllowed] = useState(false);
   const [failuresDialogOpen, setFailuresDialogOpen] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [selectedLatestAccess, setSelectedLatestAccess] = useState<LatestGateAccessItem | null>(null);
 
   useEffect(() => {
     if (!refreshing) setHasLoadedInitialData(true);
@@ -103,6 +106,7 @@ export default function PainelOperacional() {
 
     const evaluateViewport = () => {
       setIsWideViewport(window.innerWidth >= WIDE_VIEWPORT_MIN_WIDTH);
+      setIsMobileViewport(window.innerWidth <= MOBILE_VIEWPORT_MAX_WIDTH);
     };
 
     evaluateViewport();
@@ -368,6 +372,11 @@ export default function PainelOperacional() {
     setFailuresDialogOpen(true);
   };
 
+  const handleOpenLatestAccessDetails = (access: LatestGateAccessItem) => {
+    if (!isMobileViewport) return;
+    setSelectedLatestAccess(access);
+  };
+
   return (
     <PageContainer size={isWideViewport ? "wide" : "default"} className="min-w-0">
       <h1 className="sr-only">Painel Operacional</h1>
@@ -457,7 +466,7 @@ export default function PainelOperacional() {
                 />
               </div>
             </div>
-            <CardDescription>Últimos acessos dos portões veiculares (até 20 itens).</CardDescription>
+            <CardDescription>Últimos acessos dos portões veiculares.</CardDescription>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto" onScroll={handleLatestAccessesScroll}>
             {initialLoading ? (
@@ -479,29 +488,48 @@ export default function PainelOperacional() {
                   const residentName = truncateResidentName(access.nome, 25);
                   const locationSummary = `${access.quadra} ${access.lote}`;
                   const accessSummary = `${access.tag} — ${residentName} • ${access.descricao} • ${locationSummary} • ${formattedDate}`;
+                  const mobilePrimaryLine = `${access.tag} — ${residentName}`;
                   const compactPrimaryLine = `${access.tag} — ${residentName} • ${locationSummary}`;
                   const compactSecondaryLine = `${access.descricao} • ${formattedDate}`;
-                  return (
-                    <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="rounded-lg border border-border/60 bg-muted/50 p-3">
-                      <div className="flex items-center gap-3">
-                        <span className={`inline-flex rounded-full bg-background/80 p-1 ${isExit ? "text-status-danger-soft-foreground" : "text-status-success-soft-foreground"}`}>
-                          {isExit ? (
-                            <LogOut className="h-4 w-4" />
-                          ) : (
-                            <LogIn className="h-4 w-4" />
-                          )}
-                        </span>
-                        <div className="min-w-0 flex-1" title={accessSummary}>
-                          {isWideViewport ? (
-                            <p className="truncate text-[12.5px] font-semibold leading-snug tracking-[-0.02em]">{accessSummary}</p>
-                          ) : (
-                            <>
-                              <p className="truncate text-[12px] font-semibold leading-tight tracking-[-0.02em] text-foreground">{compactPrimaryLine}</p>
-                              <p className="truncate text-[11.5px] font-medium leading-tight tracking-[-0.015em]">{compactSecondaryLine}</p>
-                            </>
-                          )}
-                        </div>
+                  const accessRowContent = (
+                    <div className="flex items-center gap-3">
+                      <span className={`inline-flex rounded-full bg-background/80 p-1 ${isExit ? "text-status-danger-soft-foreground" : "text-status-success-soft-foreground"}`}>
+                        {isExit ? (
+                          <LogOut className="h-4 w-4" />
+                        ) : (
+                          <LogIn className="h-4 w-4" />
+                        )}
+                      </span>
+                      <div className="min-w-0 flex-1" title={accessSummary}>
+                        {isMobileViewport ? (
+                          <p className="truncate text-[12px] font-semibold leading-tight tracking-[-0.02em] text-foreground">{mobilePrimaryLine}</p>
+                        ) : isWideViewport ? (
+                          <p className="truncate text-[12.5px] font-semibold leading-snug tracking-[-0.02em]">{accessSummary}</p>
+                        ) : (
+                          <>
+                            <p className="truncate text-[12px] font-semibold leading-tight tracking-[-0.02em] text-foreground">{compactPrimaryLine}</p>
+                            <p className="truncate text-[11.5px] font-medium leading-tight tracking-[-0.015em]">{compactSecondaryLine}</p>
+                          </>
+                        )}
                       </div>
+                    </div>
+                  );
+
+                  return isMobileViewport ? (
+                    <button
+                      key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`}
+                      type="button"
+                      onClick={() => handleOpenLatestAccessDetails(access)}
+                      className="w-full cursor-pointer rounded-lg border border-border/60 bg-muted/50 p-3 text-left hover:bg-muted/80"
+                    >
+                      {accessRowContent}
+                    </button>
+                  ) : (
+                    <div
+                      key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`}
+                      className="rounded-lg border border-border/60 bg-muted/50 p-3"
+                    >
+                      {accessRowContent}
                     </div>
                   );
                 })}
@@ -513,9 +541,9 @@ export default function PainelOperacional() {
         <div className="order-1 min-w-0 w-full space-y-2 xl:order-2 xl:max-w-[460px] xl:shrink-0">
           <div>
             <h2 className="typo-section-title">Acessos Rápidos</h2>
-            <p className="typo-caption">Atalhos para abrir porta ou portão com 1 clique.</p>
+            <p className="typo-caption">Comandos de abertura rápida de portas e portões.</p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 py-2">
             {shortcuts.map((shortcut) => {
               const isRunning = runningShortcutId === shortcut.id;
               const ShortcutIcon = shortcut.type === "door" ? DoorOpen : Warehouse;
@@ -794,6 +822,29 @@ export default function PainelOperacional() {
               Abrir o portão
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(selectedLatestAccess)} onOpenChange={(open) => { if (!open) setSelectedLatestAccess(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do acesso</DialogTitle>
+            <DialogDescription>
+              {selectedLatestAccess ? `${selectedLatestAccess.tag} - ${selectedLatestAccess.nome}` : "Selecione um acesso."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedLatestAccess ? (
+            <div className="space-y-2 typo-body">
+              <p><strong>Tag:</strong> {selectedLatestAccess.tag}</p>
+              <p><strong>Morador:</strong> {selectedLatestAccess.nome}</p>
+              <p><strong>Tipo:</strong> {selectedLatestAccess.descricao}</p>
+              <p><strong>Unidade:</strong> {selectedLatestAccess.quadra} {selectedLatestAccess.lote}</p>
+              <p><strong>Sentido:</strong> {isExitAccess(selectedLatestAccess.sentido) ? "Saída" : "Entrada"}</p>
+              <p><strong>Data/Hora:</strong> {formatApiDateTimeNoTimezone(selectedLatestAccess.validatedAt)}</p>
+              <p><strong>Portão:</strong> {selectedLatestAccess.gateName} ({selectedLatestAccess.gateId})</p>
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
     </PageContainer>
