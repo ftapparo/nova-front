@@ -243,6 +243,10 @@ export interface VehicleSummary {
   SEQUNIDADE: number | null;
   PROPRIETARIO: number | null;
   TAGVEICULO: string | null;
+  OWNERNOME?: string | null;
+  OWNERCPF?: string | null;
+  UNIDADEQUADRA?: string | null;
+  UNIDADELOTE?: string | null;
 }
 
 export interface VehicleDetailsResponse {

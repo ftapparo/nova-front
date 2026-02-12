@@ -37,11 +37,21 @@ const LOOKUP_ATTEMPT_LABELS = ["primeira", "segunda", "terceira"];
 
 const normalizePlate = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
 const normalizeDigits = (value: string) => value.replace(/\D/g, "");
-type LookupAttemptStatus = "pending" | "success" | "error";
+const normalizeSeq = (value: unknown): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+const formatCpf = (value: string | null | undefined): string => {
+  const digits = normalizeDigits(String(value || ""));
+  if (digits.length !== 11) return String(value || "nao informado");
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+};
+type LookupAttemptStatus = "pending" | "success" | "warning" | "error";
 type LookupAttemptLine = {
   id: string;
   status: LookupAttemptStatus;
   message: string;
+  details?: string[];
 };
 
 const isSwapConfirmationError = (error: unknown): boolean => {
@@ -243,6 +253,74 @@ export default function Veiculos() {
     setManualColor("");
 
     try {
+      const localDetails = await api.vehicleByPlate(plate);
+      const localVehicle = localDetails?.vehicle ?? null;
+
+      if (localDetails?.exists && localVehicle) {
+        const currentOwnerSeq = normalizeSeq(ownerData?.person?.sequencia);
+        const currentUnitSeq = selectedUnitSeq ? normalizeSeq(selectedUnitSeq) : 0;
+        const vehicleOwnerSeq = normalizeSeq(localVehicle.PROPRIETARIO);
+        const vehicleUnitSeq = normalizeSeq(localVehicle.SEQUNIDADE);
+        const isLinkedToAny = vehicleOwnerSeq > 0 || vehicleUnitSeq > 0;
+        const isDifferentOwner = vehicleOwnerSeq !== currentOwnerSeq || vehicleUnitSeq !== currentUnitSeq;
+
+        if (isLinkedToAny && isDifferentOwner) {
+          const ownerName = (localVehicle.OWNERNOME || "").trim() || `SEQ ${vehicleOwnerSeq}`;
+          const ownerCpf = formatCpf(localVehicle.OWNERCPF);
+          const unit = (localVehicle.UNIDADELOTE || "").trim() || String(vehicleUnitSeq || "--");
+          const block = (localVehicle.UNIDADEQUADRA || "").trim() || "--";
+          setLookupAttemptLines([
+            {
+              id: `LOCAL-CONFLICT-${Date.now()}`,
+              status: "warning",
+              message: "Placa já vinculada a outro cadastro.",
+              details: [
+                `Proprietário: ${ownerName}`,
+                `CPF: ${ownerCpf}`,
+                `Unidade: ${unit} | Bloco: ${block}`,
+                "Para transferir, acesse o cadastro do CPF atual e remova o veículo primeiro.",
+              ],
+            },
+          ]);
+          return;
+        }
+        const sourceMessage = isLinkedToAny ?
+          "Veículo ja cadastrado para este proprietario na base local." :
+          "Veículo encontrado na base local.";
+        setLookupAttemptLines([{ id: `LOCAL-${Date.now()}`, status: "success", message: sourceMessage, },]);
+        const hasAnyData = Boolean(localVehicle.MARCA || localVehicle.MODELO || localVehicle.COR);
+        setLookupResult({
+          plate,
+          sources: [{
+            name: "LOCAL",
+            success: true,
+            durationMs: 0,
+            message: sourceMessage,
+            data: {
+              brand: localVehicle.MARCA || null,
+              model: localVehicle.MODELO || null,
+              color: localVehicle.COR || null,
+            },
+          }],
+          consolidated: {
+            brand: localVehicle.MARCA || null,
+            model: localVehicle.MODELO || null,
+            color: localVehicle.COR || null,
+            sourceUsedByField: {
+              brand: localVehicle.MARCA ? "LOCAL" : null,
+              model: localVehicle.MODELO ? "LOCAL" : null,
+              color: localVehicle.COR ? "LOCAL" : null,
+            },
+          },
+          overallSuccess: hasAnyData,
+        });
+
+        setManualBrand(localVehicle.MARCA || "");
+        setManualModel(localVehicle.MODELO || "");
+        setManualColor(localVehicle.COR || "");
+        return;
+      }
+
       const attemptedSources: VehicleLookupSourceResult[] = [];
       let consolidatedResult: VehicleLookupResponse["consolidated"] | null = null;
 
@@ -740,20 +818,33 @@ export default function Veiculos() {
                     key={line.id}
                     className={`flex items-center justify-between rounded-md border px-3 py-2 typo-body ${line.status === "success"
                       ? "state-success-soft border-status-success-solid/40"
+                      : line.status === "warning"
+                        ? "state-warning-soft border-status-warning-soft-border"
                       : line.status === "error"
                         ? "state-danger-soft border-status-danger-solid/40"
                         : "border-border bg-muted text-muted-foreground"
                       }`}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-start gap-2">
                       {line.status === "pending" ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : line.status === "success" ? (
                         <CheckCircle2 className="h-4 w-4 text-status-success-solid" />
+                      ) : line.status === "warning" ? (
+                        <AlertTriangle className="h-4 w-4 text-status-warning-soft-foreground" />
                       ) : (
                         <XCircle className="h-4 w-4 text-status-danger-solid" />
                       )}
-                      <span>{line.message}</span>
+                      <span className="space-y-1">
+                        <span className="block">{line.message}</span>
+                        {line.details?.length ? (
+                          <span className="block typo-caption space-y-0.5">
+                            {line.details.map((detail, index) => (
+                              <span key={`${line.id}-detail-${index}`} className="block">{detail}</span>
+                            ))}
+                          </span>
+                        ) : null}
+                      </span>
                     </span>
                   </div>
                 ))}
