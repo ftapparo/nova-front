@@ -1,15 +1,13 @@
 @import "./theme/theme.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-barlow antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 

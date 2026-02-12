@@ -185,7 +185,7 @@ export default function ControleAcesso() {
   };
 
   return (
-    <PageContainer className="max-w-8xl">
+    <PageContainer className="max-w-[90rem]">
       <PageHeader title="Controle de Acesso" description="Gerencie a abertura de portas e portoes do condominio." />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)]">
