@@ -10,7 +10,7 @@ import Login from "./pages/Login";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import PainelOperacional from "./pages/dashboard/PainelOperacional";
 import ControleAcesso from "./pages/dashboard/ControleAcesso";
-import Exhausts from "./pages/dashboard/Exhausts";
+import Exhausts from "./pages/dashboard/Exaustores";
 import Equipamentos from "./pages/dashboard/Equipamentos";
 import Veiculos from "./pages/dashboard/Veiculos";
 
