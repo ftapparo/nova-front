@@ -58,19 +58,13 @@ export default function AppSidebar() {
       collapsible="icon"
       className={
         isCollapsed
-          ? "[&_[data-sidebar=sidebar]]:bg-primary [&_[data-sidebar=sidebar]]:text-primary-foreground [&_[data-sidebar=header]]:border-primary/35 [&_[data-sidebar=footer]]:border-primary/35"
+          ? "[&_[data-sidebar=sidebar]]:bg-[var(--color-brand-purple)] [&_[data-sidebar=sidebar]]:text-primary-foreground [&_[data-sidebar=header]]:border-white/20 [&_[data-sidebar=footer]]:border-white/20"
           : undefined
       }
     >
       <SidebarHeader className="h-14 border-b border-sidebar-border p-0">
-        <div className="flex h-full items-center gap-3 px-4">
-          {!isCollapsed && <BrandLogo className="h-8 w-8" fallbackClassName="h-8 w-8" />}
-          {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="typo-body font-semibold text-sidebar-foreground">Nova Residence</span>
-              <span className="typo-caption text-sidebar-foreground/60">Portaria</span>
-            </div>
-          )}
+        <div className="flex h-full items-center justify-center px-2">
+          <BrandLogo className="h-20 w-20" fallbackClassName="h-20 w-20" forceWhite={isCollapsed} />
         </div>
       </SidebarHeader>
 
@@ -86,8 +80,8 @@ export default function AppSidebar() {
                       to={item.url}
                       end={item.url === "/dashboard"}
                       className={`flex items-center gap-3 ${isCollapsed
-                          ? "text-primary-foreground/90 hover:bg-primary-dark/40 hover:text-primary-foreground"
-                          : ""
+                        ? "text-primary-foreground/90 hover:bg-primary-dark/40 hover:text-primary-foreground"
+                        : ""
                         }`}
                       activeClassName={
                         isCollapsed

@@ -402,23 +402,23 @@ export default function Veiculos() {
               type="button"
               onClick={() => void onSearchCpf()}
               disabled={normalizeDigits(cpf).length < 11 || loadingOwner}
-              className={`h-9 ${getCompactButtonClasses("primary")}`}
+              className="h-9 w-9 p-0 sm:w-auto sm:px-4"
               aria-label="Buscar Pessoa"
             >
               {loadingOwner ? (
-                <Loader2 className={`${iconSpacingClass} ${compactIconSizeClass} animate-spin`} />
+                <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
               ) : (
-                <Search className={`${iconSpacingClass} ${compactIconSizeClass}`} />
+                <Search className="h-4 w-4 sm:mr-2" />
               )}
-              {renderButtonLabel("Buscar")}
+              <span className="hidden sm:inline">Buscar</span>
             </Button>
           </div>
 
           {ownerData?.person ? (
             <div className="typo-body space-y-2">
               <div
-                className={`mt-2 min-h-[132px] rounded-md border px-3 py-2 typo-body ${!ownerAccessMessage && !ownerAccessInfo
-                  ? "border-border bg-muted text-muted-foreground"
+                className={`mt-2 min-h-[132px] rounded-md px-3 py-2 typo-body ${!ownerAccessMessage && !ownerAccessInfo
+                  ? "border border-border bg-muted text-muted-foreground"
                   : ownerAccessAllowed
                     ? "state-success-soft"
                     : "state-danger-soft"
@@ -482,7 +482,7 @@ export default function Veiculos() {
                 return (
                   // ✅ 3) Item com layout mais “card-like” e responsivo
                   <div key={vehicle.SEQUENCIA} className="rounded-md border p-4 typo-body">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                    <div className={`grid grid-cols-[minmax(0,1fr)_auto] gap-3 ${isWideViewport ? "items-start" : "items-center"}`}>
                       <div className="space-y-1">
                         <p>
                           <strong>Placa:</strong> {vehicle.PLACA}
@@ -502,13 +502,13 @@ export default function Veiculos() {
                       </div>
 
                       {/* ações ficam “perto” e alinhadas; no desktop vão para a direita */}
-                      <div className="flex flex-wrap items-center justify-end gap-2">
+                      <div className={`flex flex-wrap justify-end gap-2 ${isWideViewport ? "items-start" : "items-center"}`}>
                         <Button
                           type="button"
                           size="sm"
                           onClick={() => openTagModal(vehicle)}
                           aria-label={hasTag ? "Editar tag" : "Adicionar tag"}
-                          className={getCompactButtonClasses("primary")}
+                          className={getCompactButtonClasses("primary") + (isWideViewport ? " self-start" : "")}
                         >
                           {hasTag ? (
                             <Pencil className={`${iconSpacingClass} ${compactIconSizeClass}`} />
@@ -525,7 +525,7 @@ export default function Veiculos() {
                           onClick={() => requestUnlinkVehicle(vehicle)}
                           disabled={unlinkingVehicleSeq === Number(vehicle.SEQUENCIA)}
                           aria-label="Excluir veículo"
-                          className={getCompactButtonClasses("destructive")}
+                          className={getCompactButtonClasses("destructive") + (isWideViewport ? " self-start" : "")}
                         >
                           {unlinkingVehicleSeq === Number(vehicle.SEQUENCIA) ? (
                             <Loader2 className={`${iconSpacingClass} ${compactIconSizeClass} animate-spin`} />

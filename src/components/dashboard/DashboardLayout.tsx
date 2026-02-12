@@ -8,11 +8,11 @@ export default function DashboardLayout() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="min-w-0">
           <AppBar>
             <SidebarTrigger className="-ml-1 text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15" />
           </AppBar>
-          <main className="flex-1 py-6">
+          <main className="min-w-0 flex-1 py-6">
             <Outlet />
           </main>
         </SidebarInset>

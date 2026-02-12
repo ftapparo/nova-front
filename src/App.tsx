@@ -1,8 +1,9 @@
+import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -35,6 +36,28 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function QueryCacheResetOnRouteChange() {
+  const { pathname } = useLocation();
+  const queryClient = useQueryClient();
+  const previousPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (previousPathRef.current && previousPathRef.current !== pathname) {
+      const syncQueriesOnRouteChange = async () => {
+        await queryClient.cancelQueries();
+        queryClient.removeQueries({ type: "inactive" });
+        await queryClient.refetchQueries({ type: "active" });
+      };
+
+      void syncQueriesOnRouteChange();
+    }
+
+    previousPathRef.current = pathname;
+  }, [pathname, queryClient]);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="nova-residence-theme">
@@ -42,7 +65,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <QueryCacheResetOnRouteChange />
             <Routes>
               <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
               <Route

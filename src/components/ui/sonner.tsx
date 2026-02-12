@@ -9,6 +9,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
+      richColors={true}
       visibleToasts={3}
       expand={true}
       position="bottom-right"
@@ -21,14 +22,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           title: "group-[.toast]:text-inherit",
           description: "group-[.toast]:text-inherit/80",
           icon: "group-[.toast]:text-inherit",
-          success:
-            "group-[.toaster]:bg-status-success-soft group-[.toaster]:text-status-success-soft-foreground group-[.toaster]:border-status-success-soft-border",
-          error:
-            "group-[.toaster]:bg-status-danger-soft group-[.toaster]:text-status-danger-soft-foreground group-[.toaster]:border-status-danger-soft-border",
-          warning:
-            "group-[.toaster]:bg-orange-50 group-[.toaster]:text-orange-900 group-[.toaster]:border-orange-200",
-          info:
-            "group-[.toaster]:bg-slate-100 group-[.toaster]:text-slate-900 group-[.toaster]:border-slate-300",
+          info: "!bg-slate-100 !text-slate-900 !border-slate-300 dark:!bg-slate-800 dark:!text-slate-100 dark:!border-slate-600",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },

@@ -1,3 +1,10 @@
+/* ==========================================================================
+   Nova Residence — Theme (Modern + Enterprise)
+   - Keeps brand purple close to original (slight refinement: hue ~303–304)
+   - Adds brand gold as optional accent token
+   - Typography: more readable (15px body), stronger hierarchy, tabular nums for KPIs
+   ========================================================================== */
+
 @font-face {
   font-family: "Geist";
   src: url("/fonts/geist/Geist-Variable.woff2") format("woff2");
@@ -17,35 +24,58 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* Font stack */
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
+  /* Radius (slightly more “premium” defaults) */
   --radius: 0.625rem;
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 2px);
 
-  --color-background: oklch(0.974 0.01 274);
-  --color-foreground: oklch(0.29 0.03 269);
+  /* ==========================================================================
+     BRAND HUES
+     Purple refined: keep near original 305, slightly more “enterprise” (303–304)
+     Gold from logo (used sparingly as highlight, not primary UI)
+     ========================================================================== */
+  --color-brand-purple: oklch(0.35 0.14 304);
+  --color-brand-purple-dark: oklch(0.29 0.12 304);
+  --color-brand-gold: oklch(0.78 0.16 85);
+
+  /* ==========================================================================
+     Light Theme
+     ========================================================================== */
+  --color-background: oklch(0.975 0.008 274);
+  --color-foreground: oklch(0.285 0.02 269);
 
   --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.29 0.03 269);
+  --color-card-foreground: var(--color-foreground);
 
   --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.29 0.03 269);
+  --color-popover-foreground: var(--color-foreground);
 
-  --color-primary: oklch(0.37 0.14 305);
+  /* Primary (Purple) */
+  --color-primary: var(--color-brand-purple);
   --color-primary-foreground: oklch(0.985 0 0);
-  --color-primary-dark: oklch(0.31 0.11 305);
+  --color-primary-dark: var(--color-brand-purple-dark);
 
-  --color-secondary: oklch(0.42 0.11 305);
+  /* Secondary (slightly calmer purple for enterprise accents) */
+  --color-secondary: oklch(0.40 0.10 304);
   --color-secondary-foreground: oklch(0.985 0 0);
 
-  --color-muted: oklch(0.963 0.01 274);
-  --color-muted-foreground: oklch(0.56 0.02 269);
+  /* Gold accent (use for small highlights/badges only) */
+  --color-highlight: var(--color-brand-gold);
+  --color-highlight-foreground: oklch(0.18 0.02 85);
 
-  --color-accent: oklch(0.92 0.03 305);
-  --color-accent-foreground: oklch(0.31 0.1 305);
+  /* Surfaces */
+  --color-muted: oklch(0.958 0.01 274);
+  --color-muted-foreground: oklch(0.545 0.02 269);
 
+  --color-accent: oklch(0.93 0.025 304);
+  --color-accent-foreground: oklch(0.29 0.10 304);
+
+  /* Status */
   --color-destructive: oklch(0.6 0.22 28);
   --color-destructive-foreground: oklch(0.985 0 0);
 
@@ -55,30 +85,33 @@
   --color-warning: oklch(0.76 0.16 80);
   --color-warning-foreground: oklch(0.22 0.02 80);
 
-  --color-border: oklch(0.9 0.01 274);
-  --color-input: oklch(0.9 0.01 274);
-  --color-ring: oklch(0.52 0.13 305);
+  /* Inputs/borders */
+  --color-border: oklch(0.885 0.012 274);
+  --color-input: oklch(0.885 0.012 274);
+  --color-ring: oklch(0.54 0.12 304);
 
+  /* Sidebar */
   --color-sidebar: oklch(1 0 0);
-  --color-sidebar-foreground: oklch(0.29 0.03 269);
-  --color-sidebar-primary: oklch(0.37 0.14 305);
-  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar-primary: var(--color-primary);
+  --color-sidebar-primary-foreground: var(--color-primary-foreground);
   --color-sidebar-accent: oklch(0.965 0.01 274);
-  --color-sidebar-accent-foreground: oklch(0.29 0.03 269);
-  --color-sidebar-border: oklch(0.9 0.01 274);
-  --color-sidebar-ring: oklch(0.52 0.13 305);
+  --color-sidebar-accent-foreground: var(--color-foreground);
+  --color-sidebar-border: var(--color-border);
+  --color-sidebar-ring: var(--color-ring);
 
+  /* Status soft (light) */
   --color-status-success-soft: oklch(0.93 0.05 153);
   --color-status-success-soft-border: oklch(0.85 0.06 153);
   --color-status-success-soft-foreground: oklch(0.43 0.11 153);
-  --color-status-success-solid: oklch(0.67 0.16 154);
-  --color-status-success-solid-foreground: oklch(0.985 0 0);
+  --color-status-success-solid: var(--color-success);
+  --color-status-success-solid-foreground: var(--color-success-foreground);
 
   --color-status-danger-soft: oklch(0.94 0.05 24);
   --color-status-danger-soft-border: oklch(0.85 0.07 24);
   --color-status-danger-soft-foreground: oklch(0.44 0.13 24);
-  --color-status-danger-solid: oklch(0.6 0.22 28);
-  --color-status-danger-solid-foreground: oklch(0.985 0 0);
+  --color-status-danger-solid: var(--color-destructive);
+  --color-status-danger-solid-foreground: var(--color-destructive-foreground);
 
   --color-status-warning-soft: oklch(0.94 0.06 82);
   --color-status-warning-soft-border: oklch(0.86 0.07 82);
@@ -88,43 +121,72 @@
   --color-status-info-soft-border: oklch(0.86 0.04 250);
   --color-status-info-soft-foreground: oklch(0.42 0.08 250);
 
-  --font-page-title: 700 1.75rem/1.2 var(--font-sans);
-  --font-page-subtitle: 400 0.95rem/1.5 var(--font-sans);
-  --font-card-title: 600 1rem/1.35 var(--font-sans);
-  --font-card-subtitle: 400 0.75rem/1.35 var(--font-sans);
-  --font-section-title: 600 1.125rem/1.3 var(--font-sans);
-  --font-section-subtitle: 400 0.875rem/1.4 var(--font-sans);
-  --font-stat-value: 800 2.5rem/1 var(--font-sans);
-  --font-body: 400 0.875rem/1.45 var(--font-sans);
-  --font-caption: 400 0.75rem/1.35 var(--font-sans);
-  --font-label: 500 0.75rem/1.25 var(--font-sans);
+  /* ==========================================================================
+     Typography scale (Modern + Enterprise)
+     - Body 15px
+     - Page title 28px
+     - Slightly stronger weights
+     ========================================================================== */
+  --font-page-title: 800 1.75rem/1.15 var(--font-sans);
+  /* 28px */
+  --font-page-subtitle: 400 1rem/1.55 var(--font-sans);
+  /* 16px */
+
+  --font-section-title: 650 1.125rem/1.3 var(--font-sans);
+  /* 18px */
+  --font-section-subtitle: 400 0.875rem/1.45 var(--font-sans);
+  /* 14px */
+
+  --font-card-title: 650 1rem/1.35 var(--font-sans);
+  /* 16px */
+  --font-card-title-strong: 780 1.8rem/1.5 var(--font-sans);
+  /* 18px */
+  --font-card-subtitle: 400 0.8125rem/1.35 var(--font-sans);
+  /* 13px */
+
+  --font-stat-value: 850 2.5rem/1 var(--font-sans);
+  /* 40px */
+  --font-body: 400 0.9375rem/1.55 var(--font-sans);
+  /* 15px */
+  --font-caption: 400 0.8125rem/1.4 var(--font-sans);
+  /* 13px */
+  --font-label: 550 0.75rem/1.25 var(--font-sans);
+  /* 12px */
 }
 
 :root {
   --gradient-header: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
 }
 
+/* ==========================================================================
+   Dark Theme (Modern + Enterprise)
+   - Controlled contrast
+   - Slightly calmer primary chroma
+   ========================================================================== */
 .dark {
-  --color-background: oklch(0.22 0.018 269);
-  --color-foreground: oklch(0.96 0.01 270);
+  --color-background: oklch(0.205 0.015 269);
+  --color-foreground: oklch(0.96 0.008 270);
 
-  --color-card: oklch(0.24 0.02 269);
-  --color-card-foreground: oklch(0.96 0.01 270);
+  --color-card: oklch(0.235 0.018 269);
+  --color-card-foreground: var(--color-foreground);
 
-  --color-popover: oklch(0.24 0.02 269);
-  --color-popover-foreground: oklch(0.96 0.01 270);
+  --color-popover: oklch(0.235 0.018 269);
+  --color-popover-foreground: var(--color-foreground);
 
-  --color-primary: oklch(0.6 0.16 304);
+  --color-primary: oklch(0.58 0.14 304);
   --color-primary-foreground: oklch(0.985 0 0);
-  --color-primary-dark: oklch(0.52 0.15 304);
+  --color-primary-dark: oklch(0.50 0.13 304);
 
-  --color-secondary: oklch(0.47 0.11 304);
+  --color-secondary: oklch(0.46 0.095 304);
   --color-secondary-foreground: oklch(0.985 0 0);
 
-  --color-muted: oklch(0.29 0.02 269);
-  --color-muted-foreground: oklch(0.74 0.015 270);
+  --color-highlight: oklch(0.78 0.14 85);
+  --color-highlight-foreground: oklch(0.18 0.015 80);
 
-  --color-accent: oklch(0.33 0.04 304);
+  --color-muted: oklch(0.285 0.018 269);
+  --color-muted-foreground: oklch(0.74 0.014 270);
+
+  --color-accent: oklch(0.32 0.035 304);
   --color-accent-foreground: oklch(0.95 0.01 270);
 
   --color-destructive: oklch(0.55 0.2 24);
@@ -138,28 +200,28 @@
 
   --color-border: oklch(0.33 0.02 269);
   --color-input: oklch(0.33 0.02 269);
-  --color-ring: oklch(0.68 0.12 304);
+  --color-ring: oklch(0.66 0.11 304);
 
-  --color-sidebar: oklch(0.26 0.02 269);
-  --color-sidebar-foreground: oklch(0.95 0.01 270);
-  --color-sidebar-primary: oklch(0.6 0.16 304);
-  --color-sidebar-primary-foreground: oklch(0.985 0 0);
-  --color-sidebar-accent: oklch(0.31 0.025 269);
-  --color-sidebar-accent-foreground: oklch(0.95 0.01 270);
-  --color-sidebar-border: oklch(0.33 0.02 269);
-  --color-sidebar-ring: oklch(0.68 0.12 304);
+  --color-sidebar: oklch(0.255 0.018 269);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar-primary: var(--color-primary);
+  --color-sidebar-primary-foreground: var(--color-primary-foreground);
+  --color-sidebar-accent: oklch(0.305 0.02 269);
+  --color-sidebar-accent-foreground: var(--color-foreground);
+  --color-sidebar-border: var(--color-border);
+  --color-sidebar-ring: var(--color-ring);
 
   --color-status-success-soft: oklch(0.33 0.05 153);
   --color-status-success-soft-border: oklch(0.42 0.07 153);
   --color-status-success-soft-foreground: oklch(0.84 0.08 153);
-  --color-status-success-solid: oklch(0.62 0.15 154);
-  --color-status-success-solid-foreground: oklch(0.985 0 0);
+  --color-status-success-solid: var(--color-success);
+  --color-status-success-solid-foreground: var(--color-success-foreground);
 
   --color-status-danger-soft: oklch(0.33 0.06 24);
   --color-status-danger-soft-border: oklch(0.43 0.08 24);
   --color-status-danger-soft-foreground: oklch(0.85 0.08 24);
-  --color-status-danger-solid: oklch(0.55 0.2 24);
-  --color-status-danger-solid-foreground: oklch(0.985 0 0);
+  --color-status-danger-solid: var(--color-destructive);
+  --color-status-danger-solid-foreground: var(--color-destructive-foreground);
 
   --color-status-warning-soft: oklch(0.33 0.05 82);
   --color-status-warning-soft-border: oklch(0.43 0.07 82);
@@ -171,58 +233,71 @@
 }
 
 @layer components {
+
+  /* Typography helpers */
   .typo-page-title {
-    font: var(--font-page-title);
-    letter-spacing: -0.01em;
-    color: var(--color-foreground);
+    font: var(--font-page-title) !important;
+    letter-spacing: -0.02em !important;
   }
 
   .typo-page-subtitle {
-    font: var(--font-page-subtitle);
-    color: var(--color-muted-foreground);
+    font: var(--font-page-subtitle) !important;
   }
 
   .typo-card-title {
-    font: var(--font-card-title);
-    color: var(--color-foreground);
+    font: var(--font-card-title) !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .typo-card-title-strong {
+    font: var(--font-card-title-strong) !important;
+    letter-spacing: -0.018em !important;
   }
 
   .typo-card-subtitle {
-    font: var(--font-card-subtitle);
-    color: var(--color-muted-foreground);
+    font: var(--font-card-subtitle) !important;
   }
 
   .typo-section-title {
-    font: var(--font-section-title);
-    color: var(--color-foreground);
+    font: var(--font-section-title) !important;
+    letter-spacing: -0.01em !important;
   }
 
   .typo-section-subtitle {
-    font: var(--font-section-subtitle);
-    color: var(--color-muted-foreground);
+    font: var(--font-section-subtitle) !important;
   }
 
   .typo-stat-value {
-    font: var(--font-stat-value);
-    letter-spacing: -0.02em;
-    color: var(--color-foreground);
+    font: var(--font-stat-value) !important;
+    letter-spacing: -0.03em !important;
+    font-variant-numeric: tabular-nums;
   }
 
   .typo-body {
     font: var(--font-body);
-    color: var(--color-foreground);
   }
 
   .typo-caption {
     font: var(--font-caption);
-    color: var(--color-muted-foreground);
   }
 
   .typo-label {
-    font: var(--font-label);
+    font: var(--font-label) !important;
+  }
+
+  /* Optional highlight helpers (brand gold) */
+  .state-highlight-soft {
+    background-color: color-mix(in oklch, var(--color-highlight) 18%, var(--color-card));
+    border-color: color-mix(in oklch, var(--color-highlight) 35%, var(--color-border));
     color: var(--color-foreground);
   }
 
+  .state-highlight-solid {
+    background-color: var(--color-highlight);
+    color: var(--color-highlight-foreground);
+  }
+
+  /* Status helpers */
   .state-success-soft {
     border-color: var(--color-status-success-soft-border);
     background-color: var(--color-status-success-soft);

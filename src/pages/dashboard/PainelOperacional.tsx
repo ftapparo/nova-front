@@ -356,16 +356,24 @@ export default function PainelOperacional() {
   }, []);
   const initialLoading = !hasLoadedInitialData && refreshing;
   const autoRefreshSwitchId = "latest-access-auto-refresh";
+  const lastActionMessage = lastAction ?? "Nenhuma operação recente.";
 
   const handleOpenFailuresModal = () => {
     setFailuresDialogOpen(true);
   };
 
   return (
-    <PageContainer size={isWideViewport ? "wide" : "default"}>
+    <PageContainer size={isWideViewport ? "wide" : "default"} className="min-w-0">
       <h1 className="sr-only">Painel Operacional</h1>
+      <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:hidden">
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div>
+          <p className="typo-body font-medium text-primary">Última operação</p>
+          <p className="typo-body text-primary">{lastActionMessage}</p>
+        </div>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="bg-card shadow-sm">
+        <Card className="hidden bg-card shadow-sm sm:block">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
               <CardTitle>Portas</CardTitle>
@@ -378,7 +386,7 @@ export default function PainelOperacional() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card shadow-sm">
+        <Card className="hidden bg-card shadow-sm sm:block">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
               <CardTitle>Portões</CardTitle>
@@ -391,7 +399,7 @@ export default function PainelOperacional() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card shadow-sm">
+        <Card className="hidden bg-card shadow-sm sm:block">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
               <CardTitle>Exaustores</CardTitle>
@@ -428,8 +436,8 @@ export default function PainelOperacional() {
           </CardContent>
         </Card>
       </div>
-      <div className="flex flex-col gap-4 xl:flex-row">
-        <Card className="flex h-[400px] min-w-0 flex-1 flex-col pb-[20px]">
+      <div className="flex min-w-0 flex-col gap-4 xl:flex-row">
+        <Card className="order-2 flex min-h-0 max-h-[458px] min-w-0 flex-1 flex-col overflow-hidden pb-[20px] sm:h-[400px] sm:max-h-[400px] xl:order-1">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <CardTitle>Últimos Acessos</CardTitle>
@@ -478,7 +486,7 @@ export default function PainelOperacional() {
                         </span>
                         <div className="min-w-0 flex-1" title={accessSummary}>
                           {isWideViewport ? (
-                            <p className="truncate typo-body font-semibold leading-tight">{accessSummary}</p>
+                            <p className="truncate font-semibold leading-tight">{accessSummary}</p>
                           ) : (
                             <>
                               <p className="truncate typo-caption font-semibold leading-tight text-foreground">{compactPrimaryLine}</p>
@@ -495,7 +503,7 @@ export default function PainelOperacional() {
           </CardContent>
         </Card>
 
-        <div className="w-full space-y-2 xl:max-w-[460px] xl:shrink-0">
+        <div className="order-1 min-w-0 w-full space-y-2 xl:order-2 xl:max-w-[460px] xl:shrink-0">
           <div>
             <h2 className="typo-section-title">Acessos Rápidos</h2>
             <p className="typo-caption">Atalhos para abrir porta ou portão com 1 clique.</p>
@@ -555,15 +563,13 @@ export default function PainelOperacional() {
           </div>
         </div>
       </div>
-      {lastAction && (
-        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <div>
-            <p className="typo-body font-medium text-primary">Última operação</p>
-            <p className="typo-body text-primary">{lastAction}</p>
-          </div>
+      <div className="hidden items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex">
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div>
+          <p className="typo-body font-medium text-primary">Última operação</p>
+          <p className="typo-body text-primary">{lastActionMessage}</p>
         </div>
-      )}
+      </div>
 
       {apiError && (
         <div className="state-danger-soft flex items-start gap-3 rounded-lg border p-4">

@@ -5,6 +5,10 @@ import { notify } from "@/lib/notify";
 import { useEquipmentStatusQuery } from "@/queries/dashboardQueries";
 import { queryKeys } from "@/queries/queryKeys";
 
+const SHOULD_LOG_TANSTACK_QUERY = import.meta.env.MODE !== "production";
+const EMPTY_DOORS: DoorItem[] = [];
+const EMPTY_GATES: GateItem[] = [];
+
 export interface ExhaustDeviceItem {
   id: string;
   nome: string;
@@ -121,8 +125,8 @@ export function DashboardProvider({ children }: Props) {
   };
 
   const equipmentQuery = useEquipmentStatusQuery();
-  const doors = equipmentQuery.data?.controlStatus?.doors ?? [];
-  const gates = equipmentQuery.data?.controlStatus?.gates ?? [];
+  const doors = equipmentQuery.data?.controlStatus?.doors ?? EMPTY_DOORS;
+  const gates = equipmentQuery.data?.controlStatus?.gates ?? EMPTY_GATES;
   const exhaustDevices = mapExhaustDevices(equipmentQuery.data?.exhaustStatus);
 
   const loadLatestGateAccesses = useCallback(async (gatesToQuery?: GateItem[]): Promise<void> => {
@@ -235,7 +239,7 @@ export function DashboardProvider({ children }: Props) {
 
   useEffect(() => {
     if (!gates.length) {
-      setLatestGateAccesses([]);
+      setLatestGateAccesses((previous) => (previous.length ? [] : previous));
       return;
     }
 
@@ -326,7 +330,12 @@ export function DashboardProvider({ children }: Props) {
     try {
       const processStatus = await queryClient.fetchQuery({
         queryKey: queryKeys.exhaust.processStatus(),
-        queryFn: api.exhaustProcessStatus,
+        queryFn: async () => {
+          if (SHOULD_LOG_TANSTACK_QUERY) {
+            console.log("[tanstack-query] exhaustProcessStatus(fetchQuery)", { queryKey: queryKeys.exhaust.processStatus() });
+          }
+          return api.exhaustProcessStatus();
+        },
       });
       const memory = processStatus.memory.find((item) => item.id === normalizedId) ?? null;
 
