@@ -307,6 +307,8 @@ export interface VehicleLookupResponse {
   overallSuccess: boolean;
 }
 
+export type VehicleLookupProvider = "API1" | "API2" | "API3";
+
 export const api = {
   controlStatus: () => request<ControlStatusResponse>("GET", "/control/status"),
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
@@ -328,8 +330,8 @@ export const api = {
     request<VehicleSummary[]>("GET", `/vehicles/owner/${personSeq}`),
   vehicleByPlate: (plate: string) =>
     request<VehicleDetailsResponse>("GET", `/vehicles/plate/${plate}/details`),
-  vehicleLookupPlate: (plate: string) =>
-    request<VehicleLookupResponse>("POST", "/vehicles/plate/lookup", { plate }),
+  vehicleLookupPlate: (plate: string, provider?: VehicleLookupProvider) =>
+    request<VehicleLookupResponse>("POST", "/vehicles/plate/lookup", { plate, provider }),
   vehicleUpsertByPlate: (payload: VehicleUpsertPayload) =>
     request<VehicleUpsertResponse>("POST", "/vehicles/upsert-by-plate", payload),
   vehicleLinkTag: (vehicleSeq: number, payload: VehicleTagLinkPayload) =>

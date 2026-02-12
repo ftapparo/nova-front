@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { EllipsisVertical, Fan, Loader2, Power, PowerOff, RefreshCw } from "lucide-react";
+import { EllipsisVertical, Fan, Loader2, Power, PowerOff, RefreshCw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -259,11 +259,12 @@ export default function Exaustores() {
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={onClearFields}
                   disabled={onLoading}
-                  className="h-11 w-full bg-primary/10 px-5 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20 sm:w-auto"
+                  className="h-11 w-full px-5 sm:w-auto"
                 >
+                  <XCircle className="mr-2 h-4 w-4" />
                   Limpar
                 </Button>
                 <Button

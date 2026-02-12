@@ -5,7 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api, type AccessVerifyItem, type CpfQueryResponse, type VehicleLookupResponse, type VehicleSummary } from "@/services/api";
+import {
+  api,
+  type AccessVerifyItem,
+  type CpfQueryResponse,
+  type VehicleLookupProvider,
+  type VehicleLookupResponse,
+  type VehicleLookupSourceResult,
+  type VehicleSummary,
+} from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useDashboard } from "@/contexts/DashboardContext";
 import PageContainer from "@/components/layout/PageContainer";
@@ -24,9 +32,17 @@ type ApiErrorWithPayload = Error & {
 };
 
 const WIDE_VIEWPORT_MIN_WIDTH = 1200;
+const LOOKUP_PROVIDERS: VehicleLookupProvider[] = ["API1", "API2", "API3"];
+const LOOKUP_ATTEMPT_LABELS = ["primeira", "segunda", "terceira"];
 
 const normalizePlate = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
 const normalizeDigits = (value: string) => value.replace(/\D/g, "");
+type LookupAttemptStatus = "pending" | "success" | "error";
+type LookupAttemptLine = {
+  id: string;
+  status: LookupAttemptStatus;
+  message: string;
+};
 
 const isSwapConfirmationError = (error: unknown): boolean => {
   const apiError = error as ApiErrorWithPayload;
@@ -55,6 +71,10 @@ export default function Veiculos() {
   const [addPlate, setAddPlate] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupResult, setLookupResult] = useState<VehicleLookupResponse | null>(null);
+  const [lookupAttemptLines, setLookupAttemptLines] = useState<LookupAttemptLine[]>([]);
+  const [manualBrand, setManualBrand] = useState("");
+  const [manualModel, setManualModel] = useState("");
+  const [manualColor, setManualColor] = useState("");
   const [savingVehicle, setSavingVehicle] = useState(false);
 
   const [tagModalOpen, setTagModalOpen] = useState(false);
@@ -169,6 +189,16 @@ export default function Veiculos() {
     }
   };
 
+  const onClearSearch = () => {
+    setCpf("");
+    setOwnerData(null);
+    setVehicles([]);
+    setSelectedUnitSeq("");
+    setOwnerAccessInfo(null);
+    setOwnerAccessAllowed(false);
+    setOwnerAccessMessage(null);
+  };
+
   const onCpfKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (loadingOwner) return;
 
@@ -192,6 +222,10 @@ export default function Veiculos() {
     setAddModalOpen(true);
     setAddPlate("");
     setLookupResult(null);
+    setLookupAttemptLines([]);
+    setManualBrand("");
+    setManualModel("");
+    setManualColor("");
   };
 
   const onLookupPlate = async () => {
@@ -202,24 +236,130 @@ export default function Veiculos() {
     }
 
     setLookupLoading(true);
+    setLookupResult(null);
+    setLookupAttemptLines([]);
+    setManualBrand("");
+    setManualModel("");
+    setManualColor("");
+
     try {
-      const result = await api.vehicleLookupPlate(plate);
-      setLookupResult(result);
-      if (!result.overallSuccess) {
-        notify.warning("Consulta externa sem dados válidos.");
+      const attemptedSources: VehicleLookupSourceResult[] = [];
+      let consolidatedResult: VehicleLookupResponse["consolidated"] | null = null;
+
+      for (const [index, provider] of LOOKUP_PROVIDERS.entries()) {
+        const attemptId = `${provider}-${Date.now()}-${index}`;
+        const attemptLabel = LOOKUP_ATTEMPT_LABELS[index] || String(index + 1);
+
+        setLookupAttemptLines((previous) => [
+          ...previous,
+          {
+            id: attemptId,
+            status: "pending",
+            message: `Pesquisando placa do veículo, ${attemptLabel} tentativa... aguarde.`,
+          },
+        ]);
+
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const result = await api.vehicleLookupPlate(plate, provider);
+          const sourceResult =
+            result.sources.find((source) => source.name === provider)
+            || {
+              name: provider,
+              success: result.overallSuccess,
+              durationMs: 0,
+              message: result.overallSuccess ? "Consulta realizada com sucesso." : "Consulta sem dados de veículo.",
+              data: {
+                brand: result.consolidated.brand,
+                model: result.consolidated.model,
+                color: result.consolidated.color,
+              },
+            };
+
+          attemptedSources.push(sourceResult);
+
+          if (result.overallSuccess) {
+            setLookupAttemptLines((previous) =>
+              previous.map((line) =>
+                line.id === attemptId
+                  ? { ...line, status: "success", message: "Pesquisa de veículo realizada com sucesso." }
+                  : line,
+              ),
+            );
+            consolidatedResult = result.consolidated;
+            break;
+          }
+
+          setLookupAttemptLines((previous) =>
+            previous.map((line) =>
+              line.id === attemptId
+                ? { ...line, status: "error", message: "Não foi possível localizar dados nesta tentativa." }
+                : line,
+            ),
+          );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Falha na consulta externa.";
+          attemptedSources.push({
+            name: provider,
+            success: false,
+            durationMs: 0,
+            message,
+            data: null,
+          });
+
+          setLookupAttemptLines((previous) =>
+            previous.map((line) =>
+              line.id === attemptId
+                ? { ...line, status: "error", message: "Não foi possível localizar dados nesta tentativa." }
+                : line,
+            ),
+          );
+        }
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Falha na consulta externa.";
-      notify.error("Erro ao consultar placa", { description: message });
+
+      const overallSuccess = Boolean(consolidatedResult?.brand || consolidatedResult?.model || consolidatedResult?.color);
+
+      setLookupResult({
+        plate,
+        sources: attemptedSources,
+        consolidated: consolidatedResult || {
+          brand: null,
+          model: null,
+          color: null,
+          sourceUsedByField: {
+            brand: null,
+            model: null,
+            color: null,
+          },
+        },
+        overallSuccess,
+      });
+
+      if (overallSuccess && consolidatedResult) {
+        setManualBrand(consolidatedResult.brand || "");
+        setManualModel(consolidatedResult.model || "");
+        setManualColor(consolidatedResult.color || "");
+      } else {
+        notify.warning("Não foi possível localizar a placa informada. Preencha os dados manualmente.");
+      }
     } finally {
       setLookupLoading(false);
     }
   };
-
   const onApproveAndSaveVehicle = async () => {
     if (!ownerData?.person?.sequencia) return;
-    if (!lookupResult?.overallSuccess) {
-      notify.warning("Não há dados consolidados para aprovar.");
+    if (!lookupResult?.plate) {
+      notify.warning("Consulte uma placa antes de gravar.");
+      return;
+    }
+
+    const useLookupData = lookupResult.overallSuccess;
+    const brand = (useLookupData ? lookupResult.consolidated.brand : manualBrand).trim();
+    const model = (useLookupData ? lookupResult.consolidated.model : manualModel).trim();
+    const color = (useLookupData ? lookupResult.consolidated.color : manualColor).trim();
+
+    if (!brand || !model || !color) {
+      notify.warning("Preencha marca, modelo e cor para gravar o veículo.");
       return;
     }
 
@@ -227,9 +367,9 @@ export default function Veiculos() {
     try {
       await api.vehicleUpsertByPlate({
         plate: lookupResult.plate,
-        brand: lookupResult.consolidated.brand || "",
-        model: lookupResult.consolidated.model || "",
-        color: lookupResult.consolidated.color || "",
+        brand,
+        model,
+        color,
         ownerSeq: Number(ownerData.person.sequencia),
         unitSeq: selectedUnitSeq ? Number(selectedUnitSeq) : null,
       });
@@ -237,7 +377,11 @@ export default function Veiculos() {
       await refreshVehiclesByOwner(Number(ownerData.person.sequencia));
       setAddModalOpen(false);
       setLookupResult(null);
+      setLookupAttemptLines([]);
       setAddPlate("");
+      setManualBrand("");
+      setManualModel("");
+      setManualColor("");
       notify.success("Veículo gravado com sucesso");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha ao gravar veículo.";
@@ -246,7 +390,6 @@ export default function Veiculos() {
       setSavingVehicle(false);
     }
   };
-
   const openTagModal = (vehicle: VehicleSummary) => {
     setTagVehicle(vehicle);
     setTagValue(normalizeDigits(vehicle.TAGVEICULO || ""));
@@ -374,7 +517,7 @@ export default function Veiculos() {
   const addVehicleIconOnlyClasses = "h-12 w-12 min-w-[3rem] rounded-full bg-primary text-primary-foreground p-0 shadow-md hover:bg-primary/90 focus-visible:ring-primary";
 
   return (
-    // ✅ 1) Container com max-width e centralizado (evita esticar em ultra-wide)
+    // … 1) Container com max-width e centralizado (evita esticar em ultra-wide)
     <PageContainer>
       <PageHeader title="Veículos" description="Cadastro, tag e desvínculo de veículos por proprietário." />
 
@@ -382,10 +525,10 @@ export default function Veiculos() {
         <SectionCardHeader title="Buscar Pessoa" description="Digite o CPF para carregar os dados cadastrais." />
 
         <CardContent className="space-y-3">
-          {/* ✅ 2) Input + ação juntos, com largura controlada */}
+          {/* … 2) Input + ação juntos, com largura controlada */}
           <div className="flex items-center gap-2">
             <div className="relative w-full max-w-md">
-              {/* ícone dentro do input (lupa próxima do contexto) */}
+              {/* Ícone dentro do input (lupa próxima do contexto) */}
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 inputMode="numeric"
@@ -412,16 +555,27 @@ export default function Veiculos() {
               )}
               <span className="hidden sm:inline">Buscar</span>
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClearSearch}
+              disabled={loadingOwner}
+              className="h-9 w-9 p-0 sm:w-auto sm:px-4"
+              aria-label="Limpar pesquisa"
+            >
+              <XCircle className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Limpar</span>
+            </Button>
           </div>
 
           {ownerData?.person ? (
             <div className="typo-body space-y-2">
               <div
-                className={`mt-2 min-h-[132px] rounded-md px-3 py-2 typo-body ${!ownerAccessMessage && !ownerAccessInfo
-                  ? "border border-border bg-muted text-muted-foreground"
+                className={`mt-2 min-h-[132px] rounded-md px-3 border  py-2 typo-body ${!ownerAccessMessage && !ownerAccessInfo
+                  ? "border-border bg-muted text-muted-foreground"
                   : ownerAccessAllowed
-                    ? "state-success-soft"
-                    : "state-danger-soft"
+                    ? "state-success-soft border-status-success-solid/40"
+                    : "state-danger-soft border-status-danger-solid/40"
                   }`}
               >
                 {ownerAccessInfo ? (
@@ -480,7 +634,7 @@ export default function Veiculos() {
               {vehicles.map((vehicle) => {
                 const hasTag = Boolean((vehicle.TAGVEICULO || "").trim());
                 return (
-                  // ✅ 3) Item com layout mais “card-like” e responsivo
+                  // … 3) Item com layout mais “card-like” e responsivo
                   <div key={vehicle.SEQUENCIA} className="rounded-md border p-4 typo-body">
                     <div className={`grid grid-cols-[minmax(0,1fr)_auto] gap-3 ${isWideViewport ? "items-start" : "items-center"}`}>
                       <div className="space-y-1">
@@ -552,7 +706,7 @@ export default function Veiculos() {
           </DialogHeader>
 
           <div className="space-y-3">
-            {/* ✅ 4) Campo de placa com largura confortável */}
+            {/* … 4) Campo de placa com largura confortável */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <div className="w-full sm:max-w-xs">
                 <Label>Placa</Label>
@@ -579,29 +733,34 @@ export default function Veiculos() {
               </Button>
             </div>
 
-            <div className="space-y-2">
-              {(lookupResult?.sources || [
-                { name: "API1", success: false, message: "Aguardando consulta", durationMs: 0, data: null },
-                { name: "API2", success: false, message: "Aguardando consulta", durationMs: 0, data: null },
-                { name: "API3", success: false, message: "Aguardando consulta", durationMs: 0, data: null },
-              ]).map((source) => (
-                <div key={source.name} className="flex items-center justify-between rounded-md border px-3 py-2 typo-body">
-                  <span>{source.name}</span>
-                  <span className="flex items-center gap-2">
-                    {lookupLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : source.success ? (
-                      <CheckCircle2 className="h-4 w-4 text-status-success-solid" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-status-danger-solid" />
-                    )}
-                    <span>{source.message}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
+            {lookupAttemptLines.length > 0 ? (
+              <div className="space-y-2">
+                {lookupAttemptLines.map((line) => (
+                  <div
+                    key={line.id}
+                    className={`flex items-center justify-between rounded-md border px-3 py-2 typo-body ${line.status === "success"
+                      ? "state-success-soft border-status-success-solid/40"
+                      : line.status === "error"
+                        ? "state-danger-soft border-status-danger-solid/40"
+                        : "border-border bg-muted text-muted-foreground"
+                      }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {line.status === "pending" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : line.status === "success" ? (
+                        <CheckCircle2 className="h-4 w-4 text-status-success-solid" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-status-danger-solid" />
+                      )}
+                      <span>{line.message}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
-            {lookupResult ? (
+            {lookupResult?.overallSuccess ? (
               <div className="rounded-md border bg-muted p-3 typo-body space-y-1">
                 <p>
                   <strong>Placa:</strong> {lookupResult.plate}
@@ -617,13 +776,37 @@ export default function Veiculos() {
                 </p>
               </div>
             ) : null}
+
+            {lookupResult && !lookupResult.overallSuccess ? (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label>Marca</Label>
+                  <Input value={manualBrand} onChange={(event) => setManualBrand(event.target.value)} placeholder="Marca" className="h-9" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Modelo</Label>
+                  <Input value={manualModel} onChange={(event) => setManualModel(event.target.value)} placeholder="Modelo" className="h-9" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor</Label>
+                  <Input value={manualColor} onChange={(event) => setManualColor(event.target.value)} placeholder="Cor" className="h-9" />
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddModalOpen(false)} disabled={savingVehicle}>
               Cancelar
             </Button>
-            <Button onClick={() => void onApproveAndSaveVehicle()} disabled={!lookupResult?.overallSuccess || savingVehicle}>
+            <Button
+              onClick={() => void onApproveAndSaveVehicle()}
+              disabled={
+                !lookupResult?.plate
+                || savingVehicle
+                || (!lookupResult.overallSuccess && (!manualBrand.trim() || !manualModel.trim() || !manualColor.trim()))
+              }
+            >
               {savingVehicle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Aprovar e gravar
             </Button>

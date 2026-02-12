@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, type KeyboardEventHandler } from "react";
-import { DoorOpen, Warehouse, Loader2, Search, CheckCircle2, AlertTriangle, MoreVertical, Edit2 } from "lucide-react";
+import { DoorOpen, Warehouse, Loader2, Search, CheckCircle2, AlertTriangle, MoreVertical, Edit2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -344,15 +344,26 @@ export default function ControleAcesso() {
                   {verifyLoading ? <Loader2 className="h-4 w-4 animate-spin sm:mr-2" /> : <Search className="h-4 w-4 sm:mr-2" />}
                   <span className="hidden sm:inline">Buscar</span>
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={clearGateFlow}
+                  disabled={verifyLoading || gateLoading}
+                  className="h-9 w-9 p-0 sm:w-auto sm:px-4"
+                  aria-label="Limpar pesquisa"
+                >
+                  <XCircle className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Limpar</span>
+                </Button>
               </div>
             </div>
 
             <div
-              className={`min-h-[132px] rounded-md px-3 py-2 typo-body ${!verifyMessage && !verifiedPerson
-                ? "border border-border bg-muted text-muted-foreground"
+              className={`mt-2 min-h-[132px] rounded-md px-3 border  py-2 typo-body ${!verifyMessage && !verifiedPerson
+                ? "border-border bg-muted text-muted-foreground"
                 : gateAllowed
-                  ? "state-success-soft"
-                  : "state-danger-soft"
+                  ? "state-success-soft border-status-success-solid/40"
+                  : "state-danger-soft border-status-danger-solid/40"
                 }`}
             >
               {verifiedPerson ? (
@@ -417,15 +428,6 @@ export default function ControleAcesso() {
               Abrir Portão
             </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={clearGateFlow}
-              disabled={verifyLoading || gateLoading}
-              className="w-full bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary active:bg-primary/20"
-            >
-              Limpar
-            </Button>
           </CardContent>
         </Card>
       </div>
