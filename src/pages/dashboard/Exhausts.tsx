@@ -1,4 +1,5 @@
-ï»¿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { EllipsisVertical, Fan, Loader2, Power, PowerOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,11 +18,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useDashboard } from "@/contexts/DashboardContext";
-import { api, type ExhaustProcessMemoryItem } from "@/services/api";
+import type { ExhaustProcessMemoryItem } from "@/services/api";
 import { humanizeLabel } from "@/lib/utils";
 import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
 import { notify } from "@/lib/notify";
+import { useExhaustProcessStatusQuery } from "@/queries/exhaustQueries";
+import { queryKeys } from "@/queries/queryKeys";
 
 const BLOCKS = ["A", "B", "C"];
 const DEFAULT_DURATION_MINUTES = 180;
@@ -29,6 +32,8 @@ const MIN_CUSTOM_DURATION_MINUTES = 30;
 
 export default function Exaustores() {
   const { handleExhaustOn, handleExhaustOff, exhaustDevices } = useDashboard();
+  const queryClient = useQueryClient();
+  const processStatusQuery = useExhaustProcessStatusQuery();
 
   const [block, setBlock] = useState("");
   const [apartment, setApartment] = useState("");
@@ -37,11 +42,6 @@ export default function Exaustores() {
   const [onLoading, setOnLoading] = useState(false);
   const [offLoadingId, setOffLoadingId] = useState<string | null>(null);
   const [exhaustToConfirmOff, setExhaustToConfirmOff] = useState<ExhaustProcessMemoryItem | null>(null);
-
-  const [activeExhausts, setActiveExhausts] = useState<ExhaustProcessMemoryItem[]>([]);
-  const [processLoading, setProcessLoading] = useState(false);
-  const [processError, setProcessError] = useState<string | null>(null);
-  const [generatedAt, setGeneratedAt] = useState<number | null>(null);
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
 
   const hasValidCustomDuration = Number.isFinite(customDuration) && customDuration >= MIN_CUSTOM_DURATION_MINUTES;
@@ -49,10 +49,25 @@ export default function Exaustores() {
   const valid = Boolean(block && apartment.trim());
   const canTurnOn = valid && (!useCustomDuration || hasValidCustomDuration);
 
+  const activeExhausts = processStatusQuery.data?.memory ?? [];
+  const generatedAt = processStatusQuery.data?.generatedAt
+    ? new Date(processStatusQuery.data.generatedAt).getTime()
+    : null;
+  const processLoading = processStatusQuery.isFetching;
+  const processError = processStatusQuery.error
+    ? `Erro ao carregar status: ${processStatusQuery.error instanceof Error ? processStatusQuery.error.message : "Desconhecido"}`
+    : null;
+
   const sortedActiveExhausts = useMemo(
     () => [...activeExhausts].sort((a, b) => `${a.tower}-${a.final}`.localeCompare(`${b.tower}-${b.final}`, "pt-BR")),
     [activeExhausts],
   );
+
+  useEffect(() => {
+    if (processStatusQuery.isSuccess || processStatusQuery.isError) {
+      setHasLoadedInitialData(true);
+    }
+  }, [processStatusQuery.isError, processStatusQuery.isSuccess]);
 
   const resolveModuleIdBySelection = (towerValue: string, apartmentValue: string): string | null => {
     const tower = towerValue.trim().toUpperCase();
@@ -63,37 +78,6 @@ export default function Exaustores() {
     const group = final <= 4 ? "14" : "58";
     return `${tower}_${group}`;
   };
-
-  const loadProcessStatus = useCallback(async () => {
-    setProcessLoading(true);
-    setProcessError(null);
-
-    try {
-      const processStatus = await api.exhaustProcessStatus();
-      setActiveExhausts(processStatus.memory || []);
-      const timestamp = processStatus.generatedAt ? new Date(processStatus.generatedAt).getTime() : null;
-      setGeneratedAt(typeof timestamp === "number" && Number.isFinite(timestamp) ? timestamp : null);
-    } catch (err: unknown) {
-      setProcessError(`Erro ao carregar status: ${err instanceof Error ? err.message : "Desconhecido"}`);
-    } finally {
-      setHasLoadedInitialData(true);
-      setProcessLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadProcessStatus();
-  }, [loadProcessStatus]);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      loadProcessStatus();
-    }, 60_000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [loadProcessStatus]);
 
   const onTurnOn = async () => {
     if (!canTurnOn) return;
@@ -125,7 +109,7 @@ export default function Exaustores() {
 
     try {
       await handleExhaustOn(block, apartment.trim(), effectiveDuration);
-      await loadProcessStatus();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.exhaust.processStatus() });
     } finally {
       setOnLoading(false);
     }
@@ -135,7 +119,7 @@ export default function Exaustores() {
     setOffLoadingId(exhaust.id);
     try {
       await handleExhaustOff(exhaust.tower, String(exhaust.final));
-      await loadProcessStatus();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.exhaust.processStatus() });
     } finally {
       setOffLoadingId(null);
     }
@@ -156,7 +140,7 @@ export default function Exaustores() {
 
   const previewText = () => {
     if (!valid) return "Selecione bloco e apartamento";
-    return `Alvo: Bloco ${block} Â· Ap ${apartment.trim()} Â· DuraÃ§Ã£o ${effectiveDuration} min`;
+    return `Alvo: Bloco ${block} · Ap ${apartment.trim()} · Duração ${effectiveDuration} min`;
   };
 
   const formatRemainingTime = (remainingMinutes: number | null) => {
@@ -176,7 +160,7 @@ export default function Exaustores() {
         title="Controle de Exaustores"
         description="Gerencie os exaustores das areas comuns por bloco e apartamento."
         actions={(
-          <Button variant="outline" onClick={loadProcessStatus} disabled={processLoading} className="h-9">
+          <Button variant="outline" onClick={() => void processStatusQuery.refetch()} disabled={processLoading} className="h-9">
             <RefreshCw className={`mr-2 h-4 w-4 ${processLoading ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
@@ -193,7 +177,7 @@ export default function Exaustores() {
               <Fan className="h-5 w-5 text-primary" />
               <div>
                 <CardTitle>Controle</CardTitle>
-                <CardDescription>Ligar exaustor por localizaÃ§Ã£o</CardDescription>
+                <CardDescription>Ligar exaustor por localização</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -253,7 +237,7 @@ export default function Exaustores() {
                 </div>
                 {useCustomDuration && !hasValidCustomDuration && (
                   <p className="mt-1 typo-caption text-destructive">
-                    O tempo mÃ­nimo Ã© {MIN_CUSTOM_DURATION_MINUTES} minutos.
+                    O tempo mínimo é {MIN_CUSTOM_DURATION_MINUTES} minutos.
                   </p>
                 )}
               </div>
@@ -308,7 +292,7 @@ export default function Exaustores() {
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-muted px-4 py-3">
-              <p className="typo-body text-muted-foreground">NÃ£o hÃ¡ nenhum exaustor ligado no momento.</p>
+              <p className="typo-body text-muted-foreground">Não há nenhum exaustor ligado no momento.</p>
             </div>
           )
         ) : (
@@ -372,10 +356,10 @@ export default function Exaustores() {
 
                     <div className="space-y-2 pl-4">
                       <p className="typo-caption">
-                        MÃ³dulo: <span className="font-semibold text-foreground">{exhaust.group}</span>
+                        Módulo: <span className="font-semibold text-foreground">{exhaust.group}</span>
                       </p>
                       <p className="typo-caption">
-                        RelÃª: <span className="font-semibold text-foreground">{exhaust.relay}</span>
+                        Relê: <span className="font-semibold text-foreground">{exhaust.relay}</span>
                       </p>
                     </div>
                   </div>

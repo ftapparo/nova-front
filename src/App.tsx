@@ -14,7 +14,14 @@ import Exhausts from "./pages/dashboard/Exhausts";
 import Equipamentos from "./pages/dashboard/Equipamentos";
 import Veiculos from "./pages/dashboard/Veiculos";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: true,
+    },
+  },
+});
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();

@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type DoorItem, type ExhaustProcessMemoryItem, type ExhaustStatusResponse, type GateItem, type AccessListItem } from "@/services/api";
 import { notify } from "@/lib/notify";
+import { useEquipmentStatusQuery } from "@/queries/dashboardQueries";
+import { queryKeys } from "@/queries/queryKeys";
 
 export interface ExhaustDeviceItem {
   id: string;
@@ -66,14 +69,11 @@ interface Props {
 }
 
 export function DashboardProvider({ children }: Props) {
-  const [doors, setDoors] = useState<DoorItem[]>([]);
-  const [gates, setGates] = useState<GateItem[]>([]);
-  const [exhaustDevices, setExhaustDevices] = useState<ExhaustDeviceItem[]>([]);
+  const queryClient = useQueryClient();
   const [latestGateAccesses, setLatestGateAccesses] = useState<LatestGateAccessItem[]>([]);
   const [latestAccessAutoRefresh, setLatestAccessAutoRefresh] = useState(true);
   const [lastAction, setLastAction] = useState<string | null>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [manualApiError, setManualApiError] = useState<string | null>(null);
 
   const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : "Erro desconhecido");
 
@@ -120,6 +120,11 @@ export function DashboardProvider({ children }: Props) {
     }));
   };
 
+  const equipmentQuery = useEquipmentStatusQuery();
+  const doors = equipmentQuery.data?.controlStatus?.doors ?? [];
+  const gates = equipmentQuery.data?.controlStatus?.gates ?? [];
+  const exhaustDevices = mapExhaustDevices(equipmentQuery.data?.exhaustStatus);
+
   const loadLatestGateAccesses = useCallback(async (gatesToQuery?: GateItem[]): Promise<void> => {
     const targets = gatesToQuery ?? gates;
 
@@ -147,37 +152,71 @@ export function DashboardProvider({ children }: Props) {
     }
   }, [gates]);
 
+  const openDoorMutation = useMutation({
+    mutationFn: (id: string) => api.openDoor(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.equipmentStatus() });
+    },
+  });
+
+  const openGateMutation = useMutation({
+    mutationFn: ({ id, autoClose }: { id: string; autoClose: number }) => api.openGate(id, autoClose),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.equipmentStatus() });
+    },
+  });
+
+  const exhaustOnMutation = useMutation({
+    mutationFn: ({ block, apartment, duration }: { block: string; apartment: string; duration: number }) =>
+      api.exhaustOn(block, apartment, duration),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.equipmentStatus() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.exhaust.processStatus() }),
+      ]);
+    },
+  });
+
+  const exhaustOffMutation = useMutation({
+    mutationFn: ({ block, apartment }: { block: string; apartment: string }) => api.exhaustOff(block, apartment),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.equipmentStatus() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.exhaust.processStatus() }),
+      ]);
+    },
+  });
+
   const loadDevices = useCallback(async (options?: { silent?: boolean }) => {
     const silent = Boolean(options?.silent);
 
-    setRefreshing(true);
-    setApiError(null);
+    setManualApiError(null);
 
     if (!silent) {
       notify.info("Atualizando dispositivos", { description: "Consultando portas e portões." });
     }
 
     try {
-      const [status, exhaustStatus] = await Promise.all([
-        api.controlStatus(),
-        api.exhaustStatusAll(),
-      ]);
-      const loadedDoors = status?.doors || [];
-      const loadedGates = status?.gates || [];
-      const loadedExhaustDevices = mapExhaustDevices(exhaustStatus);
+      const result = await equipmentQuery.refetch();
+      const payload = result.data ?? equipmentQuery.data;
 
-      setDoors(loadedDoors);
-      setGates(loadedGates);
-      setExhaustDevices(loadedExhaustDevices);
+      if (!payload) {
+        throw result.error ?? new Error("Nenhum dado retornado pela API.");
+      }
+
+      const loadedDoors = payload.controlStatus?.doors || [];
+      const loadedGates = payload.controlStatus?.gates || [];
+      const loadedExhaustDevices = mapExhaustDevices(payload.exhaustStatus);
+
       if (latestAccessAutoRefresh) {
         void loadLatestGateAccesses(loadedGates);
       }
       setLastAction("Dispositivos atualizados com sucesso.");
 
       if (!silent) {
-        if ((loadedDoors.length === 0 && loadedGates.length === 0 && loadedExhaustDevices.length === 0) || status?.updatedAt === null) {
+        if ((loadedDoors.length === 0 && loadedGates.length === 0 && loadedExhaustDevices.length === 0) || payload.controlStatus?.updatedAt === null) {
           notify.warning("Atualizacao concluida", {
-            description: status?.error || "Aguardando dados serem atualizados.",
+            description: payload.controlStatus?.error || "Aguardando dados serem atualizados.",
           });
         } else {
           notify.success("Dispositivos atualizados", {
@@ -187,26 +226,12 @@ export function DashboardProvider({ children }: Props) {
       }
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Falha ao carregar dispositivos: ${errorMessage}`);
-      notify.error("Falha ao atualizar dispositivos", { description: errorMessage });
-    } finally {
-      setRefreshing(false);
+      setManualApiError(`Falha ao carregar dispositivos: ${errorMessage}`);
+      if (!silent) {
+        notify.error("Falha ao atualizar dispositivos", { description: errorMessage });
+      }
     }
-  }, [latestAccessAutoRefresh, loadLatestGateAccesses]);
-
-  useEffect(() => {
-    loadDevices({ silent: true });
-  }, [loadDevices]);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      void loadDevices({ silent: true });
-    }, 60_000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [loadDevices]);
+  }, [equipmentQuery, latestAccessAutoRefresh, loadLatestGateAccesses]);
 
   useEffect(() => {
     if (!gates.length) {
@@ -229,77 +254,80 @@ export function DashboardProvider({ children }: Props) {
   }, [gates, latestAccessAutoRefresh, loadLatestGateAccesses]);
 
   const handleOpenDoor = useCallback(async (id: string) => {
-    setApiError(null);
+    setManualApiError(null);
     notify.info("Enviando comando", { description: "Solicitando abertura da porta." });
 
     try {
-      await api.openDoor(id);
+      await openDoorMutation.mutateAsync(id);
       const name = doors.find((d) => String(d.id) === id)?.nome ?? id;
       setLastAction(`Porta "${name}" aberta com sucesso.`);
       notify.success("Porta aberta", { description: `Comando enviado para ${name}.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Erro ao abrir porta: ${errorMessage}`);
+      setManualApiError(`Erro ao abrir porta: ${errorMessage}`);
       notify.error("Erro ao abrir porta", { description: errorMessage });
       throw err;
     }
-  }, [doors]);
+  }, [doors, openDoorMutation]);
 
   const handleOpenGate = useCallback(async (id: string, autoClose: number) => {
-    setApiError(null);
+    setManualApiError(null);
     notify.info("Enviando comando", { description: "Solicitando abertura do portão." });
 
     try {
-      await api.openGate(id, autoClose);
+      await openGateMutation.mutateAsync({ id, autoClose });
       const name = gates.find((g) => String(g.numeroDispositivo) === id)?.nome ?? id;
       setLastAction(`Portão "${name}" aberto (fechamento em ${autoClose}s).`);
       notify.success("Portão aberto", { description: `${name} com fechamento em ${autoClose}s.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Erro ao abrir portão: ${errorMessage}`);
+      setManualApiError(`Erro ao abrir portão: ${errorMessage}`);
       notify.error("Erro ao abrir portão", { description: errorMessage });
       throw err;
     }
-  }, [gates]);
+  }, [gates, openGateMutation]);
 
   const handleExhaustOn = useCallback(async (block: string, apartment: string, duration: number) => {
-    setApiError(null);
+    setManualApiError(null);
     notify.info("Enviando comando", { description: `Ligando exaustor ${block}${apartment}.` });
 
     try {
-      await api.exhaustOn(block, apartment, duration);
+      await exhaustOnMutation.mutateAsync({ block, apartment, duration });
       setLastAction(`Exaustor ${block}${apartment} ligado por ${duration} min.`);
       notify.success("Exaustor ligado", { description: `${block}${apartment} por ${duration} minuto(s).` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Erro ao ligar exaustor: ${errorMessage}`);
+      setManualApiError(`Erro ao ligar exaustor: ${errorMessage}`);
       notify.error("Erro ao ligar exaustor", { description: errorMessage });
       throw err;
     }
-  }, []);
+  }, [exhaustOnMutation]);
 
   const handleExhaustOff = useCallback(async (block: string, apartment: string) => {
-    setApiError(null);
+    setManualApiError(null);
     notify.info("Enviando comando", { description: `Desligando exaustor ${block}${apartment}.` });
 
     try {
-      await api.exhaustOff(block, apartment);
+      await exhaustOffMutation.mutateAsync({ block, apartment });
       setLastAction(`Exaustor ${block}${apartment} desligado.`);
       notify.success("Exaustor desligado", { description: `${block}${apartment}.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setApiError(`Erro ao desligar exaustor: ${errorMessage}`);
+      setManualApiError(`Erro ao desligar exaustor: ${errorMessage}`);
       notify.error("Erro ao desligar exaustor", { description: errorMessage });
       throw err;
     }
-  }, []);
+  }, [exhaustOffMutation]);
 
   const handleExhaustStatus = useCallback(async (id: string): Promise<ExhaustRunningStatus> => {
     const normalizedId = id.trim().toUpperCase().replace(/\s+/g, "").replace(/-/g, "_");
     notify.info("Consultando status", { description: `Exaustor ${normalizedId}.` });
 
     try {
-      const processStatus = await api.exhaustProcessStatus();
+      const processStatus = await queryClient.fetchQuery({
+        queryKey: queryKeys.exhaust.processStatus(),
+        queryFn: api.exhaustProcessStatus,
+      });
       const memory = processStatus.memory.find((item) => item.id === normalizedId) ?? null;
 
       const result = {
@@ -327,7 +355,11 @@ export function DashboardProvider({ children }: Props) {
       notify.error("Erro ao consultar status do exaustor", { description: errorMessage });
       throw err;
     }
-  }, []);
+  }, [queryClient]);
+
+  const queryApiError = equipmentQuery.error
+    ? `Falha ao carregar dispositivos: ${getErrorMessage(equipmentQuery.error)}`
+    : null;
 
   const value: DashboardContextType = {
     doors,
@@ -337,8 +369,8 @@ export function DashboardProvider({ children }: Props) {
     latestAccessAutoRefresh,
     setLatestAccessAutoRefresh,
     lastAction,
-    apiError,
-    refreshing,
+    apiError: manualApiError ?? queryApiError,
+    refreshing: equipmentQuery.isFetching,
     loadDevices,
     handleOpenDoor,
     handleOpenGate,

@@ -1,3 +1,5 @@
+import axios, { AxiosError, type AxiosInstance } from "axios";
+
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://192.168.0.250:3030/v2/api").replace(/\/+$/, "");
 interface ApiResponse<T> {
   data: T;
@@ -5,34 +7,58 @@ interface ApiResponse<T> {
   errors: string | null;
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    let payload: unknown = null;
-    try {
-      payload = text ? JSON.parse(text) : null;
-    } catch {
-      payload = null;
-    }
+type ApiError = Error & { status?: number; payload?: unknown };
 
-    const message =
-      (payload && typeof payload === "object" && "message" in payload && typeof (payload as { message?: unknown }).message === "string"
-        ? (payload as { message: string }).message
-        : text) || `Erro ${res.status}`;
+const http: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-    const error = new Error(message) as Error & { status?: number; payload?: unknown };
-    error.status = res.status;
-    error.payload = payload;
-    throw error;
+const parseApiMessage = (payload: unknown, fallback: string): string => {
+  if (payload && typeof payload === "object" && "message" in payload && typeof (payload as { message?: unknown }).message === "string") {
+    return (payload as { message: string }).message;
   }
-  const json: ApiResponse<T> = await res.json();
-  return json.data;
-}
+
+  if (typeof payload === "string" && payload.trim()) {
+    return payload;
+  }
+
+  return fallback;
+};
+
+const mapAxiosToApiError = (error: unknown): ApiError => {
+  if (!axios.isAxiosError(error)) {
+    const unexpected = new Error(error instanceof Error ? error.message : "Erro desconhecido") as ApiError;
+    unexpected.payload = error;
+    return unexpected;
+  }
+
+  const axiosError = error as AxiosError<unknown>;
+  const status = axiosError.response?.status;
+  const payload = axiosError.response?.data;
+  const fallback = status ? `Erro ${status}` : axiosError.message || "Erro de comunicação";
+  const mapped = new Error(parseApiMessage(payload, fallback)) as ApiError;
+  mapped.status = status;
+  mapped.payload = payload;
+
+  return mapped;
+};
+
+const request = async <T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> => {
+  try {
+    const response = await http.request<ApiResponse<T>>({
+      method,
+      url: path,
+      data: body,
+    });
+
+    return response.data.data;
+  } catch (error: unknown) {
+    throw mapAxiosToApiError(error);
+  }
+};
 
 export interface DoorItem {
   id: number;
