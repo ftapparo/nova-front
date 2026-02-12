@@ -107,7 +107,7 @@ export default function ControleAcesso() {
   const onVerifyCpf = async () => {
     const cpfDigits = sanitizeDigits(cpf);
     if (cpfDigits.length < 11) {
-      setVerifyMessage("Informe um CPF vÃ¡lido.");
+      setVerifyMessage("Informe um CPF válido.");
       setVerifiedPerson(null);
       setGateAllowed(false);
       return;
@@ -132,7 +132,7 @@ export default function ControleAcesso() {
         const devicesToQuery = availableDevices.length ? availableDevices : DEFAULT_GATE_DEVICES;
 
         if (!devicesToQuery.length) {
-          setVerifyMessage("Nenhum portao disponivel para validacao.");
+          setVerifyMessage("Nenhum portão disponível para validação.");
           setVerifiedPerson(null);
           setGateAllowed(false);
           return;
@@ -159,7 +159,7 @@ export default function ControleAcesso() {
 
       setVerifiedPerson(person);
       setGateAllowed(allowed);
-      setVerifyMessage(allowed ? "Acesso liberado para abertura do portÃ£o." : "Acesso nÃ£o autorizado para abertura do portÃ£o.");
+      setVerifyMessage(allowed ? "Acesso liberado para abertura do portão." : "Acesso não autorizado para abertura do portão.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Falha ao consultar CPF.";
       setVerifyMessage(message);
@@ -186,7 +186,7 @@ export default function ControleAcesso() {
 
   return (
     <PageContainer className="max-w-[90rem]">
-      <PageHeader title="Controle de Acesso" description="Gerencie a abertura de portas e portoes do condominio." />
+      <PageHeader title="Controle de Acesso" description="Gerencie a abertura de portas e portões do condomínio." />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)]">
         <Card className="h-full min-h-[520px] pb-8">
@@ -195,7 +195,7 @@ export default function ControleAcesso() {
               <DoorOpen className="h-5 w-5 text-primary" />
               <CardTitle>Portas</CardTitle>
             </div>
-            <CardDescription>Painel rÃ¡pido de abertura por porta</CardDescription>
+            <CardDescription>Painel rápido de abertura por porta</CardDescription>
           </CardHeader>
           <CardContent className="h-[calc(100%-78px)]">
             <div className="grid h-full auto-rows-fr grid-cols-2 gap-4 lg:grid-cols-3">
@@ -224,9 +224,9 @@ export default function ControleAcesso() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Warehouse className="h-5 w-5 text-primary" />
-              <CardTitle>PortÃµes</CardTitle>
+              <CardTitle>Portões</CardTitle>
             </div>
-            <CardDescription>Selecione um portÃ£o e configure o fechamento</CardDescription>
+            <CardDescription>Selecione um portão e configure o fechamento</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -272,7 +272,7 @@ export default function ControleAcesso() {
                   <p className="font-medium">{humanizeLabel(verifiedPerson.NOME)}</p>
                   <p>Unidade: {verifiedPerson.QUADRA?.trim() || "--"} {verifiedPerson.LOTE?.trim() || "--"}</p>
                   <p>Tipo: {humanizeLabel(verifiedPerson.DESCRICAO || "--")}</p>
-                  <p>Permitido: {(verifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "NÃ£o"}</p>
+                  <p>Permitido: {(verifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "Não"}</p>
                 </>
               ) : (
                 <p className="pt-2 typo-caption">Insira um CPF e pressione Enter, Tab ou a lupa para validar o acesso.</p>
@@ -289,12 +289,12 @@ export default function ControleAcesso() {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="gate-select" className="typo-label">PortÃ£o</Label>
+              <Label htmlFor="gate-select" className="typo-label">Portão</Label>
               <Select value={selectedGate} onValueChange={(value) => {
                 setSelectedGate(value);
               }}>
                 <SelectTrigger id="gate-select" className="h-9 text-sm">
-                  <SelectValue placeholder="Selecione um portÃ£o" />
+                  <SelectValue placeholder="Selecione um portão" />
                 </SelectTrigger>
                 <SelectContent>
                   {(gates || []).map((g) => (
@@ -307,7 +307,7 @@ export default function ControleAcesso() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="auto-close" className="typo-label">Fechamento automÃ¡tico (segundos)</Label>
+              <Label htmlFor="auto-close" className="typo-label">Fechamento automático (segundos)</Label>
               <Input
                 id="auto-close"
                 type="number"
@@ -316,7 +316,7 @@ export default function ControleAcesso() {
                 onChange={(e) => setAutoClose(Number(e.target.value))}
                 className="h-9 text-sm"
               />
-              <p className="typo-caption">O portÃ£o fecharÃ¡ automaticamente apÃ³s este tempo</p>
+              <p className="typo-caption">O portão fechará automaticamente após este tempo</p>
             </div>
 
             <Button
@@ -326,7 +326,7 @@ export default function ControleAcesso() {
               size="lg"
             >
               {gateLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Warehouse className="mr-2 h-4 w-4" />}
-              Abrir PortÃ£o
+              Abrir Portão
             </Button>
 
             <Button

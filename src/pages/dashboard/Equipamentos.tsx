@@ -11,7 +11,7 @@ type FilterType = "all" | "door" | "gate" | "exhaust";
 
 type DeviceRow = {
   id: string;
-  tipo: "Porta" | "Portao" | "Exaustor";
+  tipo: "Porta" | "Portão" | "Exaustor";
   nome: string;
   ip: string;
   porta: number | null;
@@ -55,7 +55,7 @@ export default function Equipamentos() {
 
     const gateRows: DeviceRow[] = gates.map((g) => ({
       id: `gate-${g.id}`,
-      tipo: "Portao",
+      tipo: "Portão",
       nome: g.nome,
       ip: g.ip || "--",
       porta: g.porta ?? null,
@@ -101,7 +101,7 @@ export default function Equipamentos() {
     <PageContainer size="wide">
       <PageHeader
         title="Equipamentos"
-        description="Tabela unica de dispositivos com filtro por tipo."
+        description="Tabela única de dispositivos com filtro por tipo."
         actions={
           <Button variant="outline" onClick={() => void onRefresh()} disabled={refreshLoading} className="h-9">
             <RefreshCw className={`mr-2 h-4 w-4 ${refreshLoading ? "animate-spin" : ""}`} />
@@ -118,7 +118,7 @@ export default function Equipamentos() {
         <TabsList className="h-9">
           <TabsTrigger value="all">Todos</TabsTrigger>
           <TabsTrigger value="door" className="gap-1"><DoorOpen className="h-3.5 w-3.5" />Portas</TabsTrigger>
-          <TabsTrigger value="gate" className="gap-1"><Warehouse className="h-3.5 w-3.5" />Portoes</TabsTrigger>
+          <TabsTrigger value="gate" className="gap-1"><Warehouse className="h-3.5 w-3.5" />Portões</TabsTrigger>
           <TabsTrigger value="exhaust" className="gap-1"><Fan className="h-3.5 w-3.5" />Exaustores</TabsTrigger>
         </TabsList>
       </Tabs>

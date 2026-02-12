@@ -93,7 +93,7 @@ export default function Veiculos() {
     setOwnerAccessMessage(null);
 
     if (!validationDevice) {
-      setOwnerAccessMessage("Nenhum portao de entrada disponivel para validacao.");
+      setOwnerAccessMessage("Nenhum portão de entrada disponível para validação.");
       return;
     }
 
@@ -113,7 +113,7 @@ export default function Veiculos() {
       setOwnerAccessInfo(person);
       setOwnerAccessAllowed(allowed);
       setOwnerAccessMessage(
-        allowed ? "Vinculo confirmado. Cadastro de veiculos permitido." : "Vinculo nao permite cadastro de veiculos.",
+        allowed ? "Vínculo confirmado. Cadastro de veículos permitido." : "Vínculo não permite cadastro de veículos.",
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha ao validar acesso por CPF.";
@@ -136,7 +136,7 @@ export default function Veiculos() {
   const onSearchCpf = async () => {
     const cpfDigits = normalizeDigits(cpf);
     if (cpfDigits.length !== 11) {
-      notify.warning("CPF invalido", { description: "Informe 11 digitos." });
+      notify.warning("CPF inválido", { description: "Informe 11 dígitos." });
       return;
     }
 
@@ -150,7 +150,7 @@ export default function Veiculos() {
 
       if (!response.exists || !response.person) {
         setVehicles([]);
-        notify.warning("CPF nao encontrado");
+        notify.warning("CPF não encontrado");
         return;
       }
 
@@ -160,7 +160,7 @@ export default function Veiculos() {
       setSelectedUnitSeq(defaultUnit ? String(defaultUnit) : "");
       await validateOwnerAccess(cpfDigits);
       await refreshVehiclesByOwner(Number(response.person.sequencia));
-      notify.success("Proprietario carregado");
+      notify.success("Proprietário carregado");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha ao consultar CPF.";
       notify.error("Erro ao consultar CPF", { description: message });
@@ -185,7 +185,7 @@ export default function Veiculos() {
 
   const openAddVehicleModal = () => {
     if (!hasOwner) {
-      notify.warning("Busque o proprietario por CPF primeiro.");
+      notify.warning("Busque o proprietário por CPF primeiro.");
       return;
     }
 
@@ -197,7 +197,7 @@ export default function Veiculos() {
   const onLookupPlate = async () => {
     const plate = normalizePlate(addPlate);
     if (plate.length !== 7) {
-      notify.warning("Placa invalida", { description: "Informe 7 caracteres da placa." });
+      notify.warning("Placa inválida", { description: "Informe 7 caracteres da placa." });
       return;
     }
 
@@ -206,7 +206,7 @@ export default function Veiculos() {
       const result = await api.vehicleLookupPlate(plate);
       setLookupResult(result);
       if (!result.overallSuccess) {
-        notify.warning("Consulta externa sem dados validos.");
+        notify.warning("Consulta externa sem dados válidos.");
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha na consulta externa.";
@@ -219,7 +219,7 @@ export default function Veiculos() {
   const onApproveAndSaveVehicle = async () => {
     if (!ownerData?.person?.sequencia) return;
     if (!lookupResult?.overallSuccess) {
-      notify.warning("Nao ha dados consolidados para aprovar.");
+      notify.warning("Não há dados consolidados para aprovar.");
       return;
     }
 
@@ -238,10 +238,10 @@ export default function Veiculos() {
       setAddModalOpen(false);
       setLookupResult(null);
       setAddPlate("");
-      notify.success("Veiculo gravado com sucesso");
+      notify.success("Veículo gravado com sucesso");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Falha ao gravar veiculo.";
-      notify.error("Erro ao salvar veiculo", { description: message });
+      const message = error instanceof Error ? error.message : "Falha ao gravar veículo.";
+      notify.error("Erro ao salvar veículo", { description: message });
     } finally {
       setSavingVehicle(false);
     }
@@ -257,11 +257,11 @@ export default function Veiculos() {
     if (!ownerData?.person?.sequencia) return;
     const tagDigits = normalizeDigits(tagValue);
     if (tagDigits.length !== 10) {
-      notify.warning("Tag invalida", { description: "Informe 10 digitos." });
+      notify.warning("Tag inválida", { description: "Informe 10 dígitos." });
       return;
     }
     if (!validationDevice) {
-      notify.warning("Nenhum portao de entrada disponivel para validacao.");
+      notify.warning("Nenhum portão de entrada disponível para validação.");
       return;
     }
 
@@ -328,10 +328,10 @@ export default function Veiculos() {
     try {
       await api.vehicleUnlinkOwner(Number(vehicle.SEQUENCIA));
       await refreshVehiclesByOwner(Number(ownerData.person.sequencia));
-      notify.success("Veiculo desvinculado do proprietario");
+      notify.success("Veículo desvinculado do proprietário");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Falha ao desvincular veiculo.";
-      notify.error("Erro ao desvincular veiculo", { description: message });
+      const message = error instanceof Error ? error.message : "Falha ao desvincular veículo.";
+      notify.error("Erro ao desvincular veículo", { description: message });
     } finally {
       setUnlinkingVehicleSeq(null);
     }
@@ -376,10 +376,10 @@ export default function Veiculos() {
   return (
     // ✅ 1) Container com max-width e centralizado (evita esticar em ultra-wide)
     <PageContainer>
-      <PageHeader title="Veiculos" description="Cadastro, tag e desvinculo de veiculos por proprietario." />
+      <PageHeader title="Veículos" description="Cadastro, tag e desvínculo de veículos por proprietário." />
 
       <Card>
-        <SectionCardHeader title="Buscar Pessoa" description="Digite o CPF para carregar os dados cadatrais." />
+        <SectionCardHeader title="Buscar Pessoa" description="Digite o CPF para carregar os dados cadastrais." />
 
         <CardContent className="space-y-3">
           {/* ✅ 2) Input + ação juntos, com largura controlada */}
@@ -431,7 +431,7 @@ export default function Veiculos() {
                       Unidade: {ownerAccessInfo.QUADRA?.trim() || "--"} {ownerAccessInfo.LOTE?.trim() || "--"}
                     </p>
                     <p>Tipo: {ownerAccessInfo.DESCRICAO?.trim() || "--"}</p>
-                    <p>Permitido: {(ownerAccessInfo.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "Nao"}</p>
+                    <p>Permitido: {(ownerAccessInfo.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "Não"}</p>
                   </>
                 ) : (
                   <p className="pt-2 typo-caption">Consulte um CPF para validar acesso e perfil.</p>
@@ -451,18 +451,18 @@ export default function Veiculos() {
 
       <Card>
         <SectionCardHeader
-          title="Veiculos"
-          description="Gerencie e edite os veiculos vinculados."
+          title="Veículos"
+          description="Gerencie e edite os veículos vinculados."
           action={
             <Button
               type="button"
               onClick={openAddVehicleModal}
               disabled={!hasOwner}
-              aria-label="Adicionar veiculo"
+              aria-label="Adicionar veículo"
               className={isWideViewport ? "" : addVehicleIconOnlyClasses}
             >
               <Plus className={`${iconSpacingClass} ${compactIconSizeClass}`} />
-              {renderButtonLabel("Adicionar veiculo")}
+              {renderButtonLabel("Adicionar veículo")}
             </Button>
           }
         />
@@ -471,10 +471,10 @@ export default function Veiculos() {
           {loadingList ? (
             <div className="flex items-center gap-2 typo-body text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando veiculos...
+              Carregando veículos...
             </div>
           ) : vehicles.length === 0 ? (
-            <p className="typo-body text-muted-foreground">Nenhum veiculo para exibir.</p>
+            <p className="typo-body text-muted-foreground">Nenhum veículo para exibir.</p>
           ) : (
             <div className="space-y-3">
               {vehicles.map((vehicle) => {
@@ -524,7 +524,7 @@ export default function Veiculos() {
                           variant="destructive"
                           onClick={() => requestUnlinkVehicle(vehicle)}
                           disabled={unlinkingVehicleSeq === Number(vehicle.SEQUENCIA)}
-                          aria-label="Excluir veiculo"
+                          aria-label="Excluir veículo"
                           className={getCompactButtonClasses("destructive")}
                         >
                           {unlinkingVehicleSeq === Number(vehicle.SEQUENCIA) ? (
@@ -532,7 +532,7 @@ export default function Veiculos() {
                           ) : (
                             <Trash2 className={`${iconSpacingClass} ${compactIconSizeClass}`} />
                           )}
-                          {renderButtonLabel("Excluir veiculo")}
+                          {renderButtonLabel("Excluir veículo")}
                         </Button>
                       </div>
                     </div>
@@ -547,7 +547,7 @@ export default function Veiculos() {
       <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar veiculo por placa</DialogTitle>
+            <DialogTitle>Adicionar veículo por placa</DialogTitle>
             <DialogDescription>Executa 3 consultas externas para validar marca, modelo e cor.</DialogDescription>
           </DialogHeader>
 
@@ -635,7 +635,7 @@ export default function Veiculos() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{tagVehicle?.TAGVEICULO ? "Editar tag" : "Adicionar tag"}</DialogTitle>
-            <DialogDescription>{tagVehicle ? `Veiculo ${tagVehicle.PLACA}` : "Informe os dados da tag."}</DialogDescription>
+            <DialogDescription>{tagVehicle ? `Veículo ${tagVehicle.PLACA}` : "Informe os dados da tag."}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
@@ -645,11 +645,11 @@ export default function Veiculos() {
                 inputMode="numeric"
                 value={tagValue}
                 onChange={(event) => setTagValue(normalizeDigits(event.target.value))}
-                placeholder="10 digitos"
+                placeholder="10 dígitos"
                 className="h-9"
               />
             </div>
-            <p className="typo-caption">Validacao automatica usando o primeiro portao de entrada disponivel.</p>
+            <p className="typo-caption">Validação automática usando o primeiro portão de entrada disponível.</p>
           </div>
 
           <DialogFooter className="gap-2">
@@ -674,7 +674,7 @@ export default function Veiculos() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar troca de tag</DialogTitle>
-            <DialogDescription>Este veiculo ja possui uma tag. Deseja substituir pela nova tag informada?</DialogDescription>
+            <DialogDescription>Este veículo já possui uma tag. Deseja substituir pela nova tag informada?</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSwapConfirmOpen(false)} disabled={savingTag}>
@@ -691,11 +691,11 @@ export default function Veiculos() {
       <Dialog open={removeTagConfirmOpen} onOpenChange={setRemoveTagConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmar exclusao de tag</DialogTitle>
+            <DialogTitle>Confirmar exclusão de tag</DialogTitle>
             <DialogDescription>
               {pendingRemoveTagVehicle
-                ? `Deseja excluir a tag do veiculo ${pendingRemoveTagVehicle.PLACA}?`
-                : "Deseja excluir a tag deste veiculo?"}
+                ? `Deseja excluir a tag do veículo ${pendingRemoveTagVehicle.PLACA}?`
+                : "Deseja excluir a tag deste veículo?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -713,11 +713,11 @@ export default function Veiculos() {
       <Dialog open={unlinkVehicleConfirmOpen} onOpenChange={setUnlinkVehicleConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmar exclusao de veiculo</DialogTitle>
+            <DialogTitle>Confirmar exclusão de veículo</DialogTitle>
             <DialogDescription>
               {pendingUnlinkVehicle
-                ? `Deseja desvincular o veiculo ${pendingUnlinkVehicle.PLACA} do proprietario?`
-                : "Deseja desvincular este veiculo do proprietario?"}
+                ? `Deseja desvincular o veículo ${pendingUnlinkVehicle.PLACA} do proprietário?`
+                : "Deseja desvincular este veículo do proprietário?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -726,7 +726,7 @@ export default function Veiculos() {
             </Button>
             <Button variant="destructive" onClick={() => void confirmUnlinkVehicle()} disabled={Boolean(unlinkingVehicleSeq)}>
               {unlinkingVehicleSeq ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-              Excluir veiculo
+              Excluir veículo
             </Button>
           </DialogFooter>
         </DialogContent>

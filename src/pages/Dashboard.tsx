@@ -29,7 +29,7 @@ export default function Dashboard() {
       setLastAction("Dispositivos atualizados com sucesso.");
 
       if ((d?.length ?? 0) === 0 && (g?.length ?? 0) === 0) {
-        notify.warning("Atualizacao concluida", { description: "Nenhum dispositivo foi retornado pela API." });
+        notify.warning("Atualização concluída", { description: "Nenhum dispositivo foi retornado pela API." });
       } else {
         notify.success("Dispositivos atualizados", { description: `${d?.length ?? 0} porta(s) e ${g?.length ?? 0} portão(ões).` });
       }

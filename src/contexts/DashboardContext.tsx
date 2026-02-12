@@ -215,7 +215,7 @@ export function DashboardProvider({ children }: Props) {
 
       if (!silent) {
         if ((loadedDoors.length === 0 && loadedGates.length === 0 && loadedExhaustDevices.length === 0) || payload.controlStatus?.updatedAt === null) {
-          notify.warning("Atualizacao concluida", {
+          notify.warning("Atualização concluída", {
             description: payload.controlStatus?.error || "Aguardando dados serem atualizados.",
           });
         } else {

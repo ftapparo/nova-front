@@ -84,26 +84,26 @@ export default function Exaustores() {
 
     const moduleId = resolveModuleIdBySelection(block, apartment);
     if (!moduleId) {
-      notify.warning("Apartamento invalido", { description: "Informe um apartamento com final de 1 a 8." });
+      notify.warning("Apartamento inv√°lido", { description: "Informe um apartamento com final de 1 a 8." });
       return;
     }
 
     const cachedModule = exhaustDevices.find((device) => device.id.trim().toUpperCase() === moduleId);
     if (!cachedModule) {
-      notify.warning("Modulo nao encontrado no cache", {
-        description: `Nao foi possivel localizar o modulo ${moduleId}. Atualize os equipamentos e tente novamente.`,
+      notify.warning("M√≥dulo n√£o encontrado no cache", {
+        description: `N√£o foi poss√≠vel localizar o m√≥dulo ${moduleId}. Atualize os equipamentos e tente novamente.`,
       });
       return;
     }
 
     if (!cachedModule.online) {
-      notify.error("Modulo offline", {
-        description: `${cachedModule.nome || moduleId} esta offline. Comando de ligar nao foi enviado.`,
+      notify.error("M√≥dulo offline", {
+        description: `${cachedModule.nome || moduleId} est√° offline. Comando de ligar n√£o foi enviado.`,
       });
       return;
     }
 
-    notify.success("Modulo online", { description: `${cachedModule.nome || moduleId} pronto para acionamento.` });
+    notify.success("M√≥dulo online", { description: `${cachedModule.nome || moduleId} pronto para acionamento.` });
 
     setOnLoading(true);
 
@@ -140,7 +140,7 @@ export default function Exaustores() {
 
   const previewText = () => {
     if (!valid) return "Selecione bloco e apartamento";
-    return `Alvo: Bloco ${block} ∑ Ap ${apartment.trim()} ∑ DuraÁ„o ${effectiveDuration} min`;
+    return `Alvo: Bloco ${block} - Ap ${apartment.trim()} - Dura√ß√£o ${effectiveDuration} min`;
   };
 
   const formatRemainingTime = (remainingMinutes: number | null) => {
@@ -177,7 +177,7 @@ export default function Exaustores() {
               <Fan className="h-5 w-5 text-primary" />
               <div>
                 <CardTitle>Controle</CardTitle>
-                <CardDescription>Ligar exaustor por localizaÁ„o</CardDescription>
+                <CardDescription>Ligar exaustor por localiza√ß√£o</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -237,7 +237,7 @@ export default function Exaustores() {
                 </div>
                 {useCustomDuration && !hasValidCustomDuration && (
                   <p className="mt-1 typo-caption text-destructive">
-                    O tempo mÌnimo È {MIN_CUSTOM_DURATION_MINUTES} minutos.
+                    O tempo m√≠nimo √© {MIN_CUSTOM_DURATION_MINUTES} minutos.
                   </p>
                 )}
               </div>
@@ -292,7 +292,7 @@ export default function Exaustores() {
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-muted px-4 py-3">
-              <p className="typo-body text-muted-foreground">N„o h· nenhum exaustor ligado no momento.</p>
+              <p className="typo-body text-muted-foreground">N√£o h√° nenhum exaustor ligado no momento.</p>
             </div>
           )
         ) : (
@@ -356,10 +356,10 @@ export default function Exaustores() {
 
                     <div className="space-y-2 pl-4">
                       <p className="typo-caption">
-                        MÛdulo: <span className="font-semibold text-foreground">{exhaust.group}</span>
+                        M√≥dulo: <span className="font-semibold text-foreground">{exhaust.group}</span>
                       </p>
                       <p className="typo-caption">
-                        RelÍ: <span className="font-semibold text-foreground">{exhaust.relay}</span>
+                        Rel√©: <span className="font-semibold text-foreground">{exhaust.relay}</span>
                       </p>
                     </div>
                   </div>

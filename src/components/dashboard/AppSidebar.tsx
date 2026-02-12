@@ -42,10 +42,10 @@ const menuItems = [
     description: "Controle de exaustores",
   },
   {
-    title: "Veiculos",
+    title: "Veículos",
     url: "/dashboard/veiculos",
     icon: CarFront,
-    description: "Gestao de veiculos",
+    description: "Gestão de veículos",
   },
 ];
 
@@ -85,11 +85,10 @@ export default function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
-                      className={`flex items-center gap-3 ${
-                        isCollapsed
+                      className={`flex items-center gap-3 ${isCollapsed
                           ? "text-primary-foreground/90 hover:bg-primary-dark/40 hover:text-primary-foreground"
                           : ""
-                      }`}
+                        }`}
                       activeClassName={
                         isCollapsed
                           ? "bg-primary-dark/50 text-primary-foreground font-medium"

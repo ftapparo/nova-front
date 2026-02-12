@@ -60,7 +60,7 @@ export default function Login() {
             <div className="mt-3 rounded-xl bg-card p-6">
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <Label htmlFor="username" className="typo-label text-foreground">Usuario</Label>
+                  <Label htmlFor="username" className="typo-label text-foreground">Usuário</Label>
                   <Input
                     id="username"
                     placeholder="portaria"
