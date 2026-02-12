@@ -21,11 +21,20 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
   /* Font stack */
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* Radius (slightly more “premium” defaults) */
   --radius: 0.625rem;

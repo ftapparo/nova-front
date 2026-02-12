@@ -53,6 +53,12 @@ const formatApiDateTimeNoTimezone = (value: string): string => {
   return `${day}/${month}/${year}, ${time}`;
 };
 
+const truncateResidentName = (name: string, maxLength = 25): string => {
+  const normalized = (name || "").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength)}...`;
+};
+
 export default function PainelOperacional() {
   const {
     doors,
@@ -466,13 +472,14 @@ export default function PainelOperacional() {
                 Sem acessos recentes para exibir.
               </div>
             ) : (
-              <div className="space-y-2 typo-body">
+              <div className="space-y-2 font-mono">
                 {latestGateAccesses.map((access, index) => {
                   const isExit = isExitAccess(access.sentido);
                   const formattedDate = formatApiDateTimeNoTimezone(access.validatedAt);
+                  const residentName = truncateResidentName(access.nome, 25);
                   const locationSummary = `${access.quadra} ${access.lote}`;
-                  const accessSummary = `${access.tag} — ${access.nome} • ${access.descricao} • ${locationSummary} • ${formattedDate}`;
-                  const compactPrimaryLine = `${access.tag} — ${access.nome} • ${locationSummary}`;
+                  const accessSummary = `${access.tag} — ${residentName} • ${access.descricao} • ${locationSummary} • ${formattedDate}`;
+                  const compactPrimaryLine = `${access.tag} — ${residentName} • ${locationSummary}`;
                   const compactSecondaryLine = `${access.descricao} • ${formattedDate}`;
                   return (
                     <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="rounded-lg border border-border/60 bg-muted/50 p-3">
@@ -486,11 +493,11 @@ export default function PainelOperacional() {
                         </span>
                         <div className="min-w-0 flex-1" title={accessSummary}>
                           {isWideViewport ? (
-                            <p className="truncate font-semibold leading-tight">{accessSummary}</p>
+                            <p className="truncate text-[12.5px] font-semibold leading-snug tracking-[-0.02em]">{accessSummary}</p>
                           ) : (
                             <>
-                              <p className="truncate typo-caption font-semibold leading-tight text-foreground">{compactPrimaryLine}</p>
-                              <p className="truncate typo-caption font-normal">{compactSecondaryLine}</p>
+                              <p className="truncate text-[12px] font-semibold leading-tight tracking-[-0.02em] text-foreground">{compactPrimaryLine}</p>
+                              <p className="truncate text-[11.5px] font-medium leading-tight tracking-[-0.015em]">{compactSecondaryLine}</p>
                             </>
                           )}
                         </div>
