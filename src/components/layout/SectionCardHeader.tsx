@@ -7,16 +7,27 @@ type SectionCardHeaderProps = {
   description?: string;
   action?: ReactNode;
   className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  actionClassName?: string;
 };
 
-export default function SectionCardHeader({ title, description, action, className }: SectionCardHeaderProps) {
+export default function SectionCardHeader({
+  title,
+  description,
+  action,
+  className,
+  titleClassName,
+  descriptionClassName,
+  actionClassName,
+}: SectionCardHeaderProps) {
   return (
     <CardHeader className={cn("flex flex-row items-start justify-between gap-4", className)}>
       <div>
-        <CardTitle className="text-base">{title}</CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
+        <CardTitle className={cn("typo-card-title", titleClassName)}>{title}</CardTitle>
+        {description ? <CardDescription className={cn("typo-card-subtitle", descriptionClassName)}>{description}</CardDescription> : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className={cn("shrink-0", actionClassName)}>{action}</div> : null}
     </CardHeader>
   );
 }

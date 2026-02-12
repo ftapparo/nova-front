@@ -193,9 +193,9 @@ export default function ControleAcesso() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <DoorOpen className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base font-semibold">Portas</CardTitle>
+              <CardTitle>Portas</CardTitle>
             </div>
-            <CardDescription className="text-xs">Painel rÃ¡pido de abertura por porta</CardDescription>
+            <CardDescription>Painel rÃ¡pido de abertura por porta</CardDescription>
           </CardHeader>
           <CardContent className="h-[calc(100%-78px)]">
             <div className="grid h-full auto-rows-fr grid-cols-2 gap-4 lg:grid-cols-3">
@@ -212,7 +212,7 @@ export default function ControleAcesso() {
                     title={humanizeLabel(door.nome)}
                   >
                     {loading ? <Loader2 className="h-11 w-11 animate-spin text-primary-dark" /> : <DoorOpen className="h-11 w-11 text-primary-dark" />}
-                    <span className="line-clamp-2 text-xl font-bold leading-tight text-primary-dark">{humanizeLabel(door.nome)}</span>
+                    <span className="line-clamp-2 typo-section-title text-primary-dark">{humanizeLabel(door.nome)}</span>
                   </button>
                 );
               })}
@@ -224,13 +224,13 @@ export default function ControleAcesso() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Warehouse className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base font-semibold">PortÃµes</CardTitle>
+              <CardTitle>PortÃµes</CardTitle>
             </div>
-            <CardDescription className="text-xs">Selecione um portÃ£o e configure o fechamento</CardDescription>
+            <CardDescription>Selecione um portÃ£o e configure o fechamento</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="gate-cpf" className="text-xs">CPF</Label>
+              <Label htmlFor="gate-cpf" className="typo-label">CPF</Label>
               <div className="flex items-center gap-2">
                 <div className="relative w-full">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -260,11 +260,11 @@ export default function ControleAcesso() {
             </div>
 
             <div
-              className={`min-h-[132px] rounded-md border px-3 py-2 text-sm ${!verifyMessage && !verifiedPerson
+              className={`min-h-[132px] rounded-md border px-3 py-2 typo-body ${!verifyMessage && !verifiedPerson
                 ? "border-border bg-muted text-muted-foreground"
                 : gateAllowed
-                  ? "border-emerald-200 bg-emerald-100 text-emerald-900"
-                  : "border-rose-200 bg-rose-100 text-rose-900"
+                  ? "state-success-soft"
+                  : "state-danger-soft"
                 }`}
             >
               {verifiedPerson ? (
@@ -275,11 +275,11 @@ export default function ControleAcesso() {
                   <p>Permitido: {(verifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "NÃ£o"}</p>
                 </>
               ) : (
-                <p className="pt-2 text-xs">Insira um CPF e pressione Enter, Tab ou a lupa para validar o acesso.</p>
+                <p className="pt-2 typo-caption">Insira um CPF e pressione Enter, Tab ou a lupa para validar o acesso.</p>
               )}
 
               {verifyMessage ? (
-                <div className="mt-2 flex items-center gap-2 text-xs">
+                <div className="mt-2 flex items-center gap-2 typo-caption text-current">
                   {gateAllowed ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                   <span>{verifyMessage}</span>
                 </div>
@@ -289,7 +289,7 @@ export default function ControleAcesso() {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="gate-select" className="text-xs">PortÃ£o</Label>
+              <Label htmlFor="gate-select" className="typo-label">PortÃ£o</Label>
               <Select value={selectedGate} onValueChange={(value) => {
                 setSelectedGate(value);
               }}>
@@ -307,7 +307,7 @@ export default function ControleAcesso() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="auto-close" className="text-xs">Fechamento automÃ¡tico (segundos)</Label>
+              <Label htmlFor="auto-close" className="typo-label">Fechamento automÃ¡tico (segundos)</Label>
               <Input
                 id="auto-close"
                 type="number"
@@ -316,7 +316,7 @@ export default function ControleAcesso() {
                 onChange={(e) => setAutoClose(Number(e.target.value))}
                 className="h-9 text-sm"
               />
-              <p className="text-xs text-muted-foreground">O portÃ£o fecharÃ¡ automaticamente apÃ³s este tempo</p>
+              <p className="typo-caption">O portÃ£o fecharÃ¡ automaticamente apÃ³s este tempo</p>
             </div>
 
             <Button

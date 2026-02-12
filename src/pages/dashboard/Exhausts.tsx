@@ -182,7 +182,7 @@ export default function Exaustores() {
           </Button>
         )}
       />
-      <p className="text-xs text-muted-foreground">
+      <p className="typo-caption">
         {generatedAt ? `Atualizado em: ${new Date(generatedAt).toLocaleString("pt-BR")}` : "Atualizado em: --"}
       </p>
 
@@ -192,8 +192,8 @@ export default function Exaustores() {
             <div className="flex items-center gap-2">
               <Fan className="h-5 w-5 text-primary" />
               <div>
-                <CardTitle className="text-base font-semibold">Controle</CardTitle>
-                <CardDescription className="text-xs">Ligar exaustor por localização</CardDescription>
+                <CardTitle>Controle</CardTitle>
+                <CardDescription>Ligar exaustor por localização</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -201,7 +201,7 @@ export default function Exaustores() {
           <CardContent className="mt-5 p-0">
             <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-12">
               <div className="sm:col-span-3">
-                <Label htmlFor="ex-block" className="text-xs">Bloco</Label>
+                <Label htmlFor="ex-block" className="typo-label">Bloco</Label>
                 <Select value={block} onValueChange={setBlock}>
                   <SelectTrigger id="ex-block" className="h-9 text-sm">
                     <SelectValue placeholder="Bloco" />
@@ -215,7 +215,7 @@ export default function Exaustores() {
               </div>
 
               <div className="sm:col-span-9">
-                <Label htmlFor="ex-apt" className="text-xs">Apartamento</Label>
+                <Label htmlFor="ex-apt" className="typo-label">Apartamento</Label>
                 <Input
                   id="ex-apt"
                   placeholder="Ex: 101"
@@ -229,7 +229,7 @@ export default function Exaustores() {
 
             <div className="mt-4 grid grid-cols-1 items-end gap-4 sm:grid-cols-12">
               <div className="sm:col-span-8">
-                <Label htmlFor="ex-dur" className="text-xs">Tempo (min)</Label>
+                <Label htmlFor="ex-dur" className="typo-label">Tempo (min)</Label>
                 <div className="mt-1 flex items-center gap-3">
                   <Input
                     id="ex-dur"
@@ -246,13 +246,13 @@ export default function Exaustores() {
                       checked={useCustomDuration}
                       onCheckedChange={setUseCustomDuration}
                     />
-                    <Label htmlFor="ex-custom-duration" className="text-xs font-normal text-muted-foreground">
+                    <Label htmlFor="ex-custom-duration" className="typo-caption font-normal">
                       Tempo personalizado
                     </Label>
                   </div>
                 </div>
                 {useCustomDuration && !hasValidCustomDuration && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p className="mt-1 typo-caption text-destructive">
                     O tempo mínimo é {MIN_CUSTOM_DURATION_MINUTES} minutos.
                   </p>
                 )}
@@ -262,8 +262,8 @@ export default function Exaustores() {
 
             <div className="mt-4 flex items-end justify-between gap-4">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">{previewText()}</p>
-                {processError && <p className="text-xs text-destructive">Erro ao atualizar</p>}
+                <p className="typo-caption">{previewText()}</p>
+                {processError && <p className="typo-caption text-destructive">Erro ao atualizar</p>}
               </div>
               <div className="mb-1 flex items-center gap-2">
                 <Button
@@ -290,25 +290,25 @@ export default function Exaustores() {
       </div>
 
       {processError && (
-        <p className="text-sm text-destructive">{processError}</p>
+        <p className="typo-body text-destructive">{processError}</p>
       )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Exhausts Ligados</h2>
+          <h2 className="typo-section-title">Exhausts Ligados</h2>
         </div>
 
         {sortedActiveExhausts.length === 0 ? (
           !hasLoadedInitialData && processLoading ? (
             <div className="rounded-lg border border-border bg-muted px-4 py-8">
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center gap-2 typo-body text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Carregando exaustores...
               </div>
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-muted px-4 py-3">
-              <p className="text-sm text-muted-foreground">Não há nenhum exaustor ligado no momento.</p>
+              <p className="typo-body text-muted-foreground">Não há nenhum exaustor ligado no momento.</p>
             </div>
           )
         ) : (
@@ -317,13 +317,13 @@ export default function Exaustores() {
               <Card key={exhaust.id} className="rounded-2xl border-border shadow-sm">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
-                    <CardTitle className="text-3xl font-bold leading-none tracking-tight text-foreground">
+                    <CardTitle className="typo-section-title">
                       {exhaust.tower}-{exhaust.final}
                     </CardTitle>
 
                     <div className="flex items-center gap-1">
-                      <Badge className="mt-0.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
-                        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-600" />
+                      <Badge className="mt-0.5 rounded-full state-success-soft px-3 py-1.5 typo-caption font-medium">
+                        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-status-success-solid" />
                         Em funcionamento
                       </Badge>
 
@@ -342,7 +342,7 @@ export default function Exaustores() {
                           <DropdownMenuItem
                             onSelect={() => setExhaustToConfirmOff(exhaust)}
                             disabled={offLoadingId === exhaust.id}
-                            className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 focus:bg-red-50 focus:text-red-700"
+                            className="cursor-pointer text-status-danger-solid hover:bg-status-danger-soft hover:text-status-danger-soft-foreground focus:bg-status-danger-soft focus:text-status-danger-soft-foreground"
                           >
                             {offLoadingId === exhaust.id ? (
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -360,21 +360,21 @@ export default function Exaustores() {
                 <CardContent className="space-y-4">
                   <div className="h-px w-full bg-border/80" />
 
-                  <div className="grid grid-cols-2 divide-x divide-slate-200/70 text-sm">
+                  <div className="grid grid-cols-2 divide-x divide-border/80 typo-body">
                     <div className="space-y-2 pr-4">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="typo-caption">
                         Torre: <span className="font-semibold text-foreground">{exhaust.tower}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="typo-caption">
                         Prumada: <span className="font-semibold text-foreground">{exhaust.final}</span>
                       </p>
                     </div>
 
                     <div className="space-y-2 pl-4">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="typo-caption">
                         Módulo: <span className="font-semibold text-foreground">{exhaust.group}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="typo-caption">
                         Relê: <span className="font-semibold text-foreground">{exhaust.relay}</span>
                       </p>
                     </div>
@@ -383,10 +383,10 @@ export default function Exaustores() {
                   <div className="h-px w-full bg-border/80" />
 
                   <div className="pb-1 text-center">
-                    <p className="text-2xl font-bold leading-none tracking-tight text-foreground">
+                    <p className="typo-section-title">
                       {formatRemainingTime(exhaust.remainingMinutes)}
                     </p>
-                    <p className="mt-1.5 text-xs text-muted-foreground">Tempo restante</p>
+                    <p className="mt-1.5 typo-caption">Tempo restante</p>
                   </div>
                 </CardContent>
               </Card>

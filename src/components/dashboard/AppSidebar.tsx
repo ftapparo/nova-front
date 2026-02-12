@@ -1,6 +1,7 @@
 import { LayoutDashboard, DoorOpen, Fan, Server, CarFront } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import BrandLogo from "@/components/BrandLogo";
+import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 import {
   Sidebar,
   SidebarContent,
@@ -66,8 +67,8 @@ export default function AppSidebar() {
           {!isCollapsed && <BrandLogo className="h-8 w-8" fallbackClassName="h-8 w-8" />}
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-sidebar-foreground">Nova Residence</span>
-              <span className="text-xs text-sidebar-foreground/60">Portaria</span>
+              <span className="typo-body font-semibold text-sidebar-foreground">Nova Residence</span>
+              <span className="typo-caption text-sidebar-foreground/60">Portaria</span>
             </div>
           )}
         </div>
@@ -109,8 +110,16 @@ export default function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border">
         {!isCollapsed && (
           <div className="px-2 py-3">
-            <p className="text-xs text-sidebar-foreground/50">Portal Administrativo v1.0</p>
-            <p className="mt-1 text-[11px] text-sidebar-foreground/45">Desenvolvido por: Flavio Eduardo Tapparo</p>
+            <div className="mb-2">
+              <ThemeSwitcher />
+            </div>
+            <p className="typo-caption text-sidebar-foreground/50">Portal Administrativo v1.0</p>
+            <p className="mt-1 typo-caption text-sidebar-foreground/45">Desenvolvido por: Flavio Eduardo Tapparo</p>
+          </div>
+        )}
+        {isCollapsed && (
+          <div className="flex items-center justify-center py-2">
+            <ThemeSwitcher compact />
           </div>
         )}
       </SidebarFooter>

@@ -53,14 +53,14 @@ export default function Login() {
                   className="h-20 w-auto max-w-[400px] object-contain"
                 />
               </div>
-              <p className="mb-0 text-lg font-bold text-primary">Portal Administrativo</p>
-              <p className="text-xs text-muted-foreground">Portaria e Zeladoria</p>
+              <p className="mb-0 typo-section-title text-primary">Portal Administrativo</p>
+              <p className="typo-caption">Portaria e Zeladoria</p>
             </div>
 
             <div className="mt-3 rounded-xl bg-card p-6">
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <Label htmlFor="username" className="text-foreground">Usuario</Label>
+                  <Label htmlFor="username" className="typo-label text-foreground">Usuario</Label>
                   <Input
                     id="username"
                     placeholder="portaria"
@@ -73,7 +73,7 @@ export default function Login() {
                 </div>
 
                 <div className="mb-4">
-                  <Label htmlFor="password" className="text-foreground">Senha</Label>
+                  <Label htmlFor="password" className="typo-label text-foreground">Senha</Label>
                   <Input
                     id="password"
                     type="password"
@@ -86,12 +86,12 @@ export default function Login() {
                 </div>
 
                 {error ? (
-                  <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
+                  <div className="state-danger-soft mb-4 rounded-md border p-3 typo-body font-medium">
                     {error}
                   </div>
                 ) : null}
 
-                <Button type="submit" className="mt-6 h-11 w-full text-sm font-semibold" disabled={loading}>
+                <Button type="submit" className="mt-6 h-11 w-full typo-body font-semibold" disabled={loading}>
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>

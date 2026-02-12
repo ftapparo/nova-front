@@ -21,7 +21,7 @@ export default function AppBar({ children }: Props) {
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 lg:px-8">
       {children}
       <div className="flex flex-1 items-center justify-end gap-3">
-        <span className="hidden sm:inline rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground uppercase">
+        <span className="hidden sm:inline rounded-full bg-muted px-3 py-1 typo-label text-muted-foreground uppercase">
           {user}
         </span>
         <Button

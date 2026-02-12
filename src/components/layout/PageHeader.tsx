@@ -6,16 +6,27 @@ type PageHeaderProps = {
   description?: string;
   actions?: ReactNode;
   className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  actionsClassName?: string;
 };
 
-export default function PageHeader({ title, description, actions, className }: PageHeaderProps) {
+export default function PageHeader({
+  title,
+  description,
+  actions,
+  className,
+  titleClassName,
+  descriptionClassName,
+  actionsClassName,
+}: PageHeaderProps) {
   return (
     <div className={cn("flex items-start justify-between gap-4", className)}>
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-        {description ? <p className="text-muted-foreground">{description}</p> : null}
+        <h1 className={cn("typo-page-title", titleClassName)}>{title}</h1>
+        {description ? <p className={cn("typo-page-subtitle", descriptionClassName)}>{description}</p> : null}
       </div>
-      {actions ? <div className="shrink-0">{actions}</div> : null}
+      {actions ? <div className={cn("shrink-0", actionsClassName)}>{actions}</div> : null}
     </div>
   );
 }

@@ -22,9 +22,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           description: "group-[.toast]:text-inherit/80",
           icon: "group-[.toast]:text-inherit",
           success:
-            "group-[.toaster]:bg-emerald-50 group-[.toaster]:text-emerald-900 group-[.toaster]:border-emerald-200",
+            "group-[.toaster]:bg-status-success-soft group-[.toaster]:text-status-success-soft-foreground group-[.toaster]:border-status-success-soft-border",
           error:
-            "group-[.toaster]:bg-rose-50 group-[.toaster]:text-rose-900 group-[.toaster]:border-rose-200",
+            "group-[.toaster]:bg-status-danger-soft group-[.toaster]:text-status-danger-soft-foreground group-[.toaster]:border-status-danger-soft-border",
           warning:
             "group-[.toaster]:bg-orange-50 group-[.toaster]:text-orange-900 group-[.toaster]:border-orange-200",
           info:

@@ -110,7 +110,7 @@ export default function Equipamentos() {
         }
       />
 
-      <p className="text-xs text-muted-foreground">
+      <p className="typo-caption">
         {updatedAt ? `Atualizado em: ${new Date(updatedAt).toLocaleString("pt-BR")}` : "Atualizado em: --"}
       </p>
 
@@ -124,7 +124,7 @@ export default function Equipamentos() {
       </Tabs>
 
       <div className="overflow-hidden rounded-lg border bg-card">
-        <div className="grid grid-cols-7 gap-3 border-b bg-muted px-4 py-3 text-xs font-medium text-muted-foreground">
+        <div className="grid grid-cols-7 gap-3 border-b bg-muted px-4 py-3 typo-label text-muted-foreground">
           <span>Tipo</span>
           <span className="col-span-2">Equipamento</span>
           <span>IP</span>
@@ -135,20 +135,20 @@ export default function Equipamentos() {
 
         {initialLoading ? (
           <div className="px-4 py-8">
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 typo-body text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Carregando equipamentos...
             </div>
           </div>
         ) : filteredDevices.length === 0 ? (
-          <div className="px-4 py-8 text-sm text-muted-foreground">Nenhum equipamento para o filtro selecionado.</div>
+          <div className="px-4 py-8 typo-body text-muted-foreground">Nenhum equipamento para o filtro selecionado.</div>
         ) : (
           filteredDevices.map((device, index) => (
-            <div key={device.id} className={`grid grid-cols-7 items-center gap-3 px-4 py-3 text-sm ${index !== filteredDevices.length - 1 ? "border-b" : ""}`}>
+            <div key={device.id} className={`grid grid-cols-7 items-center gap-3 px-4 py-3 typo-body ${index !== filteredDevices.length - 1 ? "border-b" : ""}`}>
               <div className="text-muted-foreground">{device.tipo}</div>
               <div className="col-span-2">
                 <p className="font-semibold text-foreground">{device.nome}</p>
-                {device.error ? <p className="text-xs text-rose-700">Erro: {device.error}</p> : null}
+                {device.error ? <p className="typo-caption text-status-danger-soft-foreground">Erro: {device.error}</p> : null}
               </div>
               <div className="text-foreground">{device.ip}</div>
               <div className="text-foreground">{device.porta ?? "--"}</div>
@@ -157,11 +157,11 @@ export default function Equipamentos() {
                 <Badge
                   className={
                     device.online
-                      ? "rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"
-                      : "rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-50"
+                      ? "rounded-full state-success-soft px-3 py-1 typo-caption font-medium"
+                      : "rounded-full state-danger-soft px-3 py-1 typo-caption font-medium"
                   }
                 >
-                  <span className={`mr-2 inline-block h-2 w-2 rounded-full ${device.online ? "bg-emerald-600" : "bg-rose-600"}`} />
+                  <span className={`mr-2 inline-block h-2 w-2 rounded-full ${device.online ? "bg-status-success-solid" : "bg-status-danger-solid"}`} />
                   {device.online ? "Online" : "Offline"}
                 </Badge>
               </div>

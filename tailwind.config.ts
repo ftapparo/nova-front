@@ -44,6 +44,32 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        status: {
+          success: {
+            soft: "hsl(var(--status-success-soft-bg))",
+            "soft-border": "hsl(var(--status-success-soft-border))",
+            "soft-foreground": "hsl(var(--status-success-soft-foreground))",
+            solid: "hsl(var(--status-success-solid-bg))",
+            "solid-foreground": "hsl(var(--status-success-solid-foreground))",
+          },
+          danger: {
+            soft: "hsl(var(--status-danger-soft-bg))",
+            "soft-border": "hsl(var(--status-danger-soft-border))",
+            "soft-foreground": "hsl(var(--status-danger-soft-foreground))",
+            solid: "hsl(var(--status-danger-solid-bg))",
+            "solid-foreground": "hsl(var(--status-danger-solid-foreground))",
+          },
+          warning: {
+            soft: "hsl(var(--status-warning-soft-bg))",
+            "soft-border": "hsl(var(--status-warning-soft-border))",
+            "soft-foreground": "hsl(var(--status-warning-soft-foreground))",
+          },
+          info: {
+            soft: "hsl(var(--status-info-soft-bg))",
+            "soft-border": "hsl(var(--status-info-soft-border))",
+            "soft-foreground": "hsl(var(--status-info-soft-foreground))",
+          },
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",

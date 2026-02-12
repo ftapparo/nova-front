@@ -1,0 +1,236 @@
+@layer base {
+  :root {
+    --background: 228 33% 97%;
+    --foreground: 210 24% 16%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 24% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 24% 16%;
+
+    --primary: 265 67% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-dark: 264 66% 19%;
+
+    --secondary: 265 55% 31%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 228 33% 97%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 265 46% 91%;
+    --accent-foreground: 264 66% 19%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 222 22% 91%;
+    --input: 222 22% 91%;
+    --ring: 265 67% 25%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 210 24% 16%;
+    --sidebar-primary: 265 67% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 33% 97%;
+    --sidebar-accent-foreground: 210 24% 16%;
+    --sidebar-border: 222 22% 91%;
+    --sidebar-ring: 265 67% 25%;
+
+    --gradient-header: linear-gradient(135deg, hsl(265 67% 25%), hsl(264 66% 19%));
+
+    --status-success-soft-bg: 142 50% 92%;
+    --status-success-soft-border: 142 43% 80%;
+    --status-success-soft-foreground: 142 58% 25%;
+    --status-success-solid-bg: 142 76% 36%;
+    --status-success-solid-foreground: 0 0% 100%;
+
+    --status-danger-soft-bg: 0 80% 94%;
+    --status-danger-soft-border: 0 65% 84%;
+    --status-danger-soft-foreground: 0 59% 34%;
+    --status-danger-solid-bg: 0 72% 51%;
+    --status-danger-solid-foreground: 0 0% 100%;
+
+    --status-warning-soft-bg: 37 100% 93%;
+    --status-warning-soft-border: 35 92% 82%;
+    --status-warning-soft-foreground: 26 76% 30%;
+
+    --status-info-soft-bg: 214 83% 94%;
+    --status-info-soft-border: 214 67% 84%;
+    --status-info-soft-foreground: 219 63% 32%;
+
+    --font-page-title: 700 1.75rem/1.2 "Barlow", sans-serif;
+    --font-page-subtitle: 400 0.95rem/1.5 "Barlow", sans-serif;
+    --font-card-title: 600 1rem/1.35 "Barlow", sans-serif;
+    --font-card-subtitle: 400 0.75rem/1.35 "Barlow", sans-serif;
+    --font-section-title: 600 1.125rem/1.3 "Barlow", sans-serif;
+    --font-section-subtitle: 400 0.875rem/1.4 "Barlow", sans-serif;
+    --font-stat-value: 800 2.5rem/1 "Barlow", sans-serif;
+    --font-body: 400 0.875rem/1.45 "Barlow", sans-serif;
+    --font-caption: 400 0.75rem/1.35 "Barlow", sans-serif;
+    --font-label: 500 0.75rem/1.25 "Barlow", sans-serif;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 265 67% 47%;
+    --primary-foreground: 0 0% 100%;
+    --primary-dark: 264 66% 38%;
+
+    --secondary: 265 55% 35%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 264 32% 24%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 41%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 64% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 36 100% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 217 33% 24%;
+    --input: 217 33% 24%;
+    --ring: 264 60% 70%;
+
+    --sidebar-background: 223 42% 14%;
+    --sidebar-foreground: 210 38% 95%;
+    --sidebar-primary: 265 67% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 223 34% 20%;
+    --sidebar-accent-foreground: 210 38% 95%;
+    --sidebar-border: 223 28% 24%;
+    --sidebar-ring: 264 60% 70%;
+
+    --status-success-soft-bg: 142 35% 20%;
+    --status-success-soft-border: 142 33% 32%;
+    --status-success-soft-foreground: 142 72% 79%;
+    --status-success-solid-bg: 142 64% 42%;
+    --status-success-solid-foreground: 0 0% 100%;
+
+    --status-danger-soft-bg: 0 36% 21%;
+    --status-danger-soft-border: 0 37% 33%;
+    --status-danger-soft-foreground: 0 76% 83%;
+    --status-danger-solid-bg: 0 63% 41%;
+    --status-danger-solid-foreground: 0 0% 100%;
+
+    --status-warning-soft-bg: 36 35% 22%;
+    --status-warning-soft-border: 35 41% 34%;
+    --status-warning-soft-foreground: 39 92% 82%;
+
+    --status-info-soft-bg: 217 36% 22%;
+    --status-info-soft-border: 217 36% 33%;
+    --status-info-soft-foreground: 212 100% 86%;
+  }
+}
+
+@layer components {
+  .typo-page-title {
+    font: var(--font-page-title);
+    letter-spacing: -0.01em;
+    color: hsl(var(--foreground));
+  }
+
+  .typo-page-subtitle {
+    font: var(--font-page-subtitle);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .typo-card-title {
+    font: var(--font-card-title);
+    color: hsl(var(--foreground));
+  }
+
+  .typo-card-subtitle {
+    font: var(--font-card-subtitle);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .typo-section-title {
+    font: var(--font-section-title);
+    color: hsl(var(--foreground));
+  }
+
+  .typo-section-subtitle {
+    font: var(--font-section-subtitle);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .typo-stat-value {
+    font: var(--font-stat-value);
+    letter-spacing: -0.02em;
+    color: hsl(var(--foreground));
+  }
+
+  .typo-body {
+    font: var(--font-body);
+    color: hsl(var(--foreground));
+  }
+
+  .typo-caption {
+    font: var(--font-caption);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .typo-label {
+    font: var(--font-label);
+    color: hsl(var(--foreground));
+  }
+
+  .state-success-soft {
+    border-color: hsl(var(--status-success-soft-border));
+    background-color: hsl(var(--status-success-soft-bg));
+    color: hsl(var(--status-success-soft-foreground));
+  }
+
+  .state-danger-soft {
+    border-color: hsl(var(--status-danger-soft-border));
+    background-color: hsl(var(--status-danger-soft-bg));
+    color: hsl(var(--status-danger-soft-foreground));
+  }
+
+  .state-warning-soft {
+    border-color: hsl(var(--status-warning-soft-border));
+    background-color: hsl(var(--status-warning-soft-bg));
+    color: hsl(var(--status-warning-soft-foreground));
+  }
+
+  .state-info-soft {
+    border-color: hsl(var(--status-info-soft-border));
+    background-color: hsl(var(--status-info-soft-bg));
+    color: hsl(var(--status-info-soft-foreground));
+  }
+
+  .state-success-solid {
+    background-color: hsl(var(--status-success-solid-bg));
+    color: hsl(var(--status-success-solid-foreground));
+  }
+
+  .state-danger-solid {
+    background-color: hsl(var(--status-danger-solid-bg));
+    color: hsl(var(--status-danger-solid-foreground));
+  }
+}

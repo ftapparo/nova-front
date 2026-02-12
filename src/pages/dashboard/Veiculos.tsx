@@ -368,7 +368,7 @@ export default function Veiculos() {
   const compactButtonClassMap: Record<CompactButtonStyle, string> = {
     primary: "bg-transparent text-primary hover:bg-primary/10 border-none shadow-none px-2",
     outline: "bg-transparent text-muted-foreground hover:bg-muted/40 border-none shadow-none px-2",
-    destructive: "bg-transparent text-rose-600 hover:bg-rose-50 border-none shadow-none px-2",
+    destructive: "bg-transparent text-status-danger-solid hover:bg-status-danger-soft border-none shadow-none px-2",
   };
   const getCompactButtonClasses = (style: CompactButtonStyle): string => (isWideViewport ? "" : compactButtonClassMap[style]);
   const addVehicleIconOnlyClasses = "h-12 w-12 min-w-[3rem] rounded-full bg-primary text-primary-foreground p-0 shadow-md hover:bg-primary/90 focus-visible:ring-primary";
@@ -415,13 +415,13 @@ export default function Veiculos() {
           </div>
 
           {ownerData?.person ? (
-            <div className="text-sm space-y-2">
+            <div className="typo-body space-y-2">
               <div
-                className={`mt-2 min-h-[132px] rounded-md border px-3 py-2 text-sm ${!ownerAccessMessage && !ownerAccessInfo
+                className={`mt-2 min-h-[132px] rounded-md border px-3 py-2 typo-body ${!ownerAccessMessage && !ownerAccessInfo
                   ? "border-border bg-muted text-muted-foreground"
                   : ownerAccessAllowed
-                    ? "border-emerald-200 bg-emerald-100 text-emerald-900"
-                    : "border-rose-200 bg-rose-100 text-rose-900"
+                    ? "state-success-soft"
+                    : "state-danger-soft"
                   }`}
               >
                 {ownerAccessInfo ? (
@@ -434,11 +434,11 @@ export default function Veiculos() {
                     <p>Permitido: {(ownerAccessInfo.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "Nao"}</p>
                   </>
                 ) : (
-                  <p className="pt-2 text-xs">Consulte um CPF para validar acesso e perfil.</p>
+                  <p className="pt-2 typo-caption">Consulte um CPF para validar acesso e perfil.</p>
                 )}
 
                 {ownerAccessMessage ? (
-                  <div className="mt-2 flex items-center gap-2 text-xs">
+                  <div className="mt-2 flex items-center gap-2 typo-caption text-current">
                     {ownerAccessAllowed ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                     <span>{ownerAccessMessage}</span>
                   </div>
@@ -469,19 +469,19 @@ export default function Veiculos() {
 
         <CardContent>
           {loadingList ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 typo-body text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Carregando veiculos...
             </div>
           ) : vehicles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum veiculo para exibir.</p>
+            <p className="typo-body text-muted-foreground">Nenhum veiculo para exibir.</p>
           ) : (
             <div className="space-y-3">
               {vehicles.map((vehicle) => {
                 const hasTag = Boolean((vehicle.TAGVEICULO || "").trim());
                 return (
                   // ✅ 3) Item com layout mais “card-like” e responsivo
-                  <div key={vehicle.SEQUENCIA} className="rounded-md border p-4 text-sm">
+                  <div key={vehicle.SEQUENCIA} className="rounded-md border p-4 typo-body">
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                       <div className="space-y-1">
                         <p>
@@ -585,15 +585,15 @@ export default function Veiculos() {
                 { name: "API2", success: false, message: "Aguardando consulta", durationMs: 0, data: null },
                 { name: "API3", success: false, message: "Aguardando consulta", durationMs: 0, data: null },
               ]).map((source) => (
-                <div key={source.name} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+                <div key={source.name} className="flex items-center justify-between rounded-md border px-3 py-2 typo-body">
                   <span>{source.name}</span>
                   <span className="flex items-center gap-2">
                     {lookupLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : source.success ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <CheckCircle2 className="h-4 w-4 text-status-success-solid" />
                     ) : (
-                      <XCircle className="h-4 w-4 text-rose-600" />
+                      <XCircle className="h-4 w-4 text-status-danger-solid" />
                     )}
                     <span>{source.message}</span>
                   </span>
@@ -602,7 +602,7 @@ export default function Veiculos() {
             </div>
 
             {lookupResult ? (
-              <div className="rounded-md border bg-muted p-3 text-sm space-y-1">
+              <div className="rounded-md border bg-muted p-3 typo-body space-y-1">
                 <p>
                   <strong>Placa:</strong> {lookupResult.plate}
                 </p>
@@ -649,7 +649,7 @@ export default function Veiculos() {
                 className="h-9"
               />
             </div>
-            <p className="text-xs text-muted-foreground">Validacao automatica usando o primeiro portao de entrada disponivel.</p>
+            <p className="typo-caption">Validacao automatica usando o primeiro portao de entrada disponivel.</p>
           </div>
 
           <DialogFooter className="gap-2">

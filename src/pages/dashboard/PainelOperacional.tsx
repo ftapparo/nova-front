@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type UIEventHandler } from "react";
+﻿import { useEffect, useMemo, useRef, useState, type UIEventHandler } from "react";
 import { DoorOpen, Warehouse, Fan, AlertTriangle, Info, Plus, EllipsisVertical, Trash2, LogIn, LogOut, Loader2, Search, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { useDashboard } from "@/contexts/DashboardContext";
 import PageContainer from "@/components/layout/PageContainer";
 
 type FailureItem = {
-  kind: "Porta" | "Portão" | "Exaustor";
+  kind: "Porta" | "PortÃ£o" | "Exaustor";
   name: string;
   ip: string;
   port: number | null;
@@ -119,7 +119,7 @@ export default function PainelOperacional() {
       online: d.online,
     })),
     ...gates.map((g) => ({
-      kind: "Portão" as const,
+      kind: "PortÃ£o" as const,
       name: g.nome,
       ip: g.ip || "--",
       port: g.porta ?? null,
@@ -248,7 +248,7 @@ export default function PainelOperacional() {
     const deviceId = pendingGateShortcut ? Number(pendingGateShortcut.targetId) : 0;
 
     if (!deviceId || cpfDigits.length < 11) {
-      setGateVerifyMessage("Informe um CPF válido para validar o acesso.");
+      setGateVerifyMessage("Informe um CPF vÃ¡lido para validar o acesso.");
       setGateVerifiedPerson(null);
       setGateAllowed(false);
       return;
@@ -272,7 +272,7 @@ export default function PainelOperacional() {
 
       setGateVerifiedPerson(person);
       setGateAllowed(allowed);
-      setGateVerifyMessage(allowed ? "Acesso liberado para abertura do portão." : "Acesso não autorizado para abertura do portão.");
+      setGateVerifyMessage(allowed ? "Acesso liberado para abertura do portÃ£o." : "Acesso nÃ£o autorizado para abertura do portÃ£o.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Falha ao validar CPF.";
       setGateVerifyMessage(message);
@@ -368,11 +368,11 @@ export default function PainelOperacional() {
         <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-foreground">Portas</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
+              <CardTitle>Portas</CardTitle>
+              <div className="mt-3 typo-stat-value">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeDoors}/${doors.length}`}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">online agora</p>
+              <p className="mt-3 typo-caption">online agora</p>
             </div>
             <DoorOpen className="h-[77px] w-[77px] text-primary" />
           </CardContent>
@@ -381,11 +381,11 @@ export default function PainelOperacional() {
         <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-foreground">Portões</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
+              <CardTitle>PortÃµes</CardTitle>
+              <div className="mt-3 typo-stat-value">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeGates}/${gates.length}`}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">online agora</p>
+              <p className="mt-3 typo-caption">online agora</p>
             </div>
             <Warehouse className="h-[77px] w-[77px] text-primary" />
           </CardContent>
@@ -394,11 +394,11 @@ export default function PainelOperacional() {
         <Card className="bg-card shadow-sm">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-foreground">Exaustores</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
+              <CardTitle>Exaustores</CardTitle>
+              <div className="mt-3 typo-stat-value">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : `${activeExhaustDevices}/${exhaustDevices.length}`}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">online agora</p>
+              <p className="mt-3 typo-caption">online agora</p>
             </div>
             <Fan className="h-[77px] w-[77px] text-primary" />
           </CardContent>
@@ -418,11 +418,11 @@ export default function PainelOperacional() {
         >
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
             <div>
-              <CardTitle className="text-base font-semibold text-foreground">Falhas</CardTitle>
-              <div className="mt-3 text-6xl font-extrabold leading-none tracking-tight text-foreground">
+              <CardTitle>Falhas</CardTitle>
+              <div className="mt-3 typo-stat-value">
                 {initialLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : failureCount}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">dispositivos</p>
+              <p className="mt-3 typo-caption">dispositivos</p>
             </div>
             <AlertTriangle className="h-[77px] w-[77px] text-destructive" />
           </CardContent>
@@ -432,44 +432,44 @@ export default function PainelOperacional() {
         <Card className="flex h-[400px] min-w-0 flex-1 flex-col pb-[20px]">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base font-semibold">Últimos Acessos</CardTitle>
+              <CardTitle>Ãšltimos Acessos</CardTitle>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Auto</span>
+                <span className="typo-caption">Auto</span>
                 <Switch
                   id={autoRefreshSwitchId}
                   checked={latestAccessAutoRefresh}
                   onCheckedChange={setLatestAccessAutoRefresh}
-                  aria-label="Ativar atualização automática dos últimos acessos"
+                  aria-label="Ativar atualizaÃ§Ã£o automÃ¡tica dos Ãºltimos acessos"
                 />
               </div>
             </div>
-            <CardDescription className="text-xs">Últimos acessos dos portões veiculares (até 20 itens).</CardDescription>
+            <CardDescription>Ãšltimos acessos dos portÃµes veiculares (atÃ© 20 itens).</CardDescription>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto" onScroll={handleLatestAccessesScroll}>
             {initialLoading ? (
               <div className="rounded-lg border border-border bg-muted p-4">
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center gap-2 typo-body text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Carregando últimos acessos...
+                  Carregando Ãºltimos acessos...
                 </div>
               </div>
             ) : latestGateAccesses.length === 0 ? (
-              <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">
+              <div className="rounded-lg border border-border bg-muted p-4 typo-body text-muted-foreground">
                 Sem acessos recentes para exibir.
               </div>
             ) : (
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 typo-body">
                 {latestGateAccesses.map((access, index) => {
                   const isExit = isExitAccess(access.sentido);
                   const formattedDate = formatApiDateTimeNoTimezone(access.validatedAt);
                   const locationSummary = `${access.quadra} ${access.lote}`;
-                  const accessSummary = `${access.tag} — ${access.nome} • ${access.descricao} • ${locationSummary} • ${formattedDate}`;
-                  const compactPrimaryLine = `${access.tag} — ${access.nome} • ${locationSummary}`;
-                  const compactSecondaryLine = `${access.descricao} • ${formattedDate}`;
+                  const accessSummary = `${access.tag} â€” ${access.nome} â€¢ ${access.descricao} â€¢ ${locationSummary} â€¢ ${formattedDate}`;
+                  const compactPrimaryLine = `${access.tag} â€” ${access.nome} â€¢ ${locationSummary}`;
+                  const compactSecondaryLine = `${access.descricao} â€¢ ${formattedDate}`;
                   return (
                     <div key={`${access.gateId}-${access.tag}-${access.validatedAt}-${index}`} className="rounded-lg border border-border/60 bg-muted/50 p-3">
                       <div className="flex items-center gap-3">
-                        <span className={`inline-flex rounded-full bg-background/80 p-1 ${isExit ? "text-rose-600" : "text-emerald-600"}`}>
+                        <span className={`inline-flex rounded-full bg-background/80 p-1 ${isExit ? "text-status-danger-soft-foreground" : "text-status-success-soft-foreground"}`}>
                           {isExit ? (
                             <LogOut className="h-4 w-4" />
                           ) : (
@@ -478,11 +478,11 @@ export default function PainelOperacional() {
                         </span>
                         <div className="min-w-0 flex-1" title={accessSummary}>
                           {isWideViewport ? (
-                            <p className="truncate text-sm font-semibold leading-tight text-foreground">{accessSummary}</p>
+                            <p className="truncate typo-body font-semibold leading-tight">{accessSummary}</p>
                           ) : (
                             <>
-                              <p className="truncate text-[0.75rem] font-semibold leading-tight text-foreground">{compactPrimaryLine}</p>
-                              <p className="truncate text-[0.68rem] font-normal text-muted-foreground">{compactSecondaryLine}</p>
+                              <p className="truncate typo-caption font-semibold leading-tight text-foreground">{compactPrimaryLine}</p>
+                              <p className="truncate typo-caption font-normal">{compactSecondaryLine}</p>
                             </>
                           )}
                         </div>
@@ -497,8 +497,8 @@ export default function PainelOperacional() {
 
         <div className="w-full space-y-2 xl:max-w-[460px] xl:shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Acessos Rápidos</h2>
-            <p className="text-xs text-muted-foreground">Atalhos para abrir porta ou portão com 1 clique.</p>
+            <h2 className="typo-section-title">Acessos RÃ¡pidos</h2>
+            <p className="typo-caption">Atalhos para abrir porta ou portÃ£o com 1 clique.</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {shortcuts.map((shortcut) => {
@@ -513,8 +513,8 @@ export default function PainelOperacional() {
                     className="flex h-full w-full items-center justify-between rounded-lg px-3 text-left transition-colors hover:bg-muted disabled:opacity-60"
                   >
                     <div className="pr-6">
-                      <div className="text-sm font-semibold leading-tight text-foreground">{shortcut.label}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">{shortcut.type === "door" ? "Porta" : `Portão ${shortcut.autoClose}s`}</div>
+                      <div className="typo-body font-semibold leading-tight">{shortcut.label}</div>
+                      <div className="mt-1 typo-caption">{shortcut.type === "door" ? "Porta" : `PortÃ£o ${shortcut.autoClose}s`}</div>
                     </div>
                     <ShortcutIcon className="h-7 w-7 shrink-0 text-foreground" />
                   </button>
@@ -531,7 +531,7 @@ export default function PainelOperacional() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         onSelect={() => removeShortcut(shortcut.id)}
-                        className="cursor-pointer text-rose-600 hover:bg-rose-50 hover:text-rose-700 focus:bg-rose-50 focus:text-rose-700"
+                        className="cursor-pointer text-status-danger-solid hover:bg-status-danger-soft hover:text-status-danger-soft-foreground focus:bg-status-danger-soft focus:text-status-danger-soft-foreground"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Excluir
@@ -549,7 +549,7 @@ export default function PainelOperacional() {
                 className="flex h-[104px] w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/35 bg-primary/10 text-primary/55 transition-colors hover:border-primary/55 hover:bg-primary/15 hover:text-primary/80"
               >
                 <Plus className="mb-2 h-8 w-8" />
-                <span className="text-xs font-medium">Adicionar</span>
+                <span className="typo-label">Adicionar</span>
               </button>
             ) : null}
           </div>
@@ -559,18 +559,18 @@ export default function PainelOperacional() {
         <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
-            <p className="text-sm font-medium text-primary-dark">Última operação</p>
-            <p className="text-sm text-primary">{lastAction}</p>
+            <p className="typo-body font-medium text-primary">Ãšltima operaÃ§Ã£o</p>
+            <p className="typo-body text-primary">{lastAction}</p>
           </div>
         </div>
       )}
 
       {apiError && (
-        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+        <div className="state-danger-soft flex items-start gap-3 rounded-lg border p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-current" />
           <div>
-            <p className="text-sm font-medium text-destructive">Erro</p>
-            <p className="text-sm text-destructive/80">{apiError}</p>
+            <p className="typo-body font-medium text-current">Erro</p>
+            <p className="typo-body text-current/90">{apiError}</p>
           </div>
         </div>
       )}
@@ -587,28 +587,28 @@ export default function PainelOperacional() {
           <div className="max-h-[420px] overflow-y-auto pr-1">
             {initialLoading ? (
               <div className="rounded-lg border border-border bg-muted p-4">
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center gap-2 typo-body text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Carregando falhas...
                 </div>
               </div>
             ) : failureCount === 0 ? (
-              <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">Nenhuma falha no momento.</div>
+              <div className="rounded-lg border border-border bg-muted p-4 typo-body text-muted-foreground">Nenhuma falha no momento.</div>
             ) : (
               <div className="space-y-3">
                 {failures.map((item, index) => (
-                  <div key={`${item.kind}-${item.name}-${index}`} className="rounded-lg bg-rose-50 px-4 py-3">
+                  <div key={`${item.kind}-${item.name}-${index}`} className="state-danger-soft rounded-lg border px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-foreground">{item.kind}: {item.name}</p>
-                        <p className="text-xs text-muted-foreground">IP {item.ip} - Porta {item.port ?? "--"} - HTTP {item.statusCode ?? "--"}</p>
+                        <p className="typo-body font-semibold text-foreground">{item.kind}: {item.name}</p>
+                        <p className="typo-caption">IP {item.ip} - Porta {item.port ?? "--"} - HTTP {item.statusCode ?? "--"}</p>
                       </div>
-                      <Badge className="rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-50">
-                        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-rose-600" />
+                      <Badge className="rounded-full state-danger-soft px-3 py-1 typo-caption font-medium">
+                        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-status-danger-solid" />
                         Falha
                       </Badge>
                     </div>
-                    {item.error ? <p className="mt-2 text-xs text-rose-700">Erro: {item.error}</p> : null}
+                    {item.error ? <p className="mt-2 typo-caption text-current">Erro: {item.error}</p> : null}
                   </div>
                 ))}
               </div>
@@ -623,18 +623,18 @@ export default function PainelOperacional() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Novo atalho rápido</DialogTitle>
-            <DialogDescription>Crie um acesso de 1 clique para porta ou portão.</DialogDescription>
+            <DialogTitle>Novo atalho rÃ¡pido</DialogTitle>
+            <DialogDescription>Crie um acesso de 1 clique para porta ou portÃ£o.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-xs">Nome do atalho</Label>
-              <Input value={shortcutLabel} onChange={(e) => setShortcutLabel(e.target.value)} placeholder="Ex: Portão Veículos" className="h-9 text-sm" />
+              <Label className="typo-label">Nome do atalho</Label>
+              <Input value={shortcutLabel} onChange={(e) => setShortcutLabel(e.target.value)} placeholder="Ex: PortÃ£o VeÃ­culos" className="h-9 text-sm" />
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs">Tipo</Label>
+              <Label className="typo-label">Tipo</Label>
               <Select value={shortcutType} onValueChange={(value) => {
                 setShortcutType(value as ShortcutType);
                 setShortcutTargetId("");
@@ -642,13 +642,13 @@ export default function PainelOperacional() {
                 <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="door">Porta</SelectItem>
-                  <SelectItem value="gate">Portão</SelectItem>
+                  <SelectItem value="gate">PortÃ£o</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs">Dispositivo</Label>
+              <Label className="typo-label">Dispositivo</Label>
               <Select value={shortcutTargetId} onValueChange={setShortcutTargetId}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -661,7 +661,7 @@ export default function PainelOperacional() {
 
             {shortcutType === "gate" ? (
               <div className="space-y-1">
-                <Label className="text-xs">Fechamento automático (s)</Label>
+                <Label className="typo-label">Fechamento automÃ¡tico (s)</Label>
                 <Input
                   type="number"
                   min={1}
@@ -695,15 +695,15 @@ export default function PainelOperacional() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Validar CPF para abrir portão</DialogTitle>
+            <DialogTitle>Validar CPF para abrir portÃ£o</DialogTitle>
             <DialogDescription>
-              {pendingGateShortcut ? `Atalho: ${pendingGateShortcut.label}` : "Validação necessária para abertura."}
+              {pendingGateShortcut ? `Atalho: ${pendingGateShortcut.label}` : "ValidaÃ§Ã£o necessÃ¡ria para abertura."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-xs">CPF</Label>
+              <Label className="typo-label">CPF</Label>
               <div className="flex gap-2">
                 <Input
                   value={gateCpf}
@@ -740,11 +740,11 @@ export default function PainelOperacional() {
             </div>
 
             <div
-              className={`min-h-[120px] rounded-md border px-3 py-2 text-sm ${!gateVerifyMessage && !gateVerifiedPerson
+              className={`min-h-[120px] rounded-md border px-3 py-2 typo-body ${!gateVerifyMessage && !gateVerifiedPerson
                 ? "border-border bg-muted text-muted-foreground"
                 : gateAllowed
-                  ? "border-emerald-200 bg-emerald-100 text-emerald-900"
-                  : "border-rose-200 bg-rose-100 text-rose-900"
+                  ? "state-success-soft"
+                  : "state-danger-soft"
                 }`}
             >
               {gateVerifiedPerson ? (
@@ -752,14 +752,14 @@ export default function PainelOperacional() {
                   <p className="font-medium">{gateVerifiedPerson.NOME?.trim() || "--"}</p>
                   <p>Unidade: {gateVerifiedPerson.QUADRA?.trim() || "--"} {gateVerifiedPerson.LOTE?.trim() || "--"}</p>
                   <p>Tipo: {gateVerifiedPerson.DESCRICAO?.trim() || "--"}</p>
-                  <p>Permitido: {(gateVerifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "Não"}</p>
+                  <p>Permitido: {(gateVerifiedPerson.PERMITIDO || "").trim().toUpperCase() === "S" ? "Sim" : "NÃ£o"}</p>
                 </>
               ) : (
-                <p className="pt-2 text-xs">Insira um CPF e clique na lupa para validar o acesso.</p>
+                <p className="pt-2 typo-caption">Insira um CPF e clique na lupa para validar o acesso.</p>
               )}
 
               {gateVerifyMessage ? (
-                <div className="mt-2 flex items-center gap-2 text-xs">
+                <div className="mt-2 flex items-center gap-2 typo-caption text-current">
                   {gateAllowed ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                   <span>{gateVerifyMessage}</span>
                 </div>
@@ -778,7 +778,7 @@ export default function PainelOperacional() {
             </Button>
             <Button onClick={() => void confirmGateShortcutOpen()} disabled={!gateAllowed || !gateVerifiedPerson || gateVerifyLoading || gateOpenLoading}>
               {gateOpenLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Abrir o portão
+              Abrir o portÃ£o
             </Button>
           </DialogFooter>
         </DialogContent>

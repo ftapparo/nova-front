@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import Login from "./pages/Login";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import PainelOperacional from "./pages/dashboard/PainelOperacional";
@@ -29,34 +30,36 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardProvider>
-                    <DashboardLayout />
-                  </DashboardProvider>
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<PainelOperacional />} />
-              <Route path="equipamentos" element={<Equipamentos />} />
-              <Route path="acesso" element={<ControleAcesso />} />
-              <Route path="exaustores" element={<Exhausts />} />
-              <Route path="veiculos" element={<Veiculos />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="nova-residence-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardProvider>
+                      <DashboardLayout />
+                    </DashboardProvider>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<PainelOperacional />} />
+                <Route path="equipamentos" element={<Equipamentos />} />
+                <Route path="acesso" element={<ControleAcesso />} />
+                <Route path="exaustores" element={<Exhausts />} />
+                <Route path="veiculos" element={<Veiculos />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
