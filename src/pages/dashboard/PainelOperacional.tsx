@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { api, type AccessVerifyItem } from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useDashboard, type LatestGateAccessItem } from "@/contexts/DashboardContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { queueUserSettingsPush } from "@/services/user-settings-sync";
 import PageContainer from "@/components/layout/PageContainer";
 
 type FailureItem = {
@@ -61,6 +63,7 @@ const truncateResidentName = (name: string, maxLength = 25): string => {
 };
 
 export default function PainelOperacional() {
+  const { user } = useAuth();
   const {
     doors,
     gates,
@@ -178,7 +181,10 @@ export default function PainelOperacional() {
 
   useEffect(() => {
     window.localStorage.setItem(SHORTCUTS_STORAGE_KEY, JSON.stringify(shortcuts));
-  }, [shortcuts]);
+    if (user) {
+      queueUserSettingsPush(user);
+    }
+  }, [shortcuts, user]);
 
   const resetDialog = () => {
     setShortcutLabel("");
@@ -781,11 +787,11 @@ export default function PainelOperacional() {
             </div>
 
             <div
-              className={`min-h-[120px] rounded-md border px-3 py-2 typo-body ${!gateVerifyMessage && !gateVerifiedPerson
+              className={`mt-2 min-h-[132px] rounded-md px-3 border  py-2 typo-body ${!gateVerifyMessage && !gateVerifiedPerson
                 ? "border-border bg-muted text-muted-foreground"
                 : gateAllowed
-                  ? "state-success-soft"
-                  : "state-danger-soft"
+                  ? "state-success-soft border-status-success-solid/40"
+                  : "state-danger-soft border-status-danger-solid/40"
                 }`}
             >
               {gateVerifiedPerson ? (

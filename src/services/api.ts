@@ -309,6 +309,18 @@ export interface VehicleLookupResponse {
 
 export type VehicleLookupProvider = "API1" | "API2" | "API3";
 
+export interface UserSettingsResponse {
+  user: string;
+  exists: boolean;
+  updatedAt: number;
+  items: Record<string, string>;
+}
+
+export interface UserSettingsUpsertPayload {
+  updatedAt: number;
+  items: Record<string, string>;
+}
+
 export const api = {
   controlStatus: () => request<ControlStatusResponse>("GET", "/control/status"),
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
@@ -342,4 +354,8 @@ export const api = {
     request<{ vehicleSeq: number; ownerUnlinked: boolean; tagRemoved: boolean }>("PATCH", `/vehicles/${vehicleSeq}/unlink-owner`),
   exhaustProcessStatus: () => request<ExhaustProcessStatus>("GET", "/exhausts/process/status"),
   exhaustStatusAll: () => request<ExhaustStatusResponse>("GET", "/exhausts/status"),
+  userSettingsGet: (user: string) =>
+    request<UserSettingsResponse>("GET", `/user-settings/${encodeURIComponent(user)}`),
+  userSettingsUpsert: (user: string, payload: UserSettingsUpsertPayload) =>
+    request<UserSettingsResponse>("PUT", `/user-settings/${encodeURIComponent(user)}`, payload),
 };

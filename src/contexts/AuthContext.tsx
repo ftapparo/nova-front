@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { syncUserSettingsOnLogin } from "@/services/user-settings-sync";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: string | null;
-  login: (username: string, password: string) => { success: boolean; error?: string };
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -16,15 +17,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem("nr_auth") === "true");
   const [user, setUser] = useState<string | null>(() => sessionStorage.getItem("nr_user"));
 
-  const login = useCallback((username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     if (username === VALID_USER && password === VALID_PASS) {
+      const normalizedUser = username.toUpperCase();
+      await syncUserSettingsOnLogin(normalizedUser);
       setIsAuthenticated(true);
-      setUser(username.toUpperCase());
+      setUser(normalizedUser);
       sessionStorage.setItem("nr_auth", "true");
-      sessionStorage.setItem("nr_user", username.toUpperCase());
+      sessionStorage.setItem("nr_user", normalizedUser);
       return { success: true };
     }
-    return { success: false, error: "UsuÃ¡rio ou senha invÃ¡lidos." };
+    return { success: false, error: "Usuário ou senha inválidos." };
   }, []);
 
   const logout = useCallback(() => {

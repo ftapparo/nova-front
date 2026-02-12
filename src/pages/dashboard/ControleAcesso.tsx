@@ -9,9 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useDashboard } from "@/contexts/DashboardContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { humanizeLabel } from "@/lib/utils";
 import { notify } from "@/lib/notify";
 import { api, type AccessVerifyItem } from "@/services/api";
+import { queueUserSettingsPush } from "@/services/user-settings-sync";
 import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
 
@@ -21,6 +23,7 @@ const WIDE_VIEWPORT_MIN_WIDTH = 1480;
 
 export default function ControleAcesso() {
   const { doors, gates, handleOpenDoor, handleOpenGate } = useDashboard();
+  const { user } = useAuth();
 
   const [selectedGate, setSelectedGate] = useState("");
   const [autoClose, setAutoClose] = useState(3);
@@ -67,6 +70,9 @@ export default function ControleAcesso() {
     }
     setCustomNames(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (user) {
+      queueUserSettingsPush(user);
+    }
   };
 
   const openEditDialog = (doorId: string, currentName: string) => {
