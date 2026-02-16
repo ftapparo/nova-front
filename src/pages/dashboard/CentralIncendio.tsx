@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Bell, RefreshCw, RotateCcw, ShieldAlert, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cieApi, type CieLogItem, type CieLogType } from "@/services/api";
@@ -12,50 +13,55 @@ import PageHeader from "@/components/layout/PageHeader";
 
 type DashboardLogTab = Exclude<CieLogType, "bloqueio">;
 type CurrentStateKey = "alarme" | "falha" | "bloqueio" | "supervisao";
+type SecondaryCardMode = "estado-atual" | "registro-eventos";
 
 const LOG_TABS: Array<{ value: DashboardLogTab; label: string }> = [
-  { value: "operacao", label: "Operação" },
+  { value: "operacao", label: "OperaÃ§Ã£o" },
   { value: "alarme", label: "Alarme" },
   { value: "falha", label: "Falha" },
-  { value: "supervisao", label: "Supervisão" },
+  { value: "supervisao", label: "SupervisÃ£o" },
 ];
 
 const COUNTER_KEYS: Array<{ key: CurrentStateKey; label: string }> = [
   { key: "alarme", label: "Alarme" },
   { key: "falha", label: "Falha" },
   { key: "bloqueio", label: "Bloqueio" },
-  { key: "supervisao", label: "Supervisão" },
+  { key: "supervisao", label: "SupervisÃ£o" },
 ];
 
 const EVENT_TYPE_LABEL: Record<CieLogType, string> = {
-  operacao: "Evento de operação",
+  operacao: "Evento de operaÃ§Ã£o",
   alarme: "Evento de alarme",
   falha: "Disp. em Falha",
-  supervisao: "Evento de supervisão",
+  supervisao: "Evento de supervisÃ£o",
   bloqueio: "Evento de bloqueio",
 };
 
 const toFriendlyError = (error: unknown): string => {
-  const fallback = "Não foi possível comunicar com a Central de Incêndio no momento.";
+  const fallback = "NÃ£o foi possÃ­vel comunicar com a Central de IncÃªndio no momento.";
   if (!(error instanceof Error)) return fallback;
 
   const raw = error.message || "";
   const message = raw.toLowerCase();
 
   if (message.includes("network error")) {
-    return "Central offline. Não foi possível conectar ao serviço da central.";
+    return "Central offline. NÃ£o foi possÃ­vel conectar ao serviÃ§o da central.";
   }
 
   if (message.includes("timeout")) {
     return "Central sem resposta. Verifique a rede e tente novamente.";
   }
 
-  if (message.includes("nao mapeado") || message.includes("não mapeado")) {
+  if (message.includes("nao mapeado") || message.includes("nÃ£o mapeado")) {
+    return "Comando nÃ£o configurado na central. Solicite ajuste tÃ©cnico.";
+  }
+
+  if (message.includes("statusbotaonaoconfigurado")) {
     return "Comando não configurado na central. Solicite ajuste técnico.";
   }
 
   if (message.includes("erro ao chamar rota cie")) {
-    return "Serviço da central indisponível no momento.";
+    return "ServiÃ§o da central indisponÃ­vel no momento.";
   }
 
   return raw || fallback;
@@ -100,9 +106,11 @@ export default function CentralIncendio() {
   const queryClient = useQueryClient();
   const [logTab, setLogTab] = useState<DashboardLogTab>("falha");
   const [currentStateTab, setCurrentStateTab] = useState<CurrentStateKey>("falha");
+  const [secondaryMode, setSecondaryMode] = useState<SecondaryCardMode>("registro-eventos");
   const [tabOpenedAt, setTabOpenedAt] = useState<number>(Date.now());
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const [lastStableFailure, setLastStableFailure] = useState<CieLogItem | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<CieLogItem | null>(null);
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -111,17 +119,21 @@ export default function CentralIncendio() {
     staleTime: 2000,
   });
 
+  const isLogsMode = secondaryMode === "registro-eventos";
+  const activeLogType: CieLogType = isLogsMode ? logTab : currentStateTab;
+
   const logsQuery = useQuery({
-    queryKey: ["cie", "logs", logTab],
-    queryFn: () => cieApi.logs(logTab, 20),
-    enabled: !panelQuery.isError && panelQuery.data?.online === true,
+    queryKey: ["cie", "logs", secondaryMode, activeLogType],
+    queryFn: () => cieApi.logs(activeLogType, 20),
+    enabled: isLogsMode && !panelQuery.isError && panelQuery.data?.online === true,
     refetchInterval: 2000,
     staleTime: 2000,
   });
 
   const commandMutation = useMutation({
-    mutationFn: async (action: "silenceBip" | "alarmGeneral" | "silenceSiren" | "restartCentral") => {
+    mutationFn: async (action: "silenceBip" | "release" | "alarmGeneral" | "silenceSiren" | "restartCentral") => {
       if (action === "silenceBip") return cieApi.silenceBip();
+      if (action === "release") return cieApi.release();
       if (action === "alarmGeneral") return cieApi.alarmGeneral();
       if (action === "silenceSiren") return cieApi.silenceSiren();
       return cieApi.restartCentral();
@@ -137,14 +149,14 @@ export default function CentralIncendio() {
   const panel = panelQuery.data;
   const panelOnline = panel?.online === true;
   const online = !panelQuery.isError && panelOnline;
-  const isLoading = panelQuery.isLoading && logsQuery.isLoading;
+  const isLoading = panelQuery.isLoading || (isLogsMode && logsQuery.isLoading);
   const offline = !online;
   const visiblePanel = online ? panel : null;
   const counters = visiblePanel?.counters;
-  const logs = online ? (logsQuery.data?.items ?? []) : [];
+  const logs = online && isLogsMode ? (logsQuery.data?.items ?? []) : [];
   const highlightedFailure = visiblePanel?.latestFailureEvent ?? null;
   const panelErrorMessage = panelQuery.error ? toFriendlyError(panelQuery.error) : null;
-  const logsErrorMessage = online && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
+  const logsErrorMessage = online && isLogsMode && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
 
   const latestEvents = useMemo(() => logs.slice(0, 20), [logs]);
   const tabElapsedMs = Date.now() - tabOpenedAt;
@@ -154,13 +166,13 @@ export default function CentralIncendio() {
   }, [logTab]);
 
   const targetEventCount = useMemo(() => {
-    if (logTab === "operacao") return 20;
-    const mappedKey = logTab as "alarme" | "falha" | "supervisao";
+    if (activeLogType === "operacao") return 20;
+    const mappedKey = activeLogType as "alarme" | "falha" | "supervisao" | "bloqueio";
     const counterValue = counters?.[mappedKey] ?? 0;
     return Math.max(0, Math.min(20, Number(counterValue) || 0));
-  }, [counters, logTab]);
+  }, [counters, activeLogType]);
 
-  const waitingBatchLoad = online
+  const waitingBatchLoad = isLogsMode && online
     && !logsErrorMessage
     && targetEventCount > 0
     && latestEvents.length < targetEventCount
@@ -186,11 +198,24 @@ export default function CentralIncendio() {
   const selectedStateCount = counters?.[currentStateTab] ?? 0;
   const selectedStateLabel = COUNTER_KEYS.find((item) => item.key === currentStateTab)?.label ?? "Estado";
   const selectedLogLabel = LOG_TABS.find((item) => item.value === logTab)?.label ?? "Eventos";
+  const secondaryTitle = secondaryMode === "estado-atual"
+    ? `Estado Atual de ${selectedStateLabel}`
+    : `Registros de ${selectedLogLabel}`;
+  const secondaryDescription = secondaryMode === "estado-atual"
+    ? `CondiÃ§Ã£o atual para ${selectedStateLabel.toLowerCase()}.`
+    : `Ãšltimos atÃ© 20 registros de ${selectedLogLabel.toLowerCase()}.`;
+  const ledAlarmGeneralOn = visiblePanel?.leds?.alarmeGeral === true;
+  const ledCentralSilenciadaOn = visiblePanel?.leds?.centralSilenciada === true;
+  const ledSireneSilenciadaOn = visiblePanel?.leds?.sireneSilenciada === true;
 
   const handleManualRefresh = async () => {
     try {
       setManualRefreshing(true);
-      await Promise.all([panelQuery.refetch(), logsQuery.refetch()]);
+      if (isLogsMode) {
+        await Promise.all([panelQuery.refetch(), logsQuery.refetch()]);
+      } else {
+        await panelQuery.refetch();
+      }
       notify.success("Central atualizada", { description: "Dados sincronizados com sucesso." });
     } finally {
       setManualRefreshing(false);
@@ -198,7 +223,7 @@ export default function CentralIncendio() {
   };
 
   const runCommand = async (
-    action: "silenceBip" | "alarmGeneral" | "silenceSiren" | "restartCentral",
+    action: "silenceBip" | "release" | "alarmGeneral" | "silenceSiren" | "restartCentral",
     label: string
   ) => {
     try {
@@ -213,7 +238,7 @@ export default function CentralIncendio() {
   return (
     <PageContainer size="wide">
       <PageHeader
-        title="Central de Incêndio"
+        title="Central de IncÃªndio"
         description="Monitoramento e comando da CIE2500 em tempo real."
         actions={(
           <Button
@@ -256,10 +281,10 @@ export default function CentralIncendio() {
                     <div>
                       <p className="typo-label uppercase text-status-danger-soft-foreground">Central Offline</p>
                       <p className="typo-body font-semibold text-foreground">
-                        {panelErrorMessage || "Central offline. Não foi possível conectar ao serviço da central."}
+                        {panelErrorMessage || "Central offline. NÃ£o foi possÃ­vel conectar ao serviÃ§o da central."}
                       </p>
                       <p className="typo-caption text-muted-foreground">
-                        Oriente o porteiro/zelador/síndico a verificar o serviço da central e a conexão de rede.
+                        Oriente o porteiro/zelador/sÃ­ndico a verificar o serviÃ§o da central e a conexÃ£o de rede.
                       </p>
                     </div>
                   </div>
@@ -271,9 +296,15 @@ export default function CentralIncendio() {
                     <div>
                       <p className="typo-label uppercase text-status-warning-soft-foreground">Sistema em Falha</p>
                       <p className="typo-body font-semibold text-foreground">
-                        {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName)}
+                        {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
                       </p>
                       <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
+                      <p className="typo-caption text-muted-foreground">
+                        Zona: {normalizeLabel(displayedFailure.zoneName)} | Dispositivo: {normalizeLabel(displayedFailure.deviceName)}
+                      </p>
+                      <p className="typo-caption text-muted-foreground">
+                        Laço/Endereço: {buildEventAddress(displayedFailure)} | Data/Hora: {formatDate(displayedFailure.occurredAt)} {formatTime(displayedFailure.occurredAt)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -292,7 +323,10 @@ export default function CentralIncendio() {
                       <button
                         key={item.key}
                         type="button"
-                        onClick={() => setCurrentStateTab(item.key)}
+                        onClick={() => {
+                          setCurrentStateTab(item.key);
+                          setSecondaryMode("estado-atual");
+                        }}
                         className={active
                           ? "rounded-lg border state-warning-soft px-3 py-2 text-center transition-colors"
                           : "rounded-lg border bg-muted/40 px-3 py-2 text-center transition-colors hover:bg-muted/60"}
@@ -310,7 +344,13 @@ export default function CentralIncendio() {
 
               <div>
                 <p className="mb-2 typo-caption uppercase text-muted-foreground">Registro de Eventos</p>
-                <Tabs value={logTab} onValueChange={(value) => setLogTab(value as DashboardLogTab)}>
+                <Tabs
+                  value={logTab}
+                  onValueChange={(value) => {
+                    setLogTab(value as DashboardLogTab);
+                    setSecondaryMode("registro-eventos");
+                  }}
+                >
                   <TabsList className="grid h-10 w-full grid-cols-4">
                     {LOG_TABS.map((tab) => (
                       <TabsTrigger key={tab.value} value={tab.value} className="w-full">
@@ -337,7 +377,7 @@ export default function CentralIncendio() {
                   <p className="typo-body font-medium">{formatPanelTime(visiblePanel?.dataHora?.timestamp)}</p>
                   {visiblePanel?.lastError ? (
                     <>
-                      <p className="mt-2 typo-caption uppercase text-muted-foreground">Último erro</p>
+                      <p className="mt-2 typo-caption uppercase text-muted-foreground">Ãšltimo erro</p>
                       <p className="typo-caption text-status-danger-soft-foreground">{visiblePanel.lastError}</p>
                     </>
                   ) : null}
@@ -348,17 +388,20 @@ export default function CentralIncendio() {
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline}
-                  onClick={() => void runCommand("silenceBip", "Silenciar Bip Interno")}
-                  className="h-11"
+                  onClick={() => void runCommand(
+                    ledCentralSilenciadaOn ? "release" : "silenceBip",
+                    ledCentralSilenciadaOn ? "Reativar Bip Interno" : "Silenciar Bip Interno"
+                  )}
+                  className={`h-11 ${ledCentralSilenciadaOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
                 >
                   <VolumeX className="mr-2 h-4 w-4" />
-                  Silenciar Bip
+                  {ledCentralSilenciadaOn ? "Reativar Bip" : "Silenciar Bip"}
                 </Button>
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand("alarmGeneral", "Alarme Geral")}
-                  className="h-11"
+                  className={`h-11 ${ledAlarmGeneralOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
                 >
                   <ShieldAlert className="mr-2 h-4 w-4" />
                   Alarme Geral
@@ -366,12 +409,13 @@ export default function CentralIncendio() {
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline}
-                  onClick={() => void runCommand("silenceSiren", "Silenciar Sirene")}
-                  className="h-11"
+                  onClick={() => void runCommand(
+                    ledSireneSilenciadaOn ? "release" : "silenceSiren",
+                    ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"
+                  )}
+                  className={`h-11 ${ledSireneSilenciadaOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
                 >
-                  <Bell className="mr-2 h-4 w-4" />
-                  Silenciar Sirene
-                </Button>
+                  <Bell className="mr-2 h-4 w-4" />{ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"}</Button>
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline}
@@ -389,27 +433,64 @@ export default function CentralIncendio() {
         <div className="xl:col-span-2">
           <Card className="h-full min-h-[540px] shadow-sm">
             <CardHeader className="space-y-3">
-              <CardTitle>{`Registros de ${selectedLogLabel}`}</CardTitle>
-              <CardDescription>{`Últimos até 20 registros de ${selectedLogLabel.toLowerCase()}.`}</CardDescription>
+              <CardTitle>{secondaryTitle}</CardTitle>
+              <CardDescription>{secondaryDescription}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="max-h-[540px] overflow-y-auto pr-1">
                 {offline ? (
                   <div className="rounded-lg border state-danger-soft px-4 py-3 typo-body text-status-danger-soft-foreground">
-                    Central offline. Registros indisponíveis no momento.
+                    Central offline. Registros indisponÃ­veis no momento.
                   </div>
+                ) : secondaryMode === "estado-atual" ? (
+                  selectedStateCount <= 0 ? (
+                    <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
+                      Nenhum evento ativo em {selectedStateLabel.toLowerCase()}.
+                    </div>
+                  ) : currentStateTab === "falha" && displayedFailure ? (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDetail(displayedFailure)}
+                      className="w-full rounded-lg border bg-muted/40 px-3 py-3 text-left transition-colors hover:bg-muted/60"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="typo-caption text-muted-foreground">1</p>
+                          <p className="typo-body font-semibold text-foreground">
+                            {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
+                          </p>
+                          <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="typo-caption">{formatDate(displayedFailure.occurredAt)}</p>
+                          <p className="typo-caption">{formatTime(displayedFailure.occurredAt)}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
+                      {selectedStateLabel}: {selectedStateCount} evento(s) ativo(s) no momento.
+                    </div>
+                  )
                 ) : isLoading || waitingBatchLoad ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
-                    Carregando os últimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
+                    Carregando os ultimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
                   </div>
                 ) : latestEvents.length === 0 ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
                     Sem eventos para o filtro selecionado.
+
+
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {latestEvents.map((event, index) => (
-                      <div key={event.key} className="rounded-lg border bg-muted/40 px-3 py-3">
+                      <button
+                        key={event.key}
+                        type="button"
+                        onClick={() => setSelectedDetail(event)}
+                        className="w-full rounded-lg border bg-muted/40 px-3 py-3 text-left transition-colors hover:bg-muted/60"
+                      >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="typo-caption text-muted-foreground">{index + 1}</p>
@@ -425,12 +506,12 @@ export default function CentralIncendio() {
                             <p className="typo-caption">{formatTime(event.occurredAt)}</p>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
               </div>
-              {logsErrorMessage ? (
+              {isLogsMode && logsErrorMessage ? (
                 <div className="mt-3 rounded-lg border state-danger-soft px-4 py-3 typo-caption">
                   {logsErrorMessage}
                 </div>
@@ -439,6 +520,38 @@ export default function CentralIncendio() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={Boolean(selectedDetail)} onOpenChange={(open) => { if (!open) setSelectedDetail(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do evento</DialogTitle>
+            <DialogDescription>
+              {selectedDetail
+                ? `${buildEventAddress(selectedDetail)} - ${normalizeLabel(selectedDetail.zoneName || selectedDetail.deviceName)}`
+                : "Selecione uma linha para ver os detalhes."}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedDetail ? (
+            <div className="grid gap-2 text-sm">
+              <p><strong>Tipo:</strong> {EVENT_TYPE_LABEL[selectedDetail.type]}</p>
+              <p><strong>ID:</strong> {selectedDetail.id}</p>
+              <p><strong>Laço/Endereço:</strong> {buildEventAddress(selectedDetail)}</p>
+              <p><strong>Zona:</strong> {normalizeLabel(selectedDetail.zoneName)}</p>
+              <p><strong>Dispositivo:</strong> {normalizeLabel(selectedDetail.deviceName)}</p>
+              <p><strong>Data:</strong> {formatDate(selectedDetail.occurredAt)}</p>
+              <p><strong>Hora:</strong> {formatTime(selectedDetail.occurredAt)}</p>
+              <p><strong>Evento (código):</strong> {selectedDetail.eventType ?? "--"}</p>
+              <p><strong>Bloqueado:</strong> {selectedDetail.blocked ? "Sim" : "Não"}</p>
+              <div className="mt-2 rounded-md bg-muted p-3">
+                <p className="mb-1 typo-caption text-muted-foreground">Payload bruto</p>
+                <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs">
+                  {JSON.stringify(selectedDetail.raw, null, 2)}
+                </pre>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

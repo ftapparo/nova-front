@@ -485,6 +485,7 @@ export const cieApi = {
     return request<CieLogsResponse>("GET", `/cie/logs?${params.toString()}`);
   },
   silenceBip: () => request<unknown>("POST", "/cie/commands/silence-bip"),
+  release: () => request<unknown>("POST", "/cie/commands/release"),
   alarmGeneral: () => request<unknown>("POST", "/cie/commands/alarm-general"),
   silenceSiren: () => request<unknown>("POST", "/cie/commands/silence-siren"),
   restartCentral: () => request<unknown>("POST", "/cie/commands/restart"),
