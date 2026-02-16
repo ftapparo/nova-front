@@ -21,14 +21,18 @@ export default defineConfig(({ mode }) => ({
       injectRegister: "auto",
       includeAssets: [
         "favicon.ico",
-        "logo-nova-residence.png",
-        "logo-nova-residence-branco.png",
         "icons/icon-192.png",
         "icons/icon-512.png",
       ],
       manifest: false,
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: [
+          "favicon.ico",
+          "icons/icon-192.png",
+          "icons/icon-512.png",
+          "screenshots/*.png",
+        ],
       },
       devOptions: {
         enabled: mode === "development",

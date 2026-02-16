@@ -1,4 +1,5 @@
 {
+  "id": "/?source=pwa",
   "name": "Nova Residence - Portal Administrativo",
   "short_name": "Nova Residence",
   "start_url": "/",
@@ -10,6 +11,8 @@
   "theme_color": "#F5F6FA",
   "background_color": "#F5F6FA",
   "orientation": "any",
+  "categories": ["business", "productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -34,6 +37,56 @@
       "sizes": "48x48",
       "type": "image/x-icon",
       "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela principal do painel administrativo"
+    },
+    {
+      "src": "/screenshots/login-desktop.png",
+      "sizes": "1762x846",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela de login em desktop"
+    },
+    {
+      "src": "/screenshots/dashboard-mobile.png",
+      "sizes": "350x759",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tela principal do painel em dispositivo movel"
+    },
+    {
+      "src": "/screenshots/login-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tela de login em dispositivo movel"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Painel",
+      "short_name": "Painel",
+      "description": "Abrir painel operacional",
+      "url": "/dashboard"
+    },
+    {
+      "name": "Controle de Acesso",
+      "short_name": "Acesso",
+      "description": "Abrir controle de acesso",
+      "url": "/dashboard/acesso"
+    },
+    {
+      "name": "Veiculos",
+      "short_name": "Veiculos",
+      "description": "Abrir modulo de veiculos",
+      "url": "/dashboard/veiculos"
     }
   ]
 }
