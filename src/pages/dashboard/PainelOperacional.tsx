@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { api, type AccessVerifyItem } from "@/services/api";
+import { api, type AccessVerifyItem, type CommandLogItem } from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useDashboard, type LatestGateAccessItem } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,6 +72,8 @@ export default function PainelOperacional() {
     latestAccessAutoRefresh,
     setLatestAccessAutoRefresh,
     lastAction,
+    commandHistory,
+    refreshCommandHistory,
     apiError,
     refreshing,
     handleOpenDoor,
@@ -99,6 +101,7 @@ export default function PainelOperacional() {
   const [isWideViewport, setIsWideViewport] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [selectedLatestAccess, setSelectedLatestAccess] = useState<LatestGateAccessItem | null>(null);
+  const [commandHistoryModalOpen, setCommandHistoryModalOpen] = useState(false);
 
   useEffect(() => {
     if (!refreshing) setHasLoadedInitialData(true);
@@ -373,6 +376,20 @@ export default function PainelOperacional() {
   const initialLoading = !hasLoadedInitialData && refreshing;
   const autoRefreshSwitchId = "latest-access-auto-refresh";
   const lastActionMessage = lastAction ?? "Nenhuma operação recente.";
+  const openCommandHistoryModal = () => {
+    setCommandHistoryModalOpen(true);
+    void refreshCommandHistory();
+  };
+
+  const formatCommandLogDate = (value: string): string => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString("pt-BR", { hour12: false });
+  };
+
+  const formatCommandLog = (item: CommandLogItem): string => {
+    return `${formatCommandLogDate(item.timestamp)} - ${item.actor} - ${item.command} - HTTP ${item.status}`;
+  };
 
   const handleOpenFailuresModal = () => {
     setFailuresDialogOpen(true);
@@ -386,13 +403,17 @@ export default function PainelOperacional() {
   return (
     <PageContainer size={isWideViewport ? "wide" : "default"} className="min-w-0">
       <h1 className="sr-only">Painel Operacional</h1>
-      <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:hidden">
+      <button
+        type="button"
+        onClick={openCommandHistoryModal}
+        className="flex w-full items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-left sm:hidden"
+      >
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div>
           <p className="typo-body font-medium text-primary">Última operação</p>
           <p className="typo-body text-primary">{lastActionMessage}</p>
         </div>
-      </div>
+      </button>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="hidden bg-card shadow-sm sm:block">
           <CardContent className="flex min-h-[131px] items-center justify-between p-5">
@@ -604,13 +625,17 @@ export default function PainelOperacional() {
           </div>
         </div>
       </div>
-      <div className="hidden items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex">
+      <button
+        type="button"
+        onClick={openCommandHistoryModal}
+        className="hidden w-full items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-left sm:flex"
+      >
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div>
           <p className="typo-body font-medium text-primary">Última operação</p>
           <p className="typo-body text-primary">{lastActionMessage}</p>
         </div>
-      </div>
+      </button>
 
       {apiError && (
         <div className="state-danger-soft flex items-start gap-3 rounded-lg border p-4">
@@ -851,6 +876,29 @@ export default function PainelOperacional() {
               <p><strong>Portão:</strong> {selectedLatestAccess.gateName} ({selectedLatestAccess.gateId})</p>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={commandHistoryModalOpen} onOpenChange={setCommandHistoryModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Últimos comandos da API</DialogTitle>
+            <DialogDescription>Histórico persistido dos últimos 20 comandos executados.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[420px] overflow-y-auto rounded-md border border-border p-2">
+            {commandHistory.length === 0 ? (
+              <p className="typo-body text-muted-foreground p-2">Nenhum comando registrado.</p>
+            ) : (
+              <div className="space-y-2">
+                {commandHistory.map((item) => (
+                  <div key={item.id} className="rounded-md border border-border bg-muted/50 p-3">
+                    <p className="typo-body font-medium text-foreground">{item.command}</p>
+                    <p className="typo-caption text-muted-foreground">{formatCommandLog(item)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </PageContainer>

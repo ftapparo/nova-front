@@ -16,6 +16,17 @@ const http: AxiosInstance = axios.create({
   },
 });
 
+http.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const user = window.sessionStorage.getItem("nr_user");
+    if (user && user.trim()) {
+      config.headers = config.headers || {};
+      (config.headers as Record<string, string>)["x-user"] = user.trim();
+    }
+  }
+  return config;
+});
+
 const parseApiMessage = (payload: unknown, fallback: string): string => {
   if (payload && typeof payload === "object" && "message" in payload && typeof (payload as { message?: unknown }).message === "string") {
     return (payload as { message: string }).message;
@@ -106,6 +117,23 @@ export interface ExhaustProcessStatus {
   total: number;
   memory: ExhaustProcessMemoryItem[];
   generatedAt: string;
+}
+
+export interface CommandLogItem {
+  id: string;
+  timestamp: string;
+  method: string;
+  path: string;
+  command: string;
+  status: number;
+  actor: string;
+  ip: string | null;
+}
+
+export interface CommandLogsResponse {
+  total: number;
+  limit: number;
+  logs: CommandLogItem[];
 }
 
 export interface ExhaustModuleStatusDetail {
@@ -362,4 +390,6 @@ export const api = {
     request<UserSettingsResponse>("GET", `/user-settings/${encodeURIComponent(user)}`),
   userSettingsUpsert: (user: string, payload: UserSettingsUpsertPayload) =>
     request<UserSettingsResponse>("PUT", `/user-settings/${encodeURIComponent(user)}`, payload),
+  commandLogs: (limit = 20) =>
+    request<CommandLogsResponse>("GET", `/commands/logs?limit=${Math.min(Math.max(1, Math.trunc(limit)), 200)}`),
 };

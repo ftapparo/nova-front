@@ -1,6 +1,14 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+﻿import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type DoorItem, type ExhaustProcessMemoryItem, type ExhaustStatusResponse, type GateItem, type AccessListItem } from "@/services/api";
+import {
+  api,
+  type DoorItem,
+  type ExhaustProcessMemoryItem,
+  type ExhaustStatusResponse,
+  type GateItem,
+  type AccessListItem,
+  type CommandLogItem,
+} from "@/services/api";
 import { notify } from "@/lib/notify";
 import { useEquipmentStatusQuery } from "@/queries/dashboardQueries";
 import { queryKeys } from "@/queries/queryKeys";
@@ -48,6 +56,8 @@ interface DashboardContextType {
   latestAccessAutoRefresh: boolean;
   setLatestAccessAutoRefresh: (enabled: boolean) => void;
   lastAction: string | null;
+  commandHistory: CommandLogItem[];
+  refreshCommandHistory: () => Promise<void>;
   apiError: string | null;
   refreshing: boolean;
   loadDevices: (options?: { silent?: boolean }) => Promise<void>;
@@ -77,6 +87,7 @@ export function DashboardProvider({ children }: Props) {
   const [latestGateAccesses, setLatestGateAccesses] = useState<LatestGateAccessItem[]>([]);
   const [latestAccessAutoRefresh, setLatestAccessAutoRefresh] = useState(true);
   const [lastAction, setLastAction] = useState<string | null>(null);
+  const [commandHistory, setCommandHistory] = useState<CommandLogItem[]>([]);
   const [manualApiError, setManualApiError] = useState<string | null>(null);
 
   const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : "Erro desconhecido");
@@ -124,6 +135,12 @@ export function DashboardProvider({ children }: Props) {
     }));
   };
 
+  const formatLastActionFromLog = (entry: CommandLogItem | null): string | null => {
+    if (!entry) return null;
+    const when = new Date(entry.timestamp).toLocaleString("pt-BR", { hour12: false });
+    return `${when} - ${entry.actor} - ${entry.command} - HTTP ${entry.status}`;
+  };
+
   const equipmentQuery = useEquipmentStatusQuery();
   const doors = equipmentQuery.data?.controlStatus?.doors ?? EMPTY_DOORS;
   const gates = equipmentQuery.data?.controlStatus?.gates ?? EMPTY_GATES;
@@ -152,7 +169,7 @@ export function DashboardProvider({ children }: Props) {
 
       setLatestGateAccesses(loadedLatestGateAccesses);
     } catch {
-      // Ignora falhas pontuais do card de acessos para não impactar o restante do painel.
+      // Ignora falhas pontuais do card de acessos para nÃ£o impactar o restante do painel.
     }
   }, [gates]);
 
@@ -191,13 +208,24 @@ export function DashboardProvider({ children }: Props) {
     },
   });
 
+  const refreshCommandHistory = useCallback(async () => {
+    try {
+      const response = await api.commandLogs(20);
+      const logs = Array.isArray(response.logs) ? response.logs : [];
+      setCommandHistory(logs);
+      setLastAction(formatLastActionFromLog(logs[0] ?? null));
+    } catch {
+      // Sem impacto para o painel se historico falhar.
+    }
+  }, []);
+
   const loadDevices = useCallback(async (options?: { silent?: boolean }) => {
     const silent = Boolean(options?.silent);
 
     setManualApiError(null);
 
     if (!silent) {
-      notify.info("Atualizando dispositivos", { description: "Consultando portas e portões." });
+      notify.info("Atualizando dispositivos", { description: "Consultando portas e portÃµes." });
     }
 
     try {
@@ -215,16 +243,16 @@ export function DashboardProvider({ children }: Props) {
       if (latestAccessAutoRefresh) {
         void loadLatestGateAccesses(loadedGates);
       }
-      setLastAction("Dispositivos atualizados com sucesso.");
+      void refreshCommandHistory();
 
       if (!silent) {
         if ((loadedDoors.length === 0 && loadedGates.length === 0 && loadedExhaustDevices.length === 0) || payload.controlStatus?.updatedAt === null) {
-          notify.warning("Atualização concluída", {
+          notify.warning("AtualizaÃ§Ã£o concluÃ­da", {
             description: payload.controlStatus?.error || "Aguardando dados serem atualizados.",
           });
         } else {
           notify.success("Dispositivos atualizados", {
-            description: `${loadedDoors.length} porta(s), ${loadedGates.length} portão(ões) e ${loadedExhaustDevices.length} exaustor(es).`,
+            description: `${loadedDoors.length} porta(s), ${loadedGates.length} portÃ£o(Ãµes) e ${loadedExhaustDevices.length} exaustor(es).`,
           });
         }
       }
@@ -235,7 +263,7 @@ export function DashboardProvider({ children }: Props) {
         notify.error("Falha ao atualizar dispositivos", { description: errorMessage });
       }
     }
-  }, [equipmentQuery, latestAccessAutoRefresh, loadLatestGateAccesses]);
+  }, [equipmentQuery, latestAccessAutoRefresh, loadLatestGateAccesses, refreshCommandHistory]);
 
   useEffect(() => {
     if (!gates.length) {
@@ -257,6 +285,17 @@ export function DashboardProvider({ children }: Props) {
     };
   }, [gates, latestAccessAutoRefresh, loadLatestGateAccesses]);
 
+  useEffect(() => {
+    void refreshCommandHistory();
+    const intervalId = window.setInterval(() => {
+      void refreshCommandHistory();
+    }, 15_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [refreshCommandHistory]);
+
   const handleOpenDoor = useCallback(async (id: string) => {
     setManualApiError(null);
     notify.info("Enviando comando", { description: "Solicitando abertura da porta." });
@@ -264,7 +303,7 @@ export function DashboardProvider({ children }: Props) {
     try {
       await openDoorMutation.mutateAsync(id);
       const name = doors.find((d) => String(d.id) === id)?.nome ?? id;
-      setLastAction(`Porta "${name}" aberta com sucesso.`);
+      await refreshCommandHistory();
       notify.success("Porta aberta", { description: `Comando enviado para ${name}.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
@@ -272,24 +311,24 @@ export function DashboardProvider({ children }: Props) {
       notify.error("Erro ao abrir porta", { description: errorMessage });
       throw err;
     }
-  }, [doors, openDoorMutation]);
+  }, [doors, openDoorMutation, refreshCommandHistory]);
 
   const handleOpenGate = useCallback(async (id: string, autoClose: number) => {
     setManualApiError(null);
-    notify.info("Enviando comando", { description: "Solicitando abertura do portão." });
+    notify.info("Enviando comando", { description: "Solicitando abertura do portÃ£o." });
 
     try {
       await openGateMutation.mutateAsync({ id, autoClose });
       const name = gates.find((g) => String(g.numeroDispositivo) === id)?.nome ?? id;
-      setLastAction(`Portão "${name}" aberto (fechamento em ${autoClose}s).`);
-      notify.success("Portão aberto", { description: `${name} com fechamento em ${autoClose}s.` });
+      await refreshCommandHistory();
+      notify.success("PortÃ£o aberto", { description: `${name} com fechamento em ${autoClose}s.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
-      setManualApiError(`Erro ao abrir portão: ${errorMessage}`);
-      notify.error("Erro ao abrir portão", { description: errorMessage });
+      setManualApiError(`Erro ao abrir portÃ£o: ${errorMessage}`);
+      notify.error("Erro ao abrir portÃ£o", { description: errorMessage });
       throw err;
     }
-  }, [gates, openGateMutation]);
+  }, [gates, openGateMutation, refreshCommandHistory]);
 
   const handleExhaustOn = useCallback(async (block: string, apartment: string, duration: number) => {
     setManualApiError(null);
@@ -297,7 +336,7 @@ export function DashboardProvider({ children }: Props) {
 
     try {
       await exhaustOnMutation.mutateAsync({ block, apartment, duration });
-      setLastAction(`Exaustor ${block}${apartment} ligado por ${duration} min.`);
+      await refreshCommandHistory();
       notify.success("Exaustor ligado", { description: `${block}${apartment} por ${duration} minuto(s).` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
@@ -305,7 +344,7 @@ export function DashboardProvider({ children }: Props) {
       notify.error("Erro ao ligar exaustor", { description: errorMessage });
       throw err;
     }
-  }, [exhaustOnMutation]);
+  }, [exhaustOnMutation, refreshCommandHistory]);
 
   const handleExhaustOff = useCallback(async (block: string, apartment: string) => {
     setManualApiError(null);
@@ -313,7 +352,7 @@ export function DashboardProvider({ children }: Props) {
 
     try {
       await exhaustOffMutation.mutateAsync({ block, apartment });
-      setLastAction(`Exaustor ${block}${apartment} desligado.`);
+      await refreshCommandHistory();
       notify.success("Exaustor desligado", { description: `${block}${apartment}.` });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
@@ -321,7 +360,7 @@ export function DashboardProvider({ children }: Props) {
       notify.error("Erro ao desligar exaustor", { description: errorMessage });
       throw err;
     }
-  }, [exhaustOffMutation]);
+  }, [exhaustOffMutation, refreshCommandHistory]);
 
   const handleExhaustStatus = useCallback(async (id: string): Promise<ExhaustRunningStatus> => {
     const normalizedId = id.trim().toUpperCase().replace(/\s+/g, "").replace(/-/g, "_");
@@ -354,7 +393,7 @@ export function DashboardProvider({ children }: Props) {
         });
       } else {
         notify.warning("Exaustor desligado", {
-          description: `${normalizedId} não consta na memória de acionamentos.`,
+          description: `${normalizedId} nÃ£o consta na memÃ³ria de acionamentos.`,
         });
       }
 
@@ -378,6 +417,8 @@ export function DashboardProvider({ children }: Props) {
     latestAccessAutoRefresh,
     setLatestAccessAutoRefresh,
     lastAction,
+    commandHistory,
+    refreshCommandHistory,
     apiError: manualApiError ?? queryApiError,
     refreshing: equipmentQuery.isFetching,
     loadDevices,
@@ -394,3 +435,4 @@ export function DashboardProvider({ children }: Props) {
     </DashboardContext.Provider>
   );
 }
+
