@@ -18,9 +18,15 @@ const http: AxiosInstance = axios.create({
 
 http.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
+    const requestId = typeof window.crypto?.randomUUID === "function"
+      ? window.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+    config.headers = config.headers || {};
+    (config.headers as Record<string, string>)["x-request-id"] = requestId;
+
     const user = window.sessionStorage.getItem("nr_user");
     if (user && user.trim()) {
-      config.headers = config.headers || {};
       (config.headers as Record<string, string>)["x-user"] = user.trim();
     }
   }
@@ -122,6 +128,7 @@ export interface ExhaustProcessStatus {
 export interface CommandLogItem {
   id: string;
   timestamp: string;
+  requestId: string | null;
   method: string;
   path: string;
   command: string;
