@@ -112,6 +112,7 @@ export default function CentralIncendio() {
   const [lastStableFailure, setLastStableFailure] = useState<CieLogItem | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<CieLogItem | null>(null);
   const [restartGraceUntil, setRestartGraceUntil] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -150,8 +151,9 @@ export default function CentralIncendio() {
 
   const panel = panelQuery.data;
   const panelRestartUntil = panel?.restartingUntil ?? null;
+  const panelRestartingActive = Boolean(panel?.restarting) && Number(panelRestartUntil ?? 0) > nowMs;
   const restartUntil = Math.max(restartGraceUntil ?? 0, panelRestartUntil ?? 0);
-  const restarting = restartUntil > Date.now() || panel?.restarting === true;
+  const restarting = restartUntil > nowMs || panelRestartingActive;
   const online = panel?.online === true;
   const isLoading = panelQuery.isLoading || (isLogsMode && logsQuery.isLoading);
   const offline = !online && !restarting;
@@ -210,6 +212,20 @@ export default function CentralIncendio() {
       setRestartGraceUntil(panelRestartUntil);
     }
   }, [online, panelRestartUntil]);
+
+  useEffect(() => {
+    if (!restarting) return;
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [restarting]);
+
+  useEffect(() => {
+    if (restartGraceUntil && nowMs >= restartGraceUntil) {
+      setRestartGraceUntil(null);
+    }
+  }, [nowMs, restartGraceUntil]);
 
   const selectedStateCount = counters?.[currentStateTab] ?? 0;
   const selectedStateLabel = COUNTER_KEYS.find((item) => item.key === currentStateTab)?.label ?? "Estado";
