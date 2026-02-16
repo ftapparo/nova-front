@@ -276,42 +276,44 @@ export default function CentralIncendio() {
             </CardHeader>
             <CardContent className="space-y-4">
               {offline ? (
-                <div className="rounded-lg border state-danger-soft px-4 py-3">
+                <div className="rounded-lg border state-danger-soft border-status-danger-solid/40 px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-status-danger-soft-foreground" />
                     <div>
                       <p className="typo-label uppercase text-status-danger-soft-foreground">Central Offline</p>
-                      <p className="typo-body font-semibold text-foreground">
+                      <p className="typo-body font-semibold text-status-danger-soft-foreground">
                         {panelErrorMessage || "Central offline. NÃ£o foi possÃ­vel conectar ao serviÃ§o da central."}
                       </p>
-                      <p className="typo-caption text-muted-foreground">
+                      <p className="typo-caption text-status-danger-soft-foreground">
                         Oriente o porteiro/zelador/sÃ­ndico a verificar o serviÃ§o da central e a conexÃ£o de rede.
                       </p>
                     </div>
                   </div>
                 </div>
               ) : displayedFailure ? (
-                <div className="rounded-lg border state-warning-soft px-4 py-3">
+                <div className="rounded-lg border state-warning-soft border-status-warning-soft-border px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-status-warning-soft-foreground" />
                     <div>
                       <p className="typo-label uppercase text-status-warning-soft-foreground">Sistema em Falha</p>
-                      <p className="typo-body font-semibold text-foreground">
+                      <p className="typo-body font-semibold text-status-warning-soft-foreground">
                         {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
                       </p>
-                      <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
-                      <p className="typo-caption text-muted-foreground">
+                      <p className="typo-caption text-status-warning-soft-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
+                      <p className="typo-caption text-status-warning-soft-foreground">
                         Zona: {normalizeLabel(displayedFailure.zoneName)} | Dispositivo: {normalizeLabel(displayedFailure.deviceName)}
                       </p>
-                      <p className="typo-caption text-muted-foreground">
+                      <p className="typo-caption text-status-warning-soft-foreground">
                         Laço/Endereço: {buildEventAddress(displayedFailure)} | Data/Hora: {formatDate(displayedFailure.occurredAt)} {formatTime(displayedFailure.occurredAt)}
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-lg border bg-muted/60 px-4 py-3 typo-body text-muted-foreground">
-                  Nenhuma falha ativa registrada.
+                <div className="rounded-lg border state-success-soft border-status-success-solid/40 px-4 py-3">
+                  <p className="typo-label uppercase text-status-success-solid">Sistema Normal</p>
+                  <p className="typo-body font-semibold text-status-success-soft-foreground">Nenhuma falha ativa registrada.</p>
+                  <p className="typo-caption text-status-success-soft-foreground">A central esta operando normalmente.</p>
                 </div>
               )}
 
@@ -456,9 +458,12 @@ export default function CentralIncendio() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="typo-caption text-muted-foreground">1</p>
+                          <p className="typo-caption text-muted-foreground">1 - {buildEventAddress(displayedFailure)}</p>
                           <p className="typo-body font-semibold text-foreground">
-                            {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
+                            {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
+                          </p>
+                          <p className="typo-caption text-muted-foreground">
+                            Zona: {normalizeLabel(displayedFailure.zoneName)} | Dispositivo: {normalizeLabel(displayedFailure.deviceName)}
                           </p>
                           <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
                         </div>
@@ -494,9 +499,12 @@ export default function CentralIncendio() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="typo-caption text-muted-foreground">{index + 1}</p>
+                            <p className="typo-caption text-muted-foreground">{index + 1} - {buildEventAddress(event)}</p>
                             <p className="typo-body font-semibold text-foreground">
-                              {buildEventAddress(event)} - {normalizeLabel(event.zoneName)}
+                              {normalizeLabel(event.zoneName)}
+                            </p>
+                            <p className="typo-caption text-muted-foreground">
+                              Zona: {normalizeLabel(event.zoneName)} | Dispositivo: {normalizeLabel(event.deviceName)}
                             </p>
                             <p className="typo-caption text-muted-foreground">
                               {EVENT_TYPE_LABEL[event.type]}
@@ -539,6 +547,10 @@ export default function CentralIncendio() {
               <p><strong>Laço/Endereço:</strong> {buildEventAddress(selectedDetail)}</p>
               <p><strong>Zona:</strong> {normalizeLabel(selectedDetail.zoneName)}</p>
               <p><strong>Dispositivo:</strong> {normalizeLabel(selectedDetail.deviceName)}</p>
+              <p><strong>Tipo do dispositivo:</strong> {normalizeLabel(selectedDetail.deviceClassification?.resolvedLabel)}</p>
+              <p><strong>Tipo/Subtipo (codigo):</strong> {selectedDetail.deviceClassification
+                ? `${selectedDetail.deviceClassification.typeCode ?? "--"} / ${selectedDetail.deviceClassification.subtypeCode ?? "--"}`
+                : "--"}</p>
               <p><strong>Data:</strong> {formatDate(selectedDetail.occurredAt)}</p>
               <p><strong>Hora:</strong> {formatTime(selectedDetail.occurredAt)}</p>
               <p><strong>Evento (código):</strong> {selectedDetail.eventType ?? "--"}</p>

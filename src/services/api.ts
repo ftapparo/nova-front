@@ -403,6 +403,14 @@ export interface CieLogItem {
   loop: number | null;
   deviceName: string | null;
   zoneName: string | null;
+  deviceClassification: {
+    typeCode: number | null;
+    subtypeCode: number | null;
+    typeLabel: string | null;
+    subtypeLabel: string | null;
+    resolvedLabel: string | null;
+    source: "codes" | "name" | "none";
+  } | null;
   eventType: number | null;
   blocked: boolean | null;
   occurredAt: string;
