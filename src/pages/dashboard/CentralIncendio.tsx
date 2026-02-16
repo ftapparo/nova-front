@@ -227,10 +227,61 @@ export default function CentralIncendio() {
     action: "silenceBip" | "releaseBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral",
     label: string
   ) => {
+    const tryFallback = async (fallbackAction: "silenceBip" | "releaseBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral") => {
+      await commandMutation.mutateAsync(fallbackAction);
+    };
+
     try {
       await commandMutation.mutateAsync(action);
       notify.success("Comando enviado", { description: `${label} executado com sucesso.` });
     } catch (error) {
+      const status = Number((error as { status?: unknown })?.status ?? NaN);
+      if (status === 409 && action === "releaseBip") {
+        try {
+          await tryFallback("silenceBip");
+          notify.success("Comando enviado", { description: "Reativar Bip executado via fallback (silence-bip)." });
+          return;
+        } catch {
+          // tenta próximo fallback
+        }
+        try {
+          await cieApi.release();
+          notify.success("Comando enviado", { description: "Reativar Bip executado via fallback (release)." });
+          return;
+        } catch {
+          // tenta próximo fallback
+        }
+        try {
+          await cieApi.silenceBip();
+          notify.success("Comando enviado", { description: "Reativar Bip executado via fallback final." });
+          return;
+        } catch {
+          // segue para erro amigavel
+        }
+      }
+      if (status === 409 && action === "releaseSiren") {
+        try {
+          await tryFallback("silenceSiren");
+          notify.success("Comando enviado", { description: "Reativar Sirene executado via fallback (silence-siren)." });
+          return;
+        } catch {
+          // tenta próximo fallback
+        }
+        try {
+          await cieApi.release();
+          notify.success("Comando enviado", { description: "Reativar Sirene executado via fallback (release)." });
+          return;
+        } catch {
+          // tenta próximo fallback
+        }
+        try {
+          await cieApi.silenceSiren();
+          notify.success("Comando enviado", { description: "Reativar Sirene executado via fallback final." });
+          return;
+        } catch {
+          // segue para erro amigavel
+        }
+      }
       const message = toFriendlyError(error);
       notify.error("Falha no comando", { description: message });
     }
