@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Bell, RefreshCw, RotateCcw, ShieldAlert, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -98,6 +98,7 @@ const buildEventAddress = (log: CieLogItem): string => {
 export default function CentralIncendio() {
   const queryClient = useQueryClient();
   const [logTab, setLogTab] = useState<DashboardLogTab>("falha");
+  const [tabOpenedAt, setTabOpenedAt] = useState<number>(Date.now());
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -108,8 +109,8 @@ export default function CentralIncendio() {
 
   const logsQuery = useQuery({
     queryKey: ["cie", "logs", logTab],
-    queryFn: () => cieApi.logs(logTab, 30),
-    refetchInterval: 5000,
+    queryFn: () => cieApi.logs(logTab, 20),
+    refetchInterval: 2000,
     staleTime: 2000,
   });
 
@@ -138,6 +139,24 @@ export default function CentralIncendio() {
 
   const latestEvents = useMemo(() => logs.slice(0, 20), [logs]);
   const isLoading = panelQuery.isLoading && logsQuery.isLoading;
+  const tabElapsedMs = Date.now() - tabOpenedAt;
+
+  useEffect(() => {
+    setTabOpenedAt(Date.now());
+  }, [logTab]);
+
+  const targetEventCount = useMemo(() => {
+    if (logTab === "operacao") return 20;
+    const mappedKey = logTab as "alarme" | "falha" | "supervisao";
+    const counterValue = counters?.[mappedKey] ?? 0;
+    return Math.max(0, Math.min(20, Number(counterValue) || 0));
+  }, [counters, logTab]);
+
+  const waitingBatchLoad = online
+    && !logsErrorMessage
+    && targetEventCount > 0
+    && latestEvents.length < targetEventCount
+    && tabElapsedMs < 12000;
 
   const handleManualRefresh = async () => {
     await Promise.all([panelQuery.refetch(), logsQuery.refetch()]);
@@ -318,9 +337,9 @@ export default function CentralIncendio() {
             </CardHeader>
             <CardContent>
               <div className="max-h-[540px] overflow-y-auto pr-1">
-                {isLoading ? (
+                {isLoading || waitingBatchLoad ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
-                    Carregando eventos...
+                    Carregando os últimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
                   </div>
                 ) : latestEvents.length === 0 ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
