@@ -111,6 +111,7 @@ export default function CentralIncendio() {
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const [lastStableFailure, setLastStableFailure] = useState<CieLogItem | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<CieLogItem | null>(null);
+  const [restartGraceUntil, setRestartGraceUntil] = useState<number | null>(null);
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -125,7 +126,7 @@ export default function CentralIncendio() {
   const logsQuery = useQuery({
     queryKey: ["cie", "logs", secondaryMode, activeLogType],
     queryFn: () => cieApi.logs(activeLogType, 20),
-    enabled: isLogsMode && !panelQuery.isError && panelQuery.data?.online === true,
+    enabled: isLogsMode && panelQuery.data?.online === true,
     refetchInterval: 2000,
     staleTime: 2000,
   });
@@ -148,15 +149,17 @@ export default function CentralIncendio() {
   });
 
   const panel = panelQuery.data;
-  const panelOnline = panel?.online === true;
-  const online = !panelQuery.isError && panelOnline;
+  const panelRestartUntil = panel?.restartingUntil ?? null;
+  const restartUntil = Math.max(restartGraceUntil ?? 0, panelRestartUntil ?? 0);
+  const restarting = restartUntil > Date.now() || panel?.restarting === true;
+  const online = panel?.online === true;
   const isLoading = panelQuery.isLoading || (isLogsMode && logsQuery.isLoading);
-  const offline = !online;
+  const offline = !online && !restarting;
   const visiblePanel = online ? panel : null;
   const counters = visiblePanel?.counters;
   const logs = online && isLogsMode ? (logsQuery.data?.items ?? []) : [];
   const highlightedFailure = visiblePanel?.latestFailureEvent ?? null;
-  const panelErrorMessage = panelQuery.error ? toFriendlyError(panelQuery.error) : null;
+  const panelErrorMessage = panelQuery.error && !restarting ? toFriendlyError(panelQuery.error) : null;
   const logsErrorMessage = online && isLogsMode && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
 
   const latestEvents = useMemo(() => logs.slice(0, 20), [logs]);
@@ -196,6 +199,18 @@ export default function CentralIncendio() {
   }, [online, highlightedFailure, counters?.falha]);
 
   const displayedFailure = highlightedFailure ?? lastStableFailure;
+
+  useEffect(() => {
+    if (online) {
+      setRestartGraceUntil(null);
+      return;
+    }
+
+    if (panelRestartUntil && panelRestartUntil > Date.now()) {
+      setRestartGraceUntil(panelRestartUntil);
+    }
+  }, [online, panelRestartUntil]);
+
   const selectedStateCount = counters?.[currentStateTab] ?? 0;
   const selectedStateLabel = COUNTER_KEYS.find((item) => item.key === currentStateTab)?.label ?? "Estado";
   const selectedLogLabel = LOG_TABS.find((item) => item.value === logTab)?.label ?? "Eventos";
@@ -233,9 +248,23 @@ export default function CentralIncendio() {
 
     try {
       await commandMutation.mutateAsync(action);
+      if (action === "restartCentral") {
+        setRestartGraceUntil(Date.now() + 60000);
+        notify.success("Reinicializacao iniciada", {
+          description: "A central esta reiniciando. Aguarde ate 1 minuto para reconexao.",
+        });
+        return;
+      }
       notify.success("Comando enviado", { description: `${label} executado com sucesso.` });
     } catch (error) {
       const status = Number((error as { status?: unknown })?.status ?? NaN);
+      if (action === "restartCentral" && (status >= 500 || Number.isNaN(status))) {
+        setRestartGraceUntil(Date.now() + 60000);
+        notify.success("Reinicializacao iniciada", {
+          description: "Comando aceito. A central pode ficar offline por alguns segundos.",
+        });
+        return;
+      }
       if (status === 409 && action === "releaseBip") {
         try {
           await tryFallback("silenceBip");
@@ -315,18 +344,45 @@ export default function CentralIncendio() {
                   variant="outline"
                   className={online
                     ? "rounded-full border-none state-success-soft px-3 py-1 typo-caption font-medium"
-                    : "rounded-full border-none state-danger-soft px-3 py-1 typo-caption font-medium"}
+                    : restarting
+                      ? "rounded-full border-none state-warning-soft px-3 py-1 typo-caption font-medium"
+                      : "rounded-full border-none state-danger-soft px-3 py-1 typo-caption font-medium"}
                 >
-                  <span className={`mr-2 inline-block h-2 w-2 rounded-full ${online ? "bg-status-success-solid" : "bg-status-danger-solid"}`} />
-                  {online ? "Online" : "Offline"}
+                  <span
+                    className={`mr-2 inline-block h-2 w-2 rounded-full ${online
+                      ? "bg-status-success-solid"
+                      : restarting
+                        ? "bg-status-warning-soft-foreground"
+                        : "bg-status-danger-solid"}`}
+                  />
+                  {online ? "Online" : restarting ? "Reiniciando" : "Offline"}
                 </Badge>
               </div>
               <CardDescription>
-                {visiblePanel?.reconnecting ? `Reconectando... tentativa ${visiblePanel.reconnectAttempt}` : "Status atual da central"}
+                {restarting
+                  ? "Central reiniciando. Aguarde reconexao automatica."
+                  : visiblePanel?.reconnecting
+                    ? `Reconectando... tentativa ${visiblePanel.reconnectAttempt}`
+                    : "Status atual da central"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {offline ? (
+              {restarting ? (
+                <div className="rounded-lg border state-warning-soft border-status-warning-soft-border px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-status-warning-soft-foreground" />
+                    <div>
+                      <p className="typo-label uppercase text-status-warning-soft-foreground">Reiniciando central</p>
+                      <p className="typo-body font-semibold text-status-warning-soft-foreground">
+                        Comando de reinicio enviado com sucesso. A central pode ficar indisponivel por ate 1 minuto.
+                      </p>
+                      <p className="typo-caption text-status-warning-soft-foreground">
+                        Aguarde reconexao automatica. Se ultrapassar 1 minuto, sera exibido status offline.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : offline ? (
                 <div className="rounded-lg border state-danger-soft border-status-danger-solid/40 px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-status-danger-soft-foreground" />
@@ -441,7 +497,7 @@ export default function CentralIncendio() {
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending || offline}
+                  disabled={commandMutation.isPending || offline || restarting}
                   onClick={() => void runCommand(
                     ledCentralSilenciadaOn ? "releaseBip" : "silenceBip",
                     ledCentralSilenciadaOn ? "Reativar Bip Interno" : "Silenciar Bip Interno"
@@ -453,7 +509,7 @@ export default function CentralIncendio() {
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending || offline}
+                  disabled={commandMutation.isPending || offline || restarting}
                   onClick={() => void runCommand("alarmGeneral", "Alarme Geral")}
                   className={`h-11 ${ledAlarmGeneralOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
                 >
@@ -462,7 +518,7 @@ export default function CentralIncendio() {
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending || offline}
+                  disabled={commandMutation.isPending || offline || restarting}
                   onClick={() => void runCommand(
                     ledSireneSilenciadaOn ? "releaseSiren" : "silenceSiren",
                     ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"
@@ -472,7 +528,7 @@ export default function CentralIncendio() {
                   <Bell className="mr-2 h-4 w-4" />{ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"}</Button>
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending || offline}
+                  disabled={commandMutation.isPending || offline || restarting}
                   onClick={() => void runCommand("restartCentral", "Reiniciar Central")}
                   className="h-11"
                 >
@@ -492,7 +548,11 @@ export default function CentralIncendio() {
             </CardHeader>
             <CardContent>
               <div className="max-h-[540px] overflow-y-auto pr-1">
-                {offline ? (
+                {restarting ? (
+                  <div className="rounded-lg border state-warning-soft px-4 py-3 typo-body text-status-warning-soft-foreground">
+                    Central reiniciando. Registros serao exibidos apos reconexao.
+                  </div>
+                ) : offline ? (
                   <div className="rounded-lg border state-danger-soft px-4 py-3 typo-body text-status-danger-soft-foreground">
                     Central offline. Registros indisponÃ­veis no momento.
                   </div>

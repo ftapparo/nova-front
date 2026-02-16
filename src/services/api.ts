@@ -421,6 +421,8 @@ export interface CieLogItem {
 export interface CiePanelResponse {
   online: boolean;
   connected: boolean;
+  restarting: boolean;
+  restartingUntil: number | null;
   reconnecting: boolean;
   reconnectAttempt: number;
   lastError: string | null;
