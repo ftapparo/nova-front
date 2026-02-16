@@ -486,6 +486,8 @@ export const cieApi = {
   },
   silenceBip: () => request<unknown>("POST", "/cie/commands/silence-bip"),
   release: () => request<unknown>("POST", "/cie/commands/release"),
+  releaseBip: () => request<unknown>("POST", "/cie/commands/release-bip"),
+  releaseSiren: () => request<unknown>("POST", "/cie/commands/release-siren"),
   alarmGeneral: () => request<unknown>("POST", "/cie/commands/alarm-general"),
   silenceSiren: () => request<unknown>("POST", "/cie/commands/silence-siren"),
   restartCentral: () => request<unknown>("POST", "/cie/commands/restart"),

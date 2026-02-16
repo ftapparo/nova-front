@@ -131,11 +131,12 @@ export default function CentralIncendio() {
   });
 
   const commandMutation = useMutation({
-    mutationFn: async (action: "silenceBip" | "release" | "alarmGeneral" | "silenceSiren" | "restartCentral") => {
+    mutationFn: async (action: "silenceBip" | "releaseBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral") => {
       if (action === "silenceBip") return cieApi.silenceBip();
-      if (action === "release") return cieApi.release();
+      if (action === "releaseBip") return cieApi.releaseBip();
       if (action === "alarmGeneral") return cieApi.alarmGeneral();
       if (action === "silenceSiren") return cieApi.silenceSiren();
+      if (action === "releaseSiren") return cieApi.releaseSiren();
       return cieApi.restartCentral();
     },
     onSuccess: async () => {
@@ -223,7 +224,7 @@ export default function CentralIncendio() {
   };
 
   const runCommand = async (
-    action: "silenceBip" | "release" | "alarmGeneral" | "silenceSiren" | "restartCentral",
+    action: "silenceBip" | "releaseBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral",
     label: string
   ) => {
     try {
@@ -389,7 +390,7 @@ export default function CentralIncendio() {
                   variant="outline"
                   disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand(
-                    ledCentralSilenciadaOn ? "release" : "silenceBip",
+                    ledCentralSilenciadaOn ? "releaseBip" : "silenceBip",
                     ledCentralSilenciadaOn ? "Reativar Bip Interno" : "Silenciar Bip Interno"
                   )}
                   className={`h-11 ${ledCentralSilenciadaOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
@@ -410,7 +411,7 @@ export default function CentralIncendio() {
                   variant="outline"
                   disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand(
-                    ledSireneSilenciadaOn ? "release" : "silenceSiren",
+                    ledSireneSilenciadaOn ? "releaseSiren" : "silenceSiren",
                     ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"
                   )}
                   className={`h-11 ${ledSireneSilenciadaOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
