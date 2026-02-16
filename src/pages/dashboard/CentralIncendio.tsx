@@ -11,6 +11,7 @@ import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
 
 type DashboardLogTab = Exclude<CieLogType, "bloqueio">;
+type CurrentStateKey = "alarme" | "falha" | "bloqueio" | "supervisao";
 
 const LOG_TABS: Array<{ value: DashboardLogTab; label: string }> = [
   { value: "operacao", label: "Operação" },
@@ -19,7 +20,7 @@ const LOG_TABS: Array<{ value: DashboardLogTab; label: string }> = [
   { value: "supervisao", label: "Supervisão" },
 ];
 
-const COUNTER_KEYS: Array<{ key: "alarme" | "falha" | "bloqueio" | "supervisao"; label: string }> = [
+const COUNTER_KEYS: Array<{ key: CurrentStateKey; label: string }> = [
   { key: "alarme", label: "Alarme" },
   { key: "falha", label: "Falha" },
   { key: "bloqueio", label: "Bloqueio" },
@@ -98,7 +99,10 @@ const buildEventAddress = (log: CieLogItem): string => {
 export default function CentralIncendio() {
   const queryClient = useQueryClient();
   const [logTab, setLogTab] = useState<DashboardLogTab>("falha");
+  const [currentStateTab, setCurrentStateTab] = useState<CurrentStateKey>("falha");
   const [tabOpenedAt, setTabOpenedAt] = useState<number>(Date.now());
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+  const [lastStableFailure, setLastStableFailure] = useState<CieLogItem | null>(null);
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -110,6 +114,7 @@ export default function CentralIncendio() {
   const logsQuery = useQuery({
     queryKey: ["cie", "logs", logTab],
     queryFn: () => cieApi.logs(logTab, 20),
+    enabled: !panelQuery.isError && panelQuery.data?.online === true,
     refetchInterval: 2000,
     staleTime: 2000,
   });
@@ -130,15 +135,18 @@ export default function CentralIncendio() {
   });
 
   const panel = panelQuery.data;
-  const counters = panel?.counters;
-  const logs = logsQuery.data?.items ?? [];
-  const highlightedFailure = panel?.latestFailureEvent ?? null;
+  const panelOnline = panel?.online === true;
+  const online = !panelQuery.isError && panelOnline;
+  const isLoading = panelQuery.isLoading && logsQuery.isLoading;
+  const offline = !online;
+  const visiblePanel = online ? panel : null;
+  const counters = visiblePanel?.counters;
+  const logs = online ? (logsQuery.data?.items ?? []) : [];
+  const highlightedFailure = visiblePanel?.latestFailureEvent ?? null;
   const panelErrorMessage = panelQuery.error ? toFriendlyError(panelQuery.error) : null;
-  const logsErrorMessage = logsQuery.error ? toFriendlyError(logsQuery.error) : null;
-  const online = panelQuery.isError ? false : (panel?.online ?? false);
+  const logsErrorMessage = online && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
 
   const latestEvents = useMemo(() => logs.slice(0, 20), [logs]);
-  const isLoading = panelQuery.isLoading && logsQuery.isLoading;
   const tabElapsedMs = Date.now() - tabOpenedAt;
 
   useEffect(() => {
@@ -158,9 +166,35 @@ export default function CentralIncendio() {
     && latestEvents.length < targetEventCount
     && tabElapsedMs < 12000;
 
+  useEffect(() => {
+    if (!online) {
+      setLastStableFailure(null);
+      return;
+    }
+
+    if (highlightedFailure) {
+      setLastStableFailure(highlightedFailure);
+      return;
+    }
+
+    if ((counters?.falha ?? 0) <= 0) {
+      setLastStableFailure(null);
+    }
+  }, [online, highlightedFailure, counters?.falha]);
+
+  const displayedFailure = highlightedFailure ?? lastStableFailure;
+  const selectedStateCount = counters?.[currentStateTab] ?? 0;
+  const selectedStateLabel = COUNTER_KEYS.find((item) => item.key === currentStateTab)?.label ?? "Estado";
+  const selectedLogLabel = LOG_TABS.find((item) => item.value === logTab)?.label ?? "Eventos";
+
   const handleManualRefresh = async () => {
-    await Promise.all([panelQuery.refetch(), logsQuery.refetch()]);
-    notify.success("Central atualizada", { description: "Dados sincronizados com sucesso." });
+    try {
+      setManualRefreshing(true);
+      await Promise.all([panelQuery.refetch(), logsQuery.refetch()]);
+      notify.success("Central atualizada", { description: "Dados sincronizados com sucesso." });
+    } finally {
+      setManualRefreshing(false);
+    }
   };
 
   const runCommand = async (
@@ -185,10 +219,10 @@ export default function CentralIncendio() {
           <Button
             variant="outline"
             onClick={() => void handleManualRefresh()}
-            disabled={panelQuery.isFetching || logsQuery.isFetching}
+            disabled={manualRefreshing}
             className="h-9"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${(panelQuery.isFetching || logsQuery.isFetching) ? "animate-spin" : ""}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${manualRefreshing ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
         )}
@@ -199,7 +233,7 @@ export default function CentralIncendio() {
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <CardTitle>{panel?.central?.nome?.trim() || "NOVA RESIDENCE"}</CardTitle>
+                <CardTitle>{visiblePanel?.central?.nome?.trim() || "NOVA RESIDENCE"}</CardTitle>
                 <Badge
                   variant="outline"
                   className={online
@@ -211,33 +245,35 @@ export default function CentralIncendio() {
                 </Badge>
               </div>
               <CardDescription>
-                {panel?.reconnecting ? `Reconectando... tentativa ${panel.reconnectAttempt}` : "Status atual da central"}
+                {visiblePanel?.reconnecting ? `Reconectando... tentativa ${visiblePanel.reconnectAttempt}` : "Status atual da central"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {panelErrorMessage ? (
+              {offline ? (
                 <div className="rounded-lg border state-danger-soft px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-status-danger-soft-foreground" />
                     <div>
                       <p className="typo-label uppercase text-status-danger-soft-foreground">Central Offline</p>
-                      <p className="typo-body font-semibold text-foreground">{panelErrorMessage}</p>
+                      <p className="typo-body font-semibold text-foreground">
+                        {panelErrorMessage || "Central offline. Não foi possível conectar ao serviço da central."}
+                      </p>
                       <p className="typo-caption text-muted-foreground">
                         Oriente o porteiro/zelador/síndico a verificar o serviço da central e a conexão de rede.
                       </p>
                     </div>
                   </div>
                 </div>
-              ) : highlightedFailure ? (
+              ) : displayedFailure ? (
                 <div className="rounded-lg border state-warning-soft px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-status-warning-soft-foreground" />
                     <div>
                       <p className="typo-label uppercase text-status-warning-soft-foreground">Sistema em Falha</p>
                       <p className="typo-body font-semibold text-foreground">
-                        {buildEventAddress(highlightedFailure)} - {normalizeLabel(highlightedFailure.zoneName)}
+                        {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName)}
                       </p>
-                      <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[highlightedFailure.type]}</p>
+                      <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
                     </div>
                   </div>
                 </div>
@@ -247,33 +283,62 @@ export default function CentralIncendio() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {COUNTER_KEYS.map((item) => (
-                  <div key={item.key} className="rounded-lg border bg-muted/40 px-3 py-2 text-center">
-                    <p className="typo-stat-value">{counters?.[item.key] ?? 0}</p>
-                    <p className="typo-caption uppercase">{item.label}</p>
-                  </div>
-                ))}
+              <div>
+                <p className="mb-2 typo-caption uppercase text-muted-foreground">Estado Atual</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {COUNTER_KEYS.map((item) => {
+                    const active = currentStateTab === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => setCurrentStateTab(item.key)}
+                        className={active
+                          ? "rounded-lg border state-warning-soft px-3 py-2 text-center transition-colors"
+                          : "rounded-lg border bg-muted/40 px-3 py-2 text-center transition-colors hover:bg-muted/60"}
+                      >
+                        <p className="typo-stat-value">{counters?.[item.key] ?? 0}</p>
+                        <p className="typo-caption uppercase">{item.label}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 typo-caption text-muted-foreground">
+                  {selectedStateLabel}: {selectedStateCount} evento(s) ativo(s) no momento.
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 typo-caption uppercase text-muted-foreground">Registro de Eventos</p>
+                <Tabs value={logTab} onValueChange={(value) => setLogTab(value as DashboardLogTab)}>
+                  <TabsList className="grid h-10 w-full grid-cols-4">
+                    {LOG_TABS.map((tab) => (
+                      <TabsTrigger key={tab.value} value={tab.value} className="w-full">
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border bg-card p-3">
                   <p className="typo-caption uppercase text-muted-foreground">Modelo</p>
-                  <p className="typo-body font-medium">{normalizeLabel(panel?.central?.modelo)}</p>
+                  <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.modelo)}</p>
                   <p className="mt-2 typo-caption uppercase text-muted-foreground">IP</p>
-                  <p className="typo-body font-medium">{normalizeLabel(panel?.central?.ip)}</p>
+                  <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.ip)}</p>
                   <p className="mt-2 typo-caption uppercase text-muted-foreground">MAC</p>
-                  <p className="typo-body font-medium">{normalizeLabel(panel?.central?.mac)}</p>
+                  <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.mac)}</p>
                 </div>
                 <div className="rounded-lg border bg-card p-3">
                   <p className="typo-caption uppercase text-muted-foreground">Data</p>
-                  <p className="typo-body font-medium">{formatPanelDate(panel?.dataHora?.timestamp)}</p>
+                  <p className="typo-body font-medium">{formatPanelDate(visiblePanel?.dataHora?.timestamp)}</p>
                   <p className="mt-2 typo-caption uppercase text-muted-foreground">Hora</p>
-                  <p className="typo-body font-medium">{formatPanelTime(panel?.dataHora?.timestamp)}</p>
-                  {panel?.lastError ? (
+                  <p className="typo-body font-medium">{formatPanelTime(visiblePanel?.dataHora?.timestamp)}</p>
+                  {visiblePanel?.lastError ? (
                     <>
                       <p className="mt-2 typo-caption uppercase text-muted-foreground">Último erro</p>
-                      <p className="typo-caption text-status-danger-soft-foreground">{panel.lastError}</p>
+                      <p className="typo-caption text-status-danger-soft-foreground">{visiblePanel.lastError}</p>
                     </>
                   ) : null}
                 </div>
@@ -282,7 +347,7 @@ export default function CentralIncendio() {
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending}
+                  disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand("silenceBip", "Silenciar Bip Interno")}
                   className="h-11"
                 >
@@ -291,7 +356,7 @@ export default function CentralIncendio() {
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending}
+                  disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand("alarmGeneral", "Alarme Geral")}
                   className="h-11"
                 >
@@ -300,7 +365,7 @@ export default function CentralIncendio() {
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending}
+                  disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand("silenceSiren", "Silenciar Sirene")}
                   className="h-11"
                 >
@@ -309,7 +374,7 @@ export default function CentralIncendio() {
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={commandMutation.isPending}
+                  disabled={commandMutation.isPending || offline}
                   onClick={() => void runCommand("restartCentral", "Reiniciar Central")}
                   className="h-11"
                 >
@@ -324,20 +389,16 @@ export default function CentralIncendio() {
         <div className="xl:col-span-2">
           <Card className="h-full min-h-[540px] shadow-sm">
             <CardHeader className="space-y-3">
-              <CardTitle>Eventos</CardTitle>
-              <Tabs value={logTab} onValueChange={(value) => setLogTab(value as DashboardLogTab)}>
-                <TabsList className="grid h-10 w-full grid-cols-4">
-                  {LOG_TABS.map((tab) => (
-                    <TabsTrigger key={tab.value} value={tab.value} className="w-full">
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
+              <CardTitle>{`Registros de ${selectedLogLabel}`}</CardTitle>
+              <CardDescription>{`Últimos até 20 registros de ${selectedLogLabel.toLowerCase()}.`}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="max-h-[540px] overflow-y-auto pr-1">
-                {isLoading || waitingBatchLoad ? (
+                {offline ? (
+                  <div className="rounded-lg border state-danger-soft px-4 py-3 typo-body text-status-danger-soft-foreground">
+                    Central offline. Registros indisponíveis no momento.
+                  </div>
+                ) : isLoading || waitingBatchLoad ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
                     Carregando os últimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
                   </div>
