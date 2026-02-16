@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { api, type AccessVerifyItem, type CommandLogItem } from "@/services/api";
+import { api, type AccessVerifyItem } from "@/services/api";
+import { getCommandLogCardSubtitle, getCommandLogCardTitle } from "@/lib/command-log-presenter";
 import { notify } from "@/lib/notify";
 import { useDashboard, type LatestGateAccessItem } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -379,16 +380,6 @@ export default function PainelOperacional() {
   const openCommandHistoryModal = () => {
     setCommandHistoryModalOpen(true);
     void refreshCommandHistory();
-  };
-
-  const formatCommandLogDate = (value: string): string => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString("pt-BR", { hour12: false });
-  };
-
-  const formatCommandLog = (item: CommandLogItem): string => {
-    return `${formatCommandLogDate(item.timestamp)} - ${item.actor} - ${item.command} - HTTP ${item.status}`;
   };
 
   const handleOpenFailuresModal = () => {
@@ -882,8 +873,8 @@ export default function PainelOperacional() {
       <Dialog open={commandHistoryModalOpen} onOpenChange={setCommandHistoryModalOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Últimos comandos da API</DialogTitle>
-            <DialogDescription>Histórico persistido dos últimos 20 comandos executados.</DialogDescription>
+            <DialogTitle>Últimas ações do sistema</DialogTitle>
+            <DialogDescription>Histórico das 20 ações mais recentes do painel.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[420px] overflow-y-auto rounded-md border border-border p-2">
             {commandHistory.length === 0 ? (
@@ -892,8 +883,8 @@ export default function PainelOperacional() {
               <div className="space-y-2">
                 {commandHistory.map((item) => (
                   <div key={item.id} className="rounded-md border border-border bg-muted/50 p-3">
-                    <p className="typo-body font-medium text-foreground">{item.command}</p>
-                    <p className="typo-caption text-muted-foreground">{formatCommandLog(item)}</p>
+                    <p className="typo-body font-medium text-foreground">{getCommandLogCardTitle(item)}</p>
+                    <p className="typo-caption text-muted-foreground">{getCommandLogCardSubtitle(item)}</p>
                   </div>
                 ))}
               </div>

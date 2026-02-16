@@ -10,6 +10,7 @@ import {
   type CommandLogItem,
 } from "@/services/api";
 import { notify } from "@/lib/notify";
+import { formatLastActionFromCommandLog } from "@/lib/command-log-presenter";
 import { useEquipmentStatusQuery } from "@/queries/dashboardQueries";
 import { queryKeys } from "@/queries/queryKeys";
 
@@ -135,12 +136,6 @@ export function DashboardProvider({ children }: Props) {
     }));
   };
 
-  const formatLastActionFromLog = (entry: CommandLogItem | null): string | null => {
-    if (!entry) return null;
-    const when = new Date(entry.timestamp).toLocaleString("pt-BR", { hour12: false });
-    return `${when} - ${entry.actor} - ${entry.command} - HTTP ${entry.status}`;
-  };
-
   const equipmentQuery = useEquipmentStatusQuery();
   const doors = equipmentQuery.data?.controlStatus?.doors ?? EMPTY_DOORS;
   const gates = equipmentQuery.data?.controlStatus?.gates ?? EMPTY_GATES;
@@ -213,7 +208,7 @@ export function DashboardProvider({ children }: Props) {
       const response = await api.commandLogs(20);
       const logs = Array.isArray(response.logs) ? response.logs : [];
       setCommandHistory(logs);
-      setLastAction(formatLastActionFromLog(logs[0] ?? null));
+      setLastAction(formatLastActionFromCommandLog(logs[0] ?? null));
     } catch {
       // Sem impacto para o painel se historico falhar.
     }
