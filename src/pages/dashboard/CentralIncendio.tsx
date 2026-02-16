@@ -258,13 +258,6 @@ export default function CentralIncendio() {
       notify.success("Comando enviado", { description: `${label} executado com sucesso.` });
     } catch (error) {
       const status = Number((error as { status?: unknown })?.status ?? NaN);
-      if (action === "restartCentral" && (status >= 500 || Number.isNaN(status))) {
-        setRestartGraceUntil(Date.now() + 60000);
-        notify.success("Reinicializacao iniciada", {
-          description: "Comando aceito. A central pode ficar offline por alguns segundos.",
-        });
-        return;
-      }
       if (status === 409 && action === "releaseBip") {
         try {
           await tryFallback("silenceBip");
