@@ -16,7 +16,7 @@ const http: AxiosInstance = axios.create({
   },
 });
 
-http.interceptors.request.use((config) => {
+const requestContextInterceptor = (config: any) => {
   if (typeof window !== "undefined") {
     const requestId = typeof window.crypto?.randomUUID === "function"
       ? window.crypto.randomUUID()
@@ -31,7 +31,9 @@ http.interceptors.request.use((config) => {
     }
   }
   return config;
-});
+};
+
+http.interceptors.request.use(requestContextInterceptor);
 
 const parseApiMessage = (payload: unknown, fallback: string): string => {
   if (payload && typeof payload === "object" && "message" in payload && typeof (payload as { message?: unknown }).message === "string") {
@@ -63,9 +65,14 @@ const mapAxiosToApiError = (error: unknown): ApiError => {
   return mapped;
 };
 
-const request = async <T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> => {
+const requestFrom = async <T>(
+  client: AxiosInstance,
+  method: "GET" | "POST" | "PATCH" | "DELETE",
+  path: string,
+  body?: unknown
+): Promise<T> => {
   try {
-    const response = await http.request<ApiResponse<T>>({
+    const response = await client.request<ApiResponse<T>>({
       method,
       url: path,
       data: body,
@@ -76,6 +83,9 @@ const request = async <T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: str
     throw mapAxiosToApiError(error);
   }
 };
+
+const request = async <T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> =>
+  requestFrom<T>(http, method, path, body);
 
 export interface DoorItem {
   id: number;
@@ -360,6 +370,68 @@ export interface UserSettingsUpsertPayload {
   items: Record<string, string>;
 }
 
+export type CieLogType = "alarme" | "falha" | "supervisao" | "operacao" | "bloqueio";
+
+export interface CiePanelCounters {
+  alarme: number;
+  falha: number;
+  supervisao: number;
+  bloqueio: number;
+  regrasTemporizando: number;
+}
+
+export interface CiePanelDateTime {
+  timestamp: number;
+  utc: string;
+  local: string;
+}
+
+export interface CiePanelCentral {
+  ip: string | null;
+  endereco: number;
+  nome: string | null;
+  modelo: string | null;
+  mac: string | null;
+}
+
+export interface CieLogItem {
+  key: string;
+  type: CieLogType;
+  id: number;
+  zone: number | null;
+  address: number | null;
+  loop: number | null;
+  deviceName: string | null;
+  zoneName: string | null;
+  eventType: number | null;
+  blocked: boolean | null;
+  occurredAt: string;
+  raw: unknown;
+  createdAt: number;
+}
+
+export interface CiePanelResponse {
+  online: boolean;
+  connected: boolean;
+  reconnecting: boolean;
+  reconnectAttempt: number;
+  lastError: string | null;
+  lastUpdated: number | null;
+  central: CiePanelCentral;
+  dataHora: CiePanelDateTime | null;
+  counters: CiePanelCounters | null;
+  leds: Record<string, boolean> | null;
+  latestFailureEvent: CieLogItem | null;
+}
+
+export interface CieLogsResponse {
+  type: CieLogType | "all";
+  limit: number;
+  cursor: string | null;
+  nextCursor: string | null;
+  items: CieLogItem[];
+}
+
 export const api = {
   controlStatus: () => request<ControlStatusResponse>("GET", "/control/status"),
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
@@ -399,4 +471,21 @@ export const api = {
     request<UserSettingsResponse>("PUT", `/user-settings/${encodeURIComponent(user)}`, payload),
   commandLogs: (limit = 20) =>
     request<CommandLogsResponse>("GET", `/commands/logs?limit=${Math.min(Math.max(1, Math.trunc(limit)), 200)}`),
+};
+
+export const cieApi = {
+  panel: () => request<CiePanelResponse>("GET", "/cie/panel"),
+  logs: (type: CieLogType, limit = 30, cursor?: string | null) => {
+    const safeLimit = Math.min(Math.max(1, Math.trunc(limit)), 200);
+    const params = new URLSearchParams({
+      type,
+      limit: String(safeLimit),
+    });
+    if (cursor) params.set("cursor", cursor);
+    return request<CieLogsResponse>("GET", `/cie/logs?${params.toString()}`);
+  },
+  silenceBip: () => request<unknown>("POST", "/cie/commands/silence-bip"),
+  alarmGeneral: () => request<unknown>("POST", "/cie/commands/alarm-general"),
+  silenceSiren: () => request<unknown>("POST", "/cie/commands/silence-siren"),
+  restartCentral: () => request<unknown>("POST", "/cie/commands/restart"),
 };

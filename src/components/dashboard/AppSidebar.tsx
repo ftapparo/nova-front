@@ -1,4 +1,4 @@
-import { LayoutDashboard, DoorOpen, Fan, Server, CarFront } from "lucide-react";
+import { LayoutDashboard, DoorOpen, Fan, Server, CarFront, ShieldAlert } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
@@ -33,7 +33,7 @@ const menuItems = [
     title: "Controle de Acesso",
     url: "/dashboard/acesso",
     icon: DoorOpen,
-    description: "Portas e Portões",
+    description: "Portas e Portoes",
   },
   {
     title: "Exaustores",
@@ -42,10 +42,16 @@ const menuItems = [
     description: "Controle de exaustores",
   },
   {
-    title: "Veículos",
+    title: "Veiculos",
     url: "/dashboard/veiculos",
     icon: CarFront,
-    description: "Gestão de veículos",
+    description: "Gestao de veiculos",
+  },
+  {
+    title: "Central de Incendio",
+    url: "/dashboard/incendio",
+    icon: ShieldAlert,
+    description: "CIE2500",
   },
 ];
 

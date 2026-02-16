@@ -14,6 +14,7 @@ import ControleAcesso from "./pages/dashboard/ControleAcesso";
 import Exhausts from "./pages/dashboard/Exaustores";
 import Equipamentos from "./pages/dashboard/Equipamentos";
 import Veiculos from "./pages/dashboard/Veiculos";
+import CentralIncendio from "./pages/dashboard/CentralIncendio";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +85,7 @@ const App = () => (
                 <Route path="acesso" element={<ControleAcesso />} />
                 <Route path="exaustores" element={<Exhausts />} />
                 <Route path="veiculos" element={<Veiculos />} />
+                <Route path="incendio" element={<CentralIncendio />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
