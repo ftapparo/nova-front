@@ -12,8 +12,8 @@ export default function AppBar({ children }: Props) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/", { replace: true });
   };
 
@@ -27,7 +27,7 @@ export default function AppBar({ children }: Props) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleLogout}
+          onClick={() => { void handleLogout(); }}
           className="text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/15"
         >
           <LogOut className="h-4 w-4 mr-1" />

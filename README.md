@@ -22,6 +22,13 @@ npm run dev
 npm run build
 ```
 
+## Web Push
+
+- O app registra Service Worker via `vite-plugin-pwa`.
+- No login, tenta registrar subscription de push no endpoint `/v2/api/push/subscriptions`.
+- No logout, remove a subscription via `/v2/api/push/subscriptions`.
+- Em producao, Web Push exige HTTPS e permissao de notificacao concedida pelo navegador.
+
 ## UI/UX Guidelines (padrao global)
 
 As paginas devem seguir o mesmo conceito visual da tela de veiculos.

@@ -137,6 +137,9 @@ export default function CentralIncendio() {
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [forcedOffline, setForcedOffline] = useState(false);
   const [consecutivePanelFailures, setConsecutivePanelFailures] = useState(0);
+  const [notificationPermission, setNotificationPermission] = useState<string>(() =>
+    typeof Notification !== "undefined" ? Notification.permission : "unsupported"
+  );
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -282,6 +285,15 @@ export default function CentralIncendio() {
       setRestartGraceUntil(null);
     }
   }, [nowMs, restartGraceUntil]);
+
+  useEffect(() => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+
+    setNotificationPermission(Notification.permission);
+  }, [nowMs]);
 
   const selectedStateCount = counters?.[currentStateTab] ?? 0;
   const selectedStateLabel = COUNTER_KEYS.find((item) => item.key === currentStateTab)?.label ?? "Estado";
@@ -522,6 +534,8 @@ export default function CentralIncendio() {
                   <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.ip)}</p>
                   <p className="mt-2 typo-caption uppercase text-muted-foreground">MAC</p>
                   <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.mac)}</p>
+                  <p className="mt-2 typo-caption uppercase text-muted-foreground">Notificações Push</p>
+                  <p className="typo-body font-medium uppercase">{normalizeLabel(notificationPermission)}</p>
                 </div>
                 <div className="rounded-lg border bg-card p-3">
                   <p className="typo-caption uppercase text-muted-foreground">Data</p>

@@ -67,7 +67,7 @@ const mapAxiosToApiError = (error: unknown): ApiError => {
 
 const requestFrom = async <T>(
   client: AxiosInstance,
-  method: "GET" | "POST" | "PATCH" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   body?: unknown
 ): Promise<T> => {
@@ -84,7 +84,7 @@ const requestFrom = async <T>(
   }
 };
 
-const request = async <T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> =>
+const request = async <T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> =>
   requestFrom<T>(http, method, path, body);
 
 export interface DoorItem {
@@ -444,6 +444,31 @@ export interface CieLogsResponse {
   items: CieLogItem[];
 }
 
+export interface PushPublicKeyResponse {
+  publicKey: string;
+}
+
+export interface PushSubscribePayload {
+  user: string;
+  subscription: {
+    endpoint: string;
+    expirationTime?: number | null;
+    keys: {
+      p256dh: string;
+      auth: string;
+    };
+  };
+  meta?: {
+    ua?: string | null;
+    platform?: string | null;
+  };
+}
+
+export interface PushUnsubscribePayload {
+  user: string;
+  endpoint: string;
+}
+
 export const api = {
   controlStatus: () => request<ControlStatusResponse>("GET", "/control/status"),
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
@@ -483,6 +508,9 @@ export const api = {
     request<UserSettingsResponse>("PUT", `/user-settings/${encodeURIComponent(user)}`, payload),
   commandLogs: (limit = 20) =>
     request<CommandLogsResponse>("GET", `/commands/logs?limit=${Math.min(Math.max(1, Math.trunc(limit)), 200)}`),
+  pushPublicKey: () => request<PushPublicKeyResponse>("GET", "/push/public-key"),
+  pushSubscribe: (payload: PushSubscribePayload) => request<unknown>("POST", "/push/subscriptions", payload),
+  pushUnsubscribe: (payload: PushUnsubscribePayload) => request<unknown>("DELETE", "/push/subscriptions", payload),
 };
 
 export const cieApi = {
