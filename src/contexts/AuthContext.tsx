@@ -5,7 +5,7 @@ import { ensurePushSubscription, removePushSubscription } from "@/services/web-p
 interface AuthContextType {
   isAuthenticated: boolean;
   user: string | null;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -13,20 +13,45 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const VALID_USER = "portaria";
 const VALID_PASS = "1793";
+const AUTH_KEY = "nr_auth";
+const USER_KEY = "nr_user";
+
+const getStoredAuthState = () => {
+  const localAuth = localStorage.getItem(AUTH_KEY) === "true";
+  const localUser = localStorage.getItem(USER_KEY);
+  if (localAuth && localUser) {
+    return { isAuthenticated: true, user: localUser };
+  }
+
+  const sessionAuth = sessionStorage.getItem(AUTH_KEY) === "true";
+  const sessionUser = sessionStorage.getItem(USER_KEY);
+  if (sessionAuth && sessionUser) {
+    return { isAuthenticated: true, user: sessionUser };
+  }
+
+  return { isAuthenticated: false, user: null as string | null };
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem("nr_auth") === "true");
-  const [user, setUser] = useState<string | null>(() => sessionStorage.getItem("nr_user"));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => getStoredAuthState().isAuthenticated);
+  const [user, setUser] = useState<string | null>(() => getStoredAuthState().user);
 
-  const login = useCallback(async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string, rememberMe = false) => {
     if (username === VALID_USER && password === VALID_PASS) {
       const normalizedUser = username.toUpperCase();
       await syncUserSettingsOnLogin(normalizedUser);
       await ensurePushSubscription(normalizedUser);
       setIsAuthenticated(true);
       setUser(normalizedUser);
-      sessionStorage.setItem("nr_auth", "true");
-      sessionStorage.setItem("nr_user", normalizedUser);
+
+      const targetStorage = rememberMe ? localStorage : sessionStorage;
+      const otherStorage = rememberMe ? sessionStorage : localStorage;
+
+      targetStorage.setItem(AUTH_KEY, "true");
+      targetStorage.setItem(USER_KEY, normalizedUser);
+      otherStorage.removeItem(AUTH_KEY);
+      otherStorage.removeItem(USER_KEY);
+
       return { success: true };
     }
     return { success: false, error: "Usuário ou senha inválidos." };
@@ -40,8 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setIsAuthenticated(false);
     setUser(null);
-    sessionStorage.removeItem("nr_auth");
-    sessionStorage.removeItem("nr_user");
+    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(USER_KEY);
   }, [user]);
 
   return (

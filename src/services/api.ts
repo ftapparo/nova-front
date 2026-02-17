@@ -25,7 +25,7 @@ const requestContextInterceptor = (config: any) => {
     config.headers = config.headers || {};
     (config.headers as Record<string, string>)["x-request-id"] = requestId;
 
-    const user = window.sessionStorage.getItem("nr_user");
+    const user = window.sessionStorage.getItem("nr_user") || window.localStorage.getItem("nr_user");
     if (user && user.trim()) {
       (config.headers as Record<string, string>)["x-user"] = user.trim();
     }
