@@ -105,14 +105,16 @@ const buildEventAddress = (log: CieLogItem): string => {
 export default function CentralIncendio() {
   const queryClient = useQueryClient();
   const [logTab, setLogTab] = useState<DashboardLogTab>("falha");
-  const [currentStateTab, setCurrentStateTab] = useState<CurrentStateKey>("falha");
-  const [secondaryMode, setSecondaryMode] = useState<SecondaryCardMode>("registro-eventos");
+  const [currentStateTab, setCurrentStateTab] = useState<CurrentStateKey>("alarme");
+  const [secondaryMode, setSecondaryMode] = useState<SecondaryCardMode>("estado-atual");
   const [tabOpenedAt, setTabOpenedAt] = useState<number>(Date.now());
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const [lastStableFailure, setLastStableFailure] = useState<CieLogItem | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<CieLogItem | null>(null);
   const [restartGraceUntil, setRestartGraceUntil] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  const [forcedOffline, setForcedOffline] = useState(false);
+  const [consecutivePanelFailures, setConsecutivePanelFailures] = useState(0);
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -121,13 +123,19 @@ export default function CentralIncendio() {
     staleTime: 2000,
   });
 
+  const panel = panelQuery.data;
+  const panelRestartUntil = panel?.restartingUntil ?? null;
+  const panelRestartingActive = Boolean(panel?.restarting) && Number(panelRestartUntil ?? 0) > nowMs;
+  const forceOfflineByFailures = !panelRestartingActive && consecutivePanelFailures >= 2;
+  const online = !(forcedOffline || forceOfflineByFailures) && panel?.online === true;
+
   const isLogsMode = secondaryMode === "registro-eventos";
   const activeLogType: CieLogType = isLogsMode ? logTab : currentStateTab;
 
   const logsQuery = useQuery({
     queryKey: ["cie", "logs", secondaryMode, activeLogType],
     queryFn: () => cieApi.logs(activeLogType, 20),
-    enabled: isLogsMode && panelQuery.data?.online === true,
+    enabled: isLogsMode && online,
     refetchInterval: 2000,
     staleTime: 2000,
   });
@@ -148,19 +156,17 @@ export default function CentralIncendio() {
     },
   });
 
-  const panel = panelQuery.data;
-  const panelRestartUntil = panel?.restartingUntil ?? null;
-  const panelRestartingActive = Boolean(panel?.restarting) && Number(panelRestartUntil ?? 0) > nowMs;
   const restartUntil = Math.max(restartGraceUntil ?? 0, panelRestartUntil ?? 0);
-  const restarting = restartUntil > nowMs || panelRestartingActive;
-  const initialLoading = panelQuery.isLoading && !panel;
-  const online = panel?.online === true;
+  const restarting = !online && (restartUntil > nowMs || panelRestartingActive);
+  const hadPanelError = panelQuery.errorUpdatedAt > 0 || panelQuery.isError || panelQuery.isRefetchError;
+  const initialLoading = panelQuery.isLoading && !panel && !hadPanelError && !forcedOffline;
   const isLoading = panelQuery.isLoading || (isLogsMode && logsQuery.isLoading);
   const offline = !initialLoading && !online && !restarting;
   const visiblePanel = online ? panel : null;
   const counters = visiblePanel?.counters;
   const logs = online && isLogsMode ? (logsQuery.data?.items ?? []) : [];
   const highlightedFailure = visiblePanel?.latestFailureEvent ?? null;
+  const hasActiveFailure = Number(counters?.falha ?? 0) > 0;
   const panelErrorMessage = panelQuery.error && !restarting ? toFriendlyError(panelQuery.error) : null;
   const logsErrorMessage = online && isLogsMode && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
 
@@ -185,22 +191,49 @@ export default function CentralIncendio() {
     && tabElapsedMs < 12000;
 
   useEffect(() => {
-    if (!online) {
+    if (!online || restarting || !hasActiveFailure) {
       setLastStableFailure(null);
       return;
     }
 
     if (highlightedFailure) {
       setLastStableFailure(highlightedFailure);
+    }
+  }, [online, restarting, highlightedFailure, hasActiveFailure]);
+
+  const displayedFailure = hasActiveFailure ? (highlightedFailure ?? lastStableFailure) : null;
+
+  useEffect(() => {
+    const hasRefetchError = panelQuery.isRefetchError || panelQuery.isError;
+    if (hasRefetchError) {
+      setConsecutivePanelFailures((prev) => prev + 1);
+    }
+  }, [panelQuery.errorUpdatedAt, panelQuery.isRefetchError, panelQuery.isError]);
+
+  useEffect(() => {
+    const hasFreshSuccessAfterLastError = panelQuery.dataUpdatedAt > 0 && panelQuery.dataUpdatedAt > panelQuery.errorUpdatedAt;
+    if (hasFreshSuccessAfterLastError) {
+      setConsecutivePanelFailures(0);
+    }
+  }, [panelQuery.dataUpdatedAt, panelQuery.errorUpdatedAt]);
+
+  useEffect(() => {
+    if (panelRestartingActive) {
+      setForcedOffline(false);
+      setConsecutivePanelFailures(0);
       return;
     }
 
-    if ((counters?.falha ?? 0) <= 0) {
-      setLastStableFailure(null);
+    if (forceOfflineByFailures) {
+      setForcedOffline(true);
+      return;
     }
-  }, [online, highlightedFailure, counters?.falha]);
 
-  const displayedFailure = highlightedFailure ?? lastStableFailure;
+    const hasFreshSuccessAfterLastError = panelQuery.dataUpdatedAt > 0 && panelQuery.dataUpdatedAt > panelQuery.errorUpdatedAt;
+    if (hasFreshSuccessAfterLastError && panel?.online === true) {
+      setForcedOffline(false);
+    }
+  }, [panelRestartingActive, forceOfflineByFailures, panelQuery.dataUpdatedAt, panelQuery.errorUpdatedAt, panel?.online]);
 
   useEffect(() => {
     if (online) {
@@ -262,6 +295,10 @@ export default function CentralIncendio() {
       await commandMutation.mutateAsync(action);
       if (action === "restartCentral") {
         setRestartGraceUntil(Date.now() + 60000);
+        setLastStableFailure(null);
+        setSelectedDetail(null);
+        setCurrentStateTab("alarme");
+        setSecondaryMode("estado-atual");
         notify.success("Reinicialização iniciada", {
           description: "A central está reiniciando. Aguarde até 1 minuto para reconexão.",
         });
@@ -518,18 +555,10 @@ export default function CentralIncendio() {
             </CardHeader>
             <CardContent>
               <div className="max-h-[540px] overflow-y-auto pr-1">
-                {restarting ? (
-                  <div className="rounded-lg border state-warning-soft px-4 py-3 typo-body text-status-warning-soft-foreground">
-                    Central reiniciando. Registros serão exibidos após reconexão.
-                  </div>
-                ) : offline ? (
-                  <div className="rounded-lg border state-danger-soft px-4 py-3 typo-body text-status-danger-soft-foreground">
-                    Central offline. Registros indisponíveis no momento.
-                  </div>
-                ) : secondaryMode === "estado-atual" ? (
+                {secondaryMode === "estado-atual" ? (
                   selectedStateCount <= 0 ? (
                     <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
-                      Nenhum evento ativo em {selectedStateLabel.toLowerCase()}.
+                      Nenhum evento para ser apresentado.
                     </div>
                   ) : currentStateTab === "falha" && displayedFailure ? (
                     <button
@@ -556,9 +585,17 @@ export default function CentralIncendio() {
                     </button>
                   ) : (
                     <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
-                      {selectedStateLabel}: {selectedStateCount} evento(s) ativo(s) no momento.
+                      Nenhum evento para ser apresentado.
                     </div>
                   )
+                ) : restarting ? (
+                  <div className="rounded-lg border state-warning-soft px-4 py-3 typo-body text-status-warning-soft-foreground">
+                    Central reiniciando. Registros serão exibidos após reconexão.
+                  </div>
+                ) : offline ? (
+                  <div className="rounded-lg border state-danger-soft px-4 py-3 typo-body text-status-danger-soft-foreground">
+                    Central offline. Registros indisponíveis no momento.
+                  </div>
                 ) : isLoading || waitingBatchLoad ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
                     Carregando os últimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
