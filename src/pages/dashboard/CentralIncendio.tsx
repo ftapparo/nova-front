@@ -132,6 +132,7 @@ export default function CentralIncendio() {
   const [manualRefreshing, setManualRefreshing] = useState(false);
   const [lastStableFailure, setLastStableFailure] = useState<CieLogItem | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<CieLogItem | null>(null);
+  const [confirmAlarmOpen, setConfirmAlarmOpen] = useState(false);
   const [restartGraceUntil, setRestartGraceUntil] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [forcedOffline, setForcedOffline] = useState(false);
@@ -497,7 +498,15 @@ export default function CentralIncendio() {
                 >
                   <TabsList className="grid h-10 w-full grid-cols-4">
                     {LOG_TABS.map((tab) => (
-                      <TabsTrigger key={tab.value} value={tab.value} className="w-full">
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className="w-full"
+                        onClick={() => {
+                          setSecondaryMode("registro-eventos");
+                          setLogTab(tab.value);
+                        }}
+                      >
                         {tab.label}
                       </TabsTrigger>
                     ))}
@@ -552,7 +561,7 @@ export default function CentralIncendio() {
                 <Button
                   variant="destructive"
                   disabled={commandMutation.isPending || offline || restarting}
-                  onClick={() => void runCommand("alarmGeneral", "Disparar Alarme")}
+                  onClick={() => setConfirmAlarmOpen(true)}
                   className={`h-11 bg-red-600 text-white hover:bg-red-700 ${ledAlarmGeneralOn ? "ring-2 ring-red-300/70" : ""}`}
                 >
                   <ShieldAlert className="mr-2 h-4 w-4" />
@@ -706,6 +715,33 @@ export default function CentralIncendio() {
               </div>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmAlarmOpen} onOpenChange={setConfirmAlarmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar disparo de alarme</DialogTitle>
+            <DialogDescription>
+              Esta ação dispara o alarme geral da central de incêndio. Confirma o envio do comando?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirmAlarmOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                setConfirmAlarmOpen(false);
+                void runCommand("alarmGeneral", "Disparar Alarme");
+              }}
+              disabled={commandMutation.isPending || offline || restarting}
+            >
+              Confirmar disparo
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </PageContainer>
