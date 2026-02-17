@@ -16,36 +16,36 @@ type CurrentStateKey = "alarme" | "falha" | "bloqueio" | "supervisao";
 type SecondaryCardMode = "estado-atual" | "registro-eventos";
 
 const LOG_TABS: Array<{ value: DashboardLogTab; label: string }> = [
-  { value: "operacao", label: "OperaÃ§Ã£o" },
+  { value: "operacao", label: "Operação" },
   { value: "alarme", label: "Alarme" },
   { value: "falha", label: "Falha" },
-  { value: "supervisao", label: "SupervisÃ£o" },
+  { value: "supervisao", label: "Supervisão" },
 ];
 
 const COUNTER_KEYS: Array<{ key: CurrentStateKey; label: string }> = [
   { key: "alarme", label: "Alarme" },
   { key: "falha", label: "Falha" },
   { key: "bloqueio", label: "Bloqueio" },
-  { key: "supervisao", label: "SupervisÃ£o" },
+  { key: "supervisao", label: "Supervisão" },
 ];
 
 const EVENT_TYPE_LABEL: Record<CieLogType, string> = {
-  operacao: "Evento de operaÃ§Ã£o",
+  operacao: "Evento de operação",
   alarme: "Evento de alarme",
   falha: "Disp. em Falha",
-  supervisao: "Evento de supervisÃ£o",
+  supervisao: "Evento de supervisão",
   bloqueio: "Evento de bloqueio",
 };
 
 const toFriendlyError = (error: unknown): string => {
-  const fallback = "NÃ£o foi possÃ­vel comunicar com a Central de IncÃªndio no momento.";
+  const fallback = "Não foi possível comunicar com a Central de Incêndio no momento.";
   if (!(error instanceof Error)) return fallback;
 
   const raw = error.message || "";
   const message = raw.toLowerCase();
 
   if (message.includes("network error")) {
-    return "Central offline. NÃ£o foi possÃ­vel conectar ao serviÃ§o da central.";
+    return "Central offline. Não foi possível conectar ao serviço da central.";
   }
 
   if (message.includes("timeout")) {
@@ -53,7 +53,7 @@ const toFriendlyError = (error: unknown): string => {
   }
 
   if (message.includes("nao mapeado") || message.includes("nÃ£o mapeado")) {
-    return "Comando nÃ£o configurado na central. Solicite ajuste tÃ©cnico.";
+    return "Comando não configurado na central. Solicite ajuste técnico.";
   }
 
   if (message.includes("statusbotaonaoconfigurado")) {
@@ -61,7 +61,7 @@ const toFriendlyError = (error: unknown): string => {
   }
 
   if (message.includes("erro ao chamar rota cie")) {
-    return "ServiÃ§o da central indisponÃ­vel no momento.";
+    return "Serviço da central indisponível no momento.";
   }
 
   return raw || fallback;
@@ -234,8 +234,8 @@ export default function CentralIncendio() {
     ? `Estado Atual de ${selectedStateLabel}`
     : `Registros de ${selectedLogLabel}`;
   const secondaryDescription = secondaryMode === "estado-atual"
-    ? `CondiÃ§Ã£o atual para ${selectedStateLabel.toLowerCase()}.`
-    : `Ãšltimos atÃ© 20 registros de ${selectedLogLabel.toLowerCase()}.`;
+    ? `Condição atual para ${selectedStateLabel.toLowerCase()}.`
+    : `Últimos até 20 registros de ${selectedLogLabel.toLowerCase()}.`;
   const ledAlarmGeneralOn = visiblePanel?.leds?.alarmeGeral === true;
   const ledCentralSilenciadaOn = visiblePanel?.leds?.centralSilenciada === true;
   const ledSireneSilenciadaOn = visiblePanel?.leds?.sireneSilenciada === true;
@@ -262,8 +262,8 @@ export default function CentralIncendio() {
       await commandMutation.mutateAsync(action);
       if (action === "restartCentral") {
         setRestartGraceUntil(Date.now() + 60000);
-        notify.success("Reinicializacao iniciada", {
-          description: "A central esta reiniciando. Aguarde ate 1 minuto para reconexao.",
+        notify.success("Reinicialização iniciada", {
+          description: "A central está reiniciando. Aguarde até 1 minuto para reconexão.",
         });
         return;
       }
@@ -277,7 +277,7 @@ export default function CentralIncendio() {
   return (
     <PageContainer size="wide">
       <PageHeader
-        title="Central de IncÃªndio"
+        title="Central de Incêndio"
         description="Monitoramento e comando da CIE2500 em tempo real."
         actions={(
           <Button
@@ -320,10 +320,10 @@ export default function CentralIncendio() {
                 {initialLoading
                   ? "Carregando status da central..."
                   : restarting
-                  ? "Central reiniciando. Aguarde reconexao automatica."
-                  : visiblePanel?.reconnecting
-                    ? `Reconectando... tentativa ${visiblePanel.reconnectAttempt}`
-                    : "Status atual da central"}
+                    ? "Central reiniciando. Aguarde reconexão automática."
+                    : visiblePanel?.reconnecting
+                      ? `Reconectando... tentativa ${visiblePanel.reconnectAttempt}`
+                      : "Status atual da central"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -341,10 +341,10 @@ export default function CentralIncendio() {
                     <div>
                       <p className="typo-label uppercase text-status-warning-soft-foreground">Reiniciando central</p>
                       <p className="typo-body font-semibold text-status-warning-soft-foreground">
-                        Comando de reinicio enviado com sucesso. A central pode ficar indisponivel por ate 1 minuto.
+                        Comando de reinício enviado com sucesso. A central pode ficar indisponível por até 1 minuto.
                       </p>
                       <p className="typo-caption text-status-warning-soft-foreground">
-                        Aguarde reconexao automatica. Se ultrapassar 1 minuto, sera exibido status offline.
+                        Aguarde reconexão automática. Se ultrapassar 1 minuto, será exibido status offline.
                       </p>
                     </div>
                   </div>
@@ -356,10 +356,10 @@ export default function CentralIncendio() {
                     <div>
                       <p className="typo-label uppercase text-status-danger-soft-foreground">Central Offline</p>
                       <p className="typo-body font-semibold text-status-danger-soft-foreground">
-                        {panelErrorMessage || "Central offline. NÃ£o foi possÃ­vel conectar ao serviÃ§o da central."}
+                        {panelErrorMessage || "Central offline. Não foi possível conectar ao serviço da central."}
                       </p>
                       <p className="typo-caption text-status-danger-soft-foreground">
-                        Oriente o porteiro/zelador/sÃ­ndico a verificar o serviÃ§o da central e a conexÃ£o de rede.
+                        Oriente o porteiro/zelador/síndico a verificar o serviço da central e a conexão de rede.
                       </p>
                     </div>
                   </div>
@@ -387,7 +387,7 @@ export default function CentralIncendio() {
                 <div className="rounded-lg border state-success-soft border-status-success-solid/40 px-4 py-3">
                   <p className="typo-label uppercase text-status-success-solid">Sistema Normal</p>
                   <p className="typo-body font-semibold text-status-success-soft-foreground">Nenhuma falha ativa registrada.</p>
-                  <p className="typo-caption text-status-success-soft-foreground">A central esta operando normalmente.</p>
+                  <p className="typo-caption text-status-success-soft-foreground">A central está operando normalmente.</p>
                 </div>
               )}
 
@@ -454,7 +454,7 @@ export default function CentralIncendio() {
                   <p className="typo-body font-medium">{formatPanelTime(visiblePanel?.dataHora?.timestamp)}</p>
                   {visiblePanel?.lastError ? (
                     <>
-                      <p className="mt-2 typo-caption uppercase text-muted-foreground">Ãšltimo erro</p>
+                      <p className="mt-2 typo-caption uppercase text-muted-foreground">Último erro</p>
                       <p className="typo-caption text-status-danger-soft-foreground">{visiblePanel.lastError}</p>
                     </>
                   ) : null}
@@ -503,7 +503,7 @@ export default function CentralIncendio() {
               </div>
               {ledCentralSilenciadaOn ? (
                 <p className="typo-caption text-muted-foreground">
-                  Bip interno silenciado. A reativacao deve ser feita localmente na central (ou apos reinicio).
+                  Bip interno silenciado. A reativação deve ser feita localmente na central (ou após reinício).
                 </p>
               ) : null}
             </CardContent>
@@ -520,11 +520,11 @@ export default function CentralIncendio() {
               <div className="max-h-[540px] overflow-y-auto pr-1">
                 {restarting ? (
                   <div className="rounded-lg border state-warning-soft px-4 py-3 typo-body text-status-warning-soft-foreground">
-                    Central reiniciando. Registros serao exibidos apos reconexao.
+                    Central reiniciando. Registros serão exibidos após reconexão.
                   </div>
                 ) : offline ? (
                   <div className="rounded-lg border state-danger-soft px-4 py-3 typo-body text-status-danger-soft-foreground">
-                    Central offline. Registros indisponÃ­veis no momento.
+                    Central offline. Registros indisponíveis no momento.
                   </div>
                 ) : secondaryMode === "estado-atual" ? (
                   selectedStateCount <= 0 ? (
@@ -561,13 +561,11 @@ export default function CentralIncendio() {
                   )
                 ) : isLoading || waitingBatchLoad ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
-                    Carregando os ultimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
+                    Carregando os últimos registros de {LOG_TABS.find((t) => t.value === logTab)?.label ?? "eventos"}...
                   </div>
                 ) : latestEvents.length === 0 ? (
                   <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
                     Sem eventos para o filtro selecionado.
-
-
                   </div>
                 ) : (
                   <div className="space-y-2">
