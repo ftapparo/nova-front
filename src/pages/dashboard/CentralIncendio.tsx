@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Bell, RefreshCw, RotateCcw, ShieldAlert, VolumeX } from "lucide-react";
+import { AlertTriangle, Bell, Loader2, RefreshCw, RotateCcw, ShieldAlert, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -153,9 +153,10 @@ export default function CentralIncendio() {
   const panelRestartingActive = Boolean(panel?.restarting) && Number(panelRestartUntil ?? 0) > nowMs;
   const restartUntil = Math.max(restartGraceUntil ?? 0, panelRestartUntil ?? 0);
   const restarting = restartUntil > nowMs || panelRestartingActive;
+  const initialLoading = panelQuery.isLoading && !panel;
   const online = panel?.online === true;
   const isLoading = panelQuery.isLoading || (isLogsMode && logsQuery.isLoading);
-  const offline = !online && !restarting;
+  const offline = !initialLoading && !online && !restarting;
   const visiblePanel = online ? panel : null;
   const counters = visiblePanel?.counters;
   const logs = online && isLogsMode ? (logsQuery.data?.items ?? []) : [];
@@ -316,7 +317,9 @@ export default function CentralIncendio() {
                 </Badge>
               </div>
               <CardDescription>
-                {restarting
+                {initialLoading
+                  ? "Carregando status da central..."
+                  : restarting
                   ? "Central reiniciando. Aguarde reconexao automatica."
                   : visiblePanel?.reconnecting
                     ? `Reconectando... tentativa ${visiblePanel.reconnectAttempt}`
@@ -324,7 +327,14 @@ export default function CentralIncendio() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {restarting ? (
+              {initialLoading ? (
+                <div className="rounded-lg border bg-muted px-4 py-3">
+                  <div className="flex items-center gap-2 typo-body text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Carregando status da central...
+                  </div>
+                </div>
+              ) : restarting ? (
                 <div className="rounded-lg border state-warning-soft border-status-warning-soft-border px-4 py-3">
                   <div className="flex items-start gap-3">
                     <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-status-warning-soft-foreground" />
@@ -464,22 +474,23 @@ export default function CentralIncendio() {
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline || restarting}
-                  onClick={() => void runCommand("alarmGeneral", "Alarme Geral")}
-                  className={`h-11 ${ledAlarmGeneralOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
-                >
-                  <ShieldAlert className="mr-2 h-4 w-4" />
-                  Alarme Geral
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={commandMutation.isPending || offline || restarting}
                   onClick={() => void runCommand(
                     ledSireneSilenciadaOn ? "releaseSiren" : "silenceSiren",
                     ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"
                   )}
                   className={`h-11 ${ledSireneSilenciadaOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
                 >
-                  <Bell className="mr-2 h-4 w-4" />{ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"}</Button>
+                  <Bell className="mr-2 h-4 w-4" />{ledSireneSilenciadaOn ? "Reativar Sirene" : "Silenciar Sirene"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={commandMutation.isPending || offline || restarting}
+                  onClick={() => void runCommand("alarmGeneral", "Disparar Alarme")}
+                  className={`h-11 bg-red-600 text-white hover:bg-red-700 ${ledAlarmGeneralOn ? "ring-2 ring-red-300/70" : ""}`}
+                >
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  Disparar Alarme
+                </Button>
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline || restarting}
