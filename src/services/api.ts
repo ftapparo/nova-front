@@ -403,6 +403,8 @@ export interface CieLogItem {
   loop: number | null;
   deviceName: string | null;
   zoneName: string | null;
+  deviceTypeCode: number | null;
+  deviceTypeLabel: string | null;
   deviceClassification: {
     typeCode: number | null;
     subtypeCode: number | null;

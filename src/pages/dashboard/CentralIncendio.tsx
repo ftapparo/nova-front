@@ -37,6 +37,16 @@ const EVENT_TYPE_LABEL: Record<CieLogType, string> = {
   bloqueio: "Evento de bloqueio",
 };
 
+const DEVICE_TYPE_LABEL: Record<number, string> = {
+  1: "Sensor de Fumaca",
+  2: "Sensor de Temperatura",
+  3: "Acionador Manual",
+  4: "Modulo de Zona",
+  5: "Modulo de Entrada",
+  9: "Modulo de entrada ou saida",
+  10: "Sinalizador Audiovisual",
+};
+
 const toFriendlyError = (error: unknown): string => {
   const fallback = "Não foi possível comunicar com a Central de Incêndio no momento.";
   if (!(error instanceof Error)) return fallback;
@@ -100,6 +110,17 @@ const buildEventAddress = (log: CieLogItem): string => {
   const loop = Number.isFinite(log.loop ?? NaN) ? `L${log.loop}` : "L-";
   const address = Number.isFinite(log.address ?? NaN) ? `D${log.address}` : "D-";
   return `${loop}${address}`;
+};
+
+const getDeviceTypeLabel = (log: CieLogItem): string => {
+  if (typeof log.deviceTypeLabel === "string" && log.deviceTypeLabel.trim()) {
+    return log.deviceTypeLabel.trim();
+  }
+  const code = log.deviceClassification?.typeCode ?? null;
+  if (typeof code === "number" && Number.isFinite(code) && DEVICE_TYPE_LABEL[code]) {
+    return DEVICE_TYPE_LABEL[code];
+  }
+  return normalizeLabel(log.deviceClassification?.typeLabel || log.deviceClassification?.resolvedLabel);
 };
 
 export default function CentralIncendio() {
@@ -167,6 +188,7 @@ export default function CentralIncendio() {
   const logs = online && isLogsMode ? (logsQuery.data?.items ?? []) : [];
   const highlightedFailure = visiblePanel?.latestFailureEvent ?? null;
   const hasActiveFailure = Number(counters?.falha ?? 0) > 0;
+  const hasActiveAlarm = Number(counters?.alarme ?? 0) > 0;
   const panelErrorMessage = panelQuery.error && !restarting ? toFriendlyError(panelQuery.error) : null;
   const logsErrorMessage = online && isLogsMode && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
 
@@ -402,19 +424,27 @@ export default function CentralIncendio() {
                   </div>
                 </div>
               ) : displayedFailure ? (
-                <div className="rounded-lg border state-warning-soft border-status-warning-soft-border px-4 py-3">
+                <div className={hasActiveAlarm
+                  ? "rounded-lg border border-red-700 bg-red-600 px-4 py-3 text-white"
+                  : "rounded-lg border state-warning-soft border-status-warning-soft-border px-4 py-3"}
+                >
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-status-warning-soft-foreground" />
+                    <AlertTriangle className={`mt-0.5 h-5 w-5 shrink-0 ${hasActiveAlarm ? "text-white" : "text-status-warning-soft-foreground"}`} />
                     <div>
-                      <p className="typo-label uppercase text-status-warning-soft-foreground">Sistema em Falha</p>
-                      <p className="typo-body font-semibold text-status-warning-soft-foreground">
+                      <p className={`typo-label uppercase ${hasActiveAlarm ? "text-white" : "text-status-warning-soft-foreground"}`}>
+                        {hasActiveAlarm ? "Sistema em Alarme" : "Sistema em Falha"}
+                      </p>
+                      <p className={`typo-body font-semibold ${hasActiveAlarm ? "text-white" : "text-status-warning-soft-foreground"}`}>
                         {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
                       </p>
-                      <p className="typo-caption text-status-warning-soft-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
-                      <p className="typo-caption text-status-warning-soft-foreground">
+                      <p className={`typo-caption ${hasActiveAlarm ? "text-white/95" : "text-status-warning-soft-foreground"}`}>
+                        {EVENT_TYPE_LABEL[displayedFailure.type]}
+                        {getDeviceTypeLabel(displayedFailure) !== "--" ? ` | Tipo: ${getDeviceTypeLabel(displayedFailure)}` : ""}
+                      </p>
+                      <p className={`typo-caption ${hasActiveAlarm ? "text-white/95" : "text-status-warning-soft-foreground"}`}>
                         Zona: {normalizeLabel(displayedFailure.zoneName)} | Dispositivo: {normalizeLabel(displayedFailure.deviceName)}
                       </p>
-                      <p className="typo-caption text-status-warning-soft-foreground">
+                      <p className={`typo-caption ${hasActiveAlarm ? "text-white/95" : "text-status-warning-soft-foreground"}`}>
                         Laço/Endereço: {buildEventAddress(displayedFailure)} | Data/Hora: {formatDate(displayedFailure.occurredAt)} {formatTime(displayedFailure.occurredAt)}
                       </p>
                     </div>
@@ -663,17 +693,14 @@ export default function CentralIncendio() {
               <p><strong>Laço/Endereço:</strong> {buildEventAddress(selectedDetail)}</p>
               <p><strong>Zona:</strong> {normalizeLabel(selectedDetail.zoneName)}</p>
               <p><strong>Dispositivo:</strong> {normalizeLabel(selectedDetail.deviceName)}</p>
-              <p><strong>Tipo do dispositivo:</strong> {normalizeLabel(selectedDetail.deviceClassification?.resolvedLabel)}</p>
-              <p><strong>Tipo/Subtipo (codigo):</strong> {selectedDetail.deviceClassification
-                ? `${selectedDetail.deviceClassification.typeCode ?? "--"} / ${selectedDetail.deviceClassification.subtypeCode ?? "--"}`
-                : "--"}</p>
+              <p><strong>Tipo do dispositivo:</strong> {getDeviceTypeLabel(selectedDetail)}</p>
               <p><strong>Data:</strong> {formatDate(selectedDetail.occurredAt)}</p>
               <p><strong>Hora:</strong> {formatTime(selectedDetail.occurredAt)}</p>
               <p><strong>Evento (código):</strong> {selectedDetail.eventType ?? "--"}</p>
               <p><strong>Bloqueado:</strong> {selectedDetail.blocked ? "Sim" : "Não"}</p>
               <div className="mt-2 rounded-md bg-muted p-3">
                 <p className="mb-1 typo-caption text-muted-foreground">Payload bruto</p>
-                <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs">
+                <pre className="max-h-56 max-w-full overflow-auto whitespace-pre-wrap break-all text-xs">
                   {JSON.stringify(selectedDetail.raw, null, 2)}
                 </pre>
               </div>
