@@ -133,9 +133,8 @@ export default function CentralIncendio() {
   });
 
   const commandMutation = useMutation({
-    mutationFn: async (action: "silenceBip" | "releaseBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral") => {
+    mutationFn: async (action: "silenceBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral") => {
       if (action === "silenceBip") return cieApi.silenceBip();
-      if (action === "releaseBip") return cieApi.releaseBip();
       if (action === "alarmGeneral") return cieApi.alarmGeneral();
       if (action === "silenceSiren") return cieApi.silenceSiren();
       if (action === "releaseSiren") return cieApi.releaseSiren();
@@ -255,7 +254,7 @@ export default function CentralIncendio() {
   };
 
   const runCommand = async (
-    action: "silenceBip" | "releaseBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral",
+    action: "silenceBip" | "alarmGeneral" | "silenceSiren" | "releaseSiren" | "restartCentral",
     label: string
   ) => {
     try {
@@ -456,14 +455,11 @@ export default function CentralIncendio() {
                 <Button
                   variant="outline"
                   disabled={commandMutation.isPending || offline || restarting}
-                  onClick={() => void runCommand(
-                    ledCentralSilenciadaOn ? "releaseBip" : "silenceBip",
-                    ledCentralSilenciadaOn ? "Reativar Bip Interno" : "Silenciar Bip Interno"
-                  )}
+                  onClick={() => void runCommand("silenceBip", "Silenciar Bip Interno")}
                   className={`h-11 ${ledCentralSilenciadaOn ? "border-primary text-primary bg-primary/10 hover:bg-primary/15" : ""}`}
                 >
                   <VolumeX className="mr-2 h-4 w-4" />
-                  {ledCentralSilenciadaOn ? "Reativar Bip" : "Silenciar Bip"}
+                  Silenciar Bip
                 </Button>
                 <Button
                   variant="outline"
@@ -494,6 +490,11 @@ export default function CentralIncendio() {
                   Reiniciar
                 </Button>
               </div>
+              {ledCentralSilenciadaOn ? (
+                <p className="typo-caption text-muted-foreground">
+                  Bip interno silenciado. A reativacao deve ser feita localmente na central (ou apos reinicio).
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>
