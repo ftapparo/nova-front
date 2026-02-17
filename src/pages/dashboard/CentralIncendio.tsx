@@ -137,11 +137,10 @@ export default function CentralIncendio() {
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const [forcedOffline, setForcedOffline] = useState(false);
   const [consecutivePanelFailures, setConsecutivePanelFailures] = useState(0);
-  const [notificationPermission, setNotificationPermission] = useState<string>(() =>
-    typeof Notification !== "undefined" ? Notification.permission : "unsupported"
-  );
+  const [syncedRightCardHeight, setSyncedRightCardHeight] = useState<number | null>(null);
   const previousAlarmActiveRef = useRef(false);
   const previousFailureActiveRef = useRef(false);
+  const leftCardRef = useRef<HTMLDivElement | null>(null);
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -289,13 +288,36 @@ export default function CentralIncendio() {
   }, [nowMs, restartGraceUntil]);
 
   useEffect(() => {
-    if (typeof Notification === "undefined") {
-      setNotificationPermission("unsupported");
-      return;
+    const updateHeight = () => {
+      if (typeof window === "undefined") return;
+      const isDesktop = window.matchMedia("(min-width: 1280px)").matches;
+      if (!isDesktop) {
+        setSyncedRightCardHeight(null);
+        return;
+      }
+
+      const height = leftCardRef.current?.getBoundingClientRect().height ?? 0;
+      if (height > 0) {
+        setSyncedRightCardHeight(Math.ceil(height));
+      }
+    };
+
+    updateHeight();
+
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => updateHeight())
+      : null;
+
+    if (observer && leftCardRef.current) {
+      observer.observe(leftCardRef.current);
     }
 
-    setNotificationPermission(Notification.permission);
-  }, [nowMs]);
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      observer?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (!online || restarting || !counters) {
@@ -392,9 +414,9 @@ export default function CentralIncendio() {
         )}
       />
 
-      <div className="grid gap-4 xl:grid-cols-5">
-        <div className="space-y-4 xl:col-span-3">
-          <Card className="shadow-sm">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-stretch">
+        <div className="space-y-4 xl:w-3/5">
+          <Card ref={leftCardRef} className="h-full shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle>{visiblePanel?.central?.nome?.trim() || "NOVA RESIDENCE"}</CardTitle>
@@ -562,8 +584,6 @@ export default function CentralIncendio() {
                   <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.ip)}</p>
                   <p className="mt-2 typo-caption uppercase text-muted-foreground">MAC</p>
                   <p className="typo-body font-medium">{normalizeLabel(visiblePanel?.central?.mac)}</p>
-                  <p className="mt-2 typo-caption uppercase text-muted-foreground">Notificações Push</p>
-                  <p className="typo-body font-medium uppercase">{normalizeLabel(notificationPermission)}</p>
                 </div>
                 <div className="rounded-lg border bg-card p-3">
                   <p className="typo-caption uppercase text-muted-foreground">Data</p>
@@ -628,14 +648,14 @@ export default function CentralIncendio() {
           </Card>
         </div>
 
-        <div className="xl:col-span-2">
-          <Card className="h-full min-h-[540px] shadow-sm">
+        <div className="h-full min-h-0 xl:w-2/5" style={syncedRightCardHeight ? { height: `${syncedRightCardHeight}px` } : undefined}>
+          <Card className="flex h-full flex-col overflow-hidden shadow-sm">
             <CardHeader className="space-y-3">
               <CardTitle>{secondaryTitle}</CardTitle>
               <CardDescription>{secondaryDescription}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="max-h-[540px] overflow-y-auto pr-1">
+            <CardContent className="flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto pr-1">
                 {secondaryMode === "estado-atual" ? (
                   selectedStateCount <= 0 ? (
                     <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
