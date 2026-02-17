@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Bell, Loader2, RefreshCw, RotateCcw, ShieldAlert, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -140,6 +140,8 @@ export default function CentralIncendio() {
   const [notificationPermission, setNotificationPermission] = useState<string>(() =>
     typeof Notification !== "undefined" ? Notification.permission : "unsupported"
   );
+  const previousAlarmActiveRef = useRef(false);
+  const previousFailureActiveRef = useRef(false);
 
   const panelQuery = useQuery({
     queryKey: ["cie", "panel"],
@@ -294,6 +296,32 @@ export default function CentralIncendio() {
 
     setNotificationPermission(Notification.permission);
   }, [nowMs]);
+
+  useEffect(() => {
+    if (!online || restarting || !counters) {
+      previousAlarmActiveRef.current = false;
+      previousFailureActiveRef.current = false;
+      return;
+    }
+
+    const alarmActive = Number(counters.alarme ?? 0) > 0;
+    const failureActive = Number(counters.falha ?? 0) > 0;
+
+    if (alarmActive && !previousAlarmActiveRef.current) {
+      notify.error("Alarme de incêndio ativo", {
+        description: `Foram detectados ${Number(counters.alarme ?? 0)} evento(s) de alarme na central.`,
+      });
+    }
+
+    if (failureActive && !previousFailureActiveRef.current) {
+      notify.warning("Falha ativa na central", {
+        description: `Foram detectados ${Number(counters.falha ?? 0)} evento(s) de falha.`,
+      });
+    }
+
+    previousAlarmActiveRef.current = alarmActive;
+    previousFailureActiveRef.current = failureActive;
+  }, [online, restarting, counters]);
 
   const selectedStateCount = counters?.[currentStateTab] ?? 0;
   const selectedStateLabel = COUNTER_KEYS.find((item) => item.key === currentStateTab)?.label ?? "Estado";
