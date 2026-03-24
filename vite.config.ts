@@ -5,7 +5,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { execSync } from "child_process";
 
-const gitHash = process.env.VITE_GIT_HASH || (() => {
+const gitHash = (() => {
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
   } catch {
