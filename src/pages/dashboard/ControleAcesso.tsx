@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, type KeyboardEventHandler } from "react";
-import { DoorOpen, Warehouse, Loader2, Search, CheckCircle2, AlertTriangle, MoreVertical, Edit2, XCircle } from "lucide-react";
+import { DoorOpen, Warehouse, Loader2, Search, CheckCircle2, AlertTriangle, MoreVertical, Edit2, XCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,13 @@ export default function ControleAcesso() {
   const [customNames, setCustomNames] = useState<Record<string, string>>({});
   const [editingDoor, setEditingDoor] = useState<{ id: string; name: string } | null>(null);
   const [isWideViewport, setIsWideViewport] = useState(false);
+
+  // Estado do modal de reiniciar antena
+  const [restartOpen, setRestartOpen] = useState(false);
+  const [restartGateId, setRestartGateId] = useState("");
+  const [restartPassword, setRestartPassword] = useState("");
+  const [restartLoading, setRestartLoading] = useState(false);
+  const [restartError, setRestartError] = useState("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -93,6 +100,29 @@ export default function ControleAcesso() {
   };
 
   const [editNameInput, setEditNameInput] = useState("");
+
+  const openRestartModal = () => {
+    setRestartGateId(gates?.length === 1 ? String(gates[0].numeroDispositivo) : "");
+    setRestartPassword("");
+    setRestartError("");
+    setRestartOpen(true);
+  };
+
+  const handleRestartConfirm = async () => {
+    if (!restartGateId) { setRestartError("Selecione uma antena."); return; }
+    if (restartPassword !== "1793") { setRestartError("Senha incorreta."); return; }
+    setRestartLoading(true);
+    setRestartError("");
+    try {
+      await api.restartGate(Number(restartGateId));
+      setRestartOpen(false);
+      notify.success("Antena reiniciada", { description: "Comando de reinicialização enviado com sucesso." });
+    } catch (err) {
+      setRestartError(err instanceof Error ? err.message : "Erro ao reiniciar antena.");
+    } finally {
+      setRestartLoading(false);
+    }
+  };
   const sortedDoors = [...(doors || [])].sort((a, b) => humanizeLabel(a.nome).localeCompare(humanizeLabel(b.nome), "pt-BR"));
   const selectedGateItem = (gates || []).find((gate) => String(gate.numeroDispositivo) === selectedGate);
 
@@ -316,9 +346,24 @@ export default function ControleAcesso() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Warehouse className="h-5 w-5 text-primary" />
-              <CardTitle>Portões</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Warehouse className="h-5 w-5 text-primary" />
+                <CardTitle>Portões</CardTitle>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={openRestartModal}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reiniciar Antena
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <CardDescription>Selecione um portão e configure o fechamento</CardDescription>
           </CardHeader>
@@ -437,6 +482,61 @@ export default function ControleAcesso() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Reiniciar Antena */}
+      <Dialog open={restartOpen} onOpenChange={(open) => { if (!restartLoading) setRestartOpen(open); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reiniciar Antena</DialogTitle>
+            <DialogDescription>
+              Selecione a antena e confirme com a senha do sistema para reiniciar a conexão.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="restart-gate-select" className="typo-label">Antena</Label>
+              <Select value={restartGateId} onValueChange={setRestartGateId}>
+                <SelectTrigger id="restart-gate-select" className="h-9 text-sm">
+                  <SelectValue placeholder="Selecione uma antena" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(gates || []).map((g) => (
+                    <SelectItem key={g.id} value={String(g.numeroDispositivo)}>
+                      {humanizeLabel(g.nome)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="restart-password" className="typo-label">Senha do sistema</Label>
+              <Input
+                id="restart-password"
+                type="password"
+                value={restartPassword}
+                onChange={(e) => { setRestartPassword(e.target.value); setRestartError(""); }}
+                placeholder="Digite a senha"
+                className="h-9 text-sm"
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void handleRestartConfirm(); } }}
+              />
+            </div>
+            {restartError && <p className="text-sm text-destructive">{restartError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestartOpen(false)} disabled={restartLoading}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleRestartConfirm()}
+              disabled={restartLoading || !restartGateId || !restartPassword}
+            >
+              {restartLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editingDoor} onOpenChange={(open) => !open && closeEditDialog()}>
         <DialogContent>

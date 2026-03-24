@@ -474,6 +474,7 @@ export const api = {
   openDoor: (id: string) => request<unknown>("POST", "/control/door/open", { id }),
   openGate: (id: string, autoClose: number) =>
     request<unknown>("POST", "/control/gate/open", { id, autoCloseTime: autoClose }),
+  restartGate: (id: number) => request<unknown>("POST", "/control/gate/restart", { id }),
   exhaustOn: (block: string, apartment: string, duration: number) =>
     request<unknown>("POST", "/exhausts/on", { bloco: block, apartamento: apartment, tempo: duration }),
   exhaustOff: (block: string, apartment: string) =>
