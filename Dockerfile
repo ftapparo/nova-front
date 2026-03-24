@@ -10,9 +10,9 @@ RUN npm ci
 
 COPY . .
 
-RUN GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "dev") && \
-    echo "VITE_GIT_HASH=$GIT_HASH" >> .env.local && \
-    npm run build
+RUN BUILD_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "dev") && \
+    echo ">>> BUILD_VERSION: $BUILD_VERSION" && \
+    BUILD_VERSION=$BUILD_VERSION npm run build
 
 # Stage 2: serve
 FROM nginx:1.27-alpine AS runner
