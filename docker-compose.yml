@@ -10,6 +10,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      BUILD_VERSION: ${BUILD_VERSION}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost"]
