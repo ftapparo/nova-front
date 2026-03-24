@@ -113,7 +113,7 @@ export default function AppSidebar() {
             <div className="mb-2">
               <ThemeSwitcher />
             </div>
-            <p className="typo-caption text-sidebar-foreground/50">v{version} ({__GIT_HASH__})</p>
+            <p className="typo-caption text-sidebar-foreground/50">v{version} ({import.meta.env.VITE_GIT_HASH ?? "dev"})</p>
             <p className="mt-1 text-[10px] text-sidebar-foreground/45">Desenvolvido por: Flavio Eduardo Tapparo</p>
           </div>
         )}
