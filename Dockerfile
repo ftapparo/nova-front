@@ -1,6 +1,9 @@
 # Stage 1: build
 FROM node:20-alpine AS builder
 
+ARG BUILD_VERSION=local
+ENV BUILD_VERSION=${BUILD_VERSION}
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -8,12 +11,13 @@ RUN npm ci
 
 COPY . .
 
-RUN BUILD_VERSION=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 5) && \
-    echo ">>> BUILD_VERSION: $BUILD_VERSION" && \
-    BUILD_VERSION=$BUILD_VERSION npm run build
+RUN echo ">>> BUILD_VERSION: ${BUILD_VERSION}" && npm run build
 
 # Stage 2: serve
 FROM nginx:1.27-alpine AS runner
+
+ARG BUILD_VERSION=local
+ENV BUILD_VERSION=${BUILD_VERSION}
 
 RUN apk add --no-cache wget
 
