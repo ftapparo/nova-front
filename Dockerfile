@@ -1,8 +1,6 @@
 # Stage 1: build
 FROM node:20-alpine AS builder
 
-RUN apk add --no-cache git
-
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,7 +8,7 @@ RUN npm ci
 
 COPY . .
 
-RUN BUILD_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "dev") && \
+RUN BUILD_VERSION=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 5) && \
     echo ">>> BUILD_VERSION: $BUILD_VERSION" && \
     BUILD_VERSION=$BUILD_VERSION npm run build
 
