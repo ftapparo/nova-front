@@ -3,6 +3,15 @@ import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { execSync } from "child_process";
+
+const gitHash = (() => {
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return "dev";
+  }
+})();
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -42,6 +51,9 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  define: {
+    __GIT_HASH__: JSON.stringify(gitHash),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -1,4 +1,5 @@
 import { LayoutDashboard, DoorOpen, Fan, Server, CarFront, ShieldAlert } from "lucide-react";
+import { version } from "../../../package.json";
 import { NavLink } from "@/components/NavLink";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
@@ -112,8 +113,8 @@ export default function AppSidebar() {
             <div className="mb-2">
               <ThemeSwitcher />
             </div>
-            <p className="typo-caption text-sidebar-foreground/50">Portal Administrativo v1.0</p>
-            <p className="mt-1 typo-caption text-sidebar-foreground/45">Desenvolvido por: Flavio Eduardo Tapparo</p>
+            <p className="typo-caption text-sidebar-foreground/50">v{version} ({__GIT_HASH__})</p>
+            <p className="mt-1 text-[10px] text-sidebar-foreground/45">Desenvolvido por: Flavio Eduardo Tapparo</p>
           </div>
         )}
         {isCollapsed && (
