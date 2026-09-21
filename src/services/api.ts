@@ -434,6 +434,7 @@ export interface CiePanelResponse {
   counters: CiePanelCounters | null;
   leds: Record<string, boolean> | null;
   latestFailureEvent: CieLogItem | null;
+  latestAlarmEvent?: CieLogItem | null;
 }
 
 export interface CieLogsResponse {

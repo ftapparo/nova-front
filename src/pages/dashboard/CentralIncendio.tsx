@@ -123,6 +123,29 @@ const getDeviceTypeLabel = (log: CieLogItem): string => {
   return normalizeLabel(log.deviceClassification?.typeLabel || log.deviceClassification?.resolvedLabel);
 };
 
+// Nomes de dispositivo seguem o padrão "12 ANDAR B T-A" (andar 12, lado B, torre A) ou "TERREO T-B".
+const parseEventLocation = (log: CieLogItem): { tower: string | null; floor: string | null; side: string | null } => {
+  const name = String(log.deviceName ?? "").trim().toUpperCase();
+  const tower = name.match(/\bT-([A-Z])\b/)?.[1] ?? null;
+  const floorNumber = name.match(/^(\d+)\s*(?:O|º)?\s*ANDAR\b/)?.[1] ?? null;
+  const floor = floorNumber ? `${floorNumber}º ANDAR` : /^TERREO\b/.test(name) ? "TÉRREO" : null;
+  const side = name.match(/(?:ANDAR|TERREO)\s+([A-Z])\s+T-[A-Z]\b/)?.[1] ?? null;
+  return { tower, floor, side };
+};
+
+const buildLocationHeadline = (log: CieLogItem): string => {
+  const { tower, floor, side } = parseEventLocation(log);
+  const parts = [
+    tower ? `TORRE ${tower}` : null,
+    floor,
+    side ? `LADO ${side}` : null,
+  ].filter(Boolean);
+  if (parts.length === 0) {
+    return normalizeLabel(log.zoneName || log.deviceName);
+  }
+  return parts.join(" · ");
+};
+
 export default function CentralIncendio() {
   const queryClient = useQueryClient();
   const [logTab, setLogTab] = useState<DashboardLogTab>("falha");
@@ -191,9 +214,13 @@ export default function CentralIncendio() {
   const visiblePanel = online ? panel : null;
   const counters = visiblePanel?.counters;
   const logs = online && isLogsMode ? (logsQuery.data?.items ?? []) : [];
-  const highlightedFailure = visiblePanel?.latestFailureEvent ?? null;
   const hasActiveFailure = Number(counters?.falha ?? 0) > 0;
   const hasActiveAlarm = Number(counters?.alarme ?? 0) > 0;
+  // Disparo de alarme tem prioridade sobre falha no banner de destaque.
+  const highlightedFailure = (hasActiveAlarm ? visiblePanel?.latestAlarmEvent : null)
+    ?? visiblePanel?.latestFailureEvent
+    ?? null;
+  const hasActiveEvent = hasActiveAlarm || hasActiveFailure;
   const panelErrorMessage = panelQuery.error && !restarting ? toFriendlyError(panelQuery.error) : null;
   const logsErrorMessage = online && isLogsMode && logsQuery.error ? toFriendlyError(logsQuery.error) : null;
 
@@ -218,7 +245,7 @@ export default function CentralIncendio() {
     && tabElapsedMs < 12000;
 
   useEffect(() => {
-    if (!online || restarting || !hasActiveFailure) {
+    if (!online || restarting || !hasActiveEvent) {
       setLastStableFailure(null);
       return;
     }
@@ -226,9 +253,14 @@ export default function CentralIncendio() {
     if (highlightedFailure) {
       setLastStableFailure(highlightedFailure);
     }
-  }, [online, restarting, highlightedFailure, hasActiveFailure]);
+  }, [online, restarting, highlightedFailure, hasActiveEvent]);
 
-  const displayedFailure = hasActiveFailure ? (highlightedFailure ?? lastStableFailure) : null;
+  const displayedFailure = hasActiveEvent ? (highlightedFailure ?? lastStableFailure) : null;
+  const stateTabEvent = currentStateTab === "alarme"
+    ? (visiblePanel?.latestAlarmEvent ?? null)
+    : currentStateTab === "falha"
+      ? (visiblePanel?.latestFailureEvent ?? null)
+      : null;
 
   useEffect(() => {
     const hasRefetchError = panelQuery.isRefetchError || panelQuery.isError;
@@ -497,18 +529,15 @@ export default function CentralIncendio() {
                       <p className={`typo-label uppercase ${hasActiveAlarm ? "text-white" : "text-status-warning-soft-foreground"}`}>
                         {hasActiveAlarm ? "Sistema em Alarme" : "Sistema em Falha"}
                       </p>
+                      <p className={`text-xl font-bold leading-tight ${hasActiveAlarm ? "text-white" : "text-status-warning-soft-foreground"}`}>
+                        {buildLocationHeadline(displayedFailure)}
+                      </p>
                       <p className={`typo-body font-semibold ${hasActiveAlarm ? "text-white" : "text-status-warning-soft-foreground"}`}>
-                        {buildEventAddress(displayedFailure)} - {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
+                        {getDeviceTypeLabel(displayedFailure) !== "--" ? getDeviceTypeLabel(displayedFailure) : EVENT_TYPE_LABEL[displayedFailure.type]}
+                        {" - "}{normalizeLabel(displayedFailure.deviceName)}
                       </p>
                       <p className={`typo-caption ${hasActiveAlarm ? "text-white/95" : "text-status-warning-soft-foreground"}`}>
-                        {EVENT_TYPE_LABEL[displayedFailure.type]}
-                        {getDeviceTypeLabel(displayedFailure) !== "--" ? ` | Tipo: ${getDeviceTypeLabel(displayedFailure)}` : ""}
-                      </p>
-                      <p className={`typo-caption ${hasActiveAlarm ? "text-white/95" : "text-status-warning-soft-foreground"}`}>
-                        Zona: {normalizeLabel(displayedFailure.zoneName)} | Dispositivo: {normalizeLabel(displayedFailure.deviceName)}
-                      </p>
-                      <p className={`typo-caption ${hasActiveAlarm ? "text-white/95" : "text-status-warning-soft-foreground"}`}>
-                        Laço/Endereço: {buildEventAddress(displayedFailure)} | Data/Hora: {formatDate(displayedFailure.occurredAt)} {formatTime(displayedFailure.occurredAt)}
+                        {formatDate(displayedFailure.occurredAt)} às {formatTime(displayedFailure.occurredAt)} | Cód. técnico: {buildEventAddress(displayedFailure)}
                       </p>
                     </div>
                   </div>
@@ -661,26 +690,26 @@ export default function CentralIncendio() {
                     <div className="rounded-lg border bg-muted p-4 typo-body text-muted-foreground">
                       Nenhum evento para ser apresentado.
                     </div>
-                  ) : currentStateTab === "falha" && displayedFailure ? (
+                  ) : stateTabEvent ? (
                     <button
                       type="button"
-                      onClick={() => setSelectedDetail(displayedFailure)}
+                      onClick={() => setSelectedDetail(stateTabEvent)}
                       className="w-full rounded-lg border bg-muted/40 px-3 py-3 text-left transition-colors hover:bg-muted/60"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="typo-caption text-muted-foreground">1 - {buildEventAddress(displayedFailure)}</p>
                           <p className="typo-body font-semibold text-foreground">
-                            {normalizeLabel(displayedFailure.zoneName || displayedFailure.deviceName)}
+                            {buildLocationHeadline(stateTabEvent)}
                           </p>
                           <p className="typo-caption text-muted-foreground">
-                            Zona: {normalizeLabel(displayedFailure.zoneName)} | Dispositivo: {normalizeLabel(displayedFailure.deviceName)}
+                            {getDeviceTypeLabel(stateTabEvent) !== "--" ? getDeviceTypeLabel(stateTabEvent) : EVENT_TYPE_LABEL[stateTabEvent.type]}
+                            {" - "}{normalizeLabel(stateTabEvent.deviceName)}
                           </p>
-                          <p className="typo-caption text-muted-foreground">{EVENT_TYPE_LABEL[displayedFailure.type]}</p>
+                          <p className="typo-caption text-muted-foreground">Cód. técnico: {buildEventAddress(stateTabEvent)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="typo-caption">{formatDate(displayedFailure.occurredAt)}</p>
-                          <p className="typo-caption">{formatTime(displayedFailure.occurredAt)}</p>
+                          <p className="typo-caption">{formatDate(stateTabEvent.occurredAt)}</p>
+                          <p className="typo-caption">{formatTime(stateTabEvent.occurredAt)}</p>
                         </div>
                       </div>
                     </button>
