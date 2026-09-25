@@ -8,6 +8,16 @@ RUN npm ci
 
 COPY . .
 
+# Configuração injetada no build. Os valores entram no bundle publicado,
+# portanto NÃO são segredos — ver o comentário em src/contexts/AuthContext.tsx.
+# Passar via --build-arg ou pela seção "args" do docker-compose.
+ARG VITE_API_BASE_URL
+ARG VITE_AUTH_USER
+ARG VITE_AUTH_PASS
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_AUTH_USER=${VITE_AUTH_USER}
+ENV VITE_AUTH_PASS=${VITE_AUTH_PASS}
+
 RUN BUILD_VERSION="$(date -u +%Y%m%d%H%M%S)-$(head -c 3 /dev/urandom | od -An -tx1 | tr -d ' \n')" && \
     echo ">>> BUILD_VERSION: ${BUILD_VERSION}" && \
     echo -n "${BUILD_VERSION}" > /tmp/build_version && \

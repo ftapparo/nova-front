@@ -3,6 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Injetados no bundle durante o build. Não são segredos — ficam
+        # visíveis no JavaScript publicado. Os valores vêm do .env local.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_AUTH_USER: ${VITE_AUTH_USER}
+        VITE_AUTH_PASS: ${VITE_AUTH_PASS}
     container_name: nova-front
     ports:
       - "8080:80"

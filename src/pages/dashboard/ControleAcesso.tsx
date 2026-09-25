@@ -21,6 +21,9 @@ const DEFAULT_GATE_DEVICES = [9, 10];
 const STORAGE_KEY = "door-custom-names";
 const WIDE_VIEWPORT_MIN_WIDTH = 1480;
 
+/** Senha de confirmação para operações sensíveis. Ver VITE_AUTH_PASS no .env.example. */
+const OPERATION_PASSWORD = import.meta.env.VITE_AUTH_PASS || "";
+
 export default function ControleAcesso() {
   const { doors, gates, handleOpenDoor, handleOpenGate } = useDashboard();
   const { user } = useAuth();
@@ -110,7 +113,13 @@ export default function ControleAcesso() {
 
   const handleRestartConfirm = async () => {
     if (!restartGateId) { setRestartError("Selecione uma antena."); return; }
-    if (restartPassword !== "1793") { setRestartError("Senha incorreta."); return; }
+    // Confirmação de operação sensível. Como toda verificação feita no
+    // navegador, é uma trava contra acionamento acidental, não um controle
+    // de segurança — ver o comentário em contexts/AuthContext.tsx.
+    if (!OPERATION_PASSWORD || restartPassword !== OPERATION_PASSWORD) {
+      setRestartError("Senha incorreta.");
+      return;
+    }
     setRestartLoading(true);
     setRestartError("");
     try {

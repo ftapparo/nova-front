@@ -11,8 +11,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const VALID_USER = "portaria";
-const VALID_PASS = "1793";
+/**
+ * ATENÇÃO — limitação conhecida desta implementação.
+ *
+ * Esta verificação roda no navegador, então NÃO é um controle de segurança:
+ * qualquer pessoa com o DevTools aberto consegue contorná-la, e as credenciais
+ * ficam no bundle publicado mesmo vindo de variável de ambiente.
+ *
+ * A proteção efetiva do painel hoje é o Cloudflare Access na borda, que
+ * autentica antes de a aplicação carregar. Esta tela é apenas o seletor de
+ * operador, usado para o cabeçalho x-user e a auditoria.
+ *
+ * Isto é substituído por autenticação real (POST /auth/login + JWT) na
+ * Etapa 2 — ver PLANO-MELHORIAS-MOBILE.md, seções 8 e 16.
+ */
+const VALID_USER = import.meta.env.VITE_AUTH_USER || "portaria";
+const VALID_PASS = import.meta.env.VITE_AUTH_PASS || "";
 const AUTH_KEY = "nr_auth";
 const USER_KEY = "nr_user";
 
@@ -37,6 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<string | null>(() => getStoredAuthState().user);
 
   const login = useCallback(async (username: string, password: string, rememberMe = false) => {
+    if (!VALID_PASS) {
+      return {
+        success: false,
+        error: "Aplicação sem credencial configurada. Defina VITE_AUTH_PASS no build.",
+      };
+    }
+
     if (username === VALID_USER && password === VALID_PASS) {
       const normalizedUser = username.toUpperCase();
       await syncUserSettingsOnLogin(normalizedUser);
