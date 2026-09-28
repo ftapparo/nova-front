@@ -1,5 +1,7 @@
 import * as React from "react";
-import { ThemeProvider as NextThemesProvider, type ThemeProviderProps, useTheme } from "next-themes";
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+
+type ThemeProviderProps = React.ComponentProps<typeof NextThemesProvider>;
 
 const FALLBACK_THEME_COLOR = {
   light: "#F5F6FA",

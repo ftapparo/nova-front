@@ -30,8 +30,9 @@ describe("useEquipmentStatusQuery", () => {
     });
 
     const query = client.getQueryCache().find({ queryKey: ["dashboard", "equipment-status"] });
-    expect(query?.options.refetchInterval).toBe(15_000);
-    expect(query?.options.refetchIntervalInBackground).toBe(false);
+    const options = query?.options as { refetchInterval?: number; refetchIntervalInBackground?: boolean } | undefined;
+    expect(options?.refetchInterval).toBe(15_000);
+    expect(options?.refetchIntervalInBackground).toBe(false);
 
     client.clear();
   });
