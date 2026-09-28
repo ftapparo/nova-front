@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Adicionado
+- `AGENTS.md` com regras genéricas de processo/arquitetura para agentes de IA, baseado em `AI-Friendly Architecture Specification.md` (raiz do workspace).
+
 ## [1.1.0] - 2026-03-24
 
 ### Adicionado

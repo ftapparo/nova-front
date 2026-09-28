@@ -2,7 +2,7 @@
 
 Painel web usado pela portaria/administração do Condomínio Nova Residence. Consome a `nova-api` para controle de acesso, portões, exaustores, central de incêndio, notificações push e configurações de usuário.
 
-Veja `CHANGELOG.md` para o histórico de versões.
+Veja `CHANGELOG.md` para o histórico de versões. Este arquivo é o contexto real do projeto; `AGENTS.md` tem as regras genéricas de processo/arquitetura (cohesion, boundaries, validation) — leia os dois, começando por este.
 
 ## 🔴 Regra absoluta: nunca tocar em `src/v2/` dos backends
 
@@ -74,3 +74,5 @@ Rode `npm run lint` e `npm test` antes de considerar uma mudança pronta — amb
 
 - `nova-api`: backend principal, único consumido diretamente por este painel.
 - `nova-tag`, `nova-cie`: não consumidos diretamente — sempre via gateway da `nova-api`.
+
+Os três backends estão migrando para uma v3 (Fastify + Zod), ainda não consumida por este painel (`src/services/api.ts` fala com `/v2/api`). Quando isso mudar, o formato de resposta é diferente do atual — ver `docs/PADRAO-RESPOSTA-V3.md` (raiz do workspace) antes de integrar.
