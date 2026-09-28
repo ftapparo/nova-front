@@ -2,6 +2,12 @@
 
 Painel web usado pela portaria/administração do Condomínio Nova Residence. Consome a `nova-api` para controle de acesso, portões, exaustores, central de incêndio, notificações push e configurações de usuário.
 
+Veja `CHANGELOG.md` para o histórico de versões.
+
+## Commits
+
+Este projeto usa um fluxo de commit específico — ver skill `commit` (`.claude/skills/commit/SKILL.md`). Resumo: separar commits por grupo lógico de mudança, mensagem com subject curto + corpo completo, atualizar `CHANGELOG.md` (seção `[Unreleased]`) antes do commit, apresentar para aprovação antes de commitar, perguntar antes de dar push. Nunca criar versão numerada nem tocar no `package.json` sem pedido explícito de "versionar".
+
 ## Stack
 
 - **React 18 + TypeScript + Vite**
