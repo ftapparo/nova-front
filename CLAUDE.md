@@ -4,6 +4,10 @@ Painel web usado pela portaria/administração do Condomínio Nova Residence. Co
 
 Veja `CHANGELOG.md` para o histórico de versões.
 
+## 🔴 Regra absoluta: nunca tocar em `src/v2/` dos backends
+
+Ao trabalhar em integração com `nova-api`, `nova-tag` ou `nova-cie` a partir daqui (ex.: ajustar `src/services/api.ts` para uma nova rota), nunca editar arquivos dentro de `src/v2/` desses projetos, em nenhuma circunstância. `v2/` é a superfície em produção real de cada backend. Qualquer mudança de contrato deve vir de uma rota v3 nova, nunca de alteração na v2 existente.
+
 ## Commits
 
 Este projeto usa um fluxo de commit específico — ver skill `commit` (`.claude/skills/commit/SKILL.md`). Resumo: separar commits por grupo lógico de mudança, mensagem com subject curto + corpo completo, atualizar `CHANGELOG.md` (seção `[Unreleased]`) antes do commit, apresentar para aprovação antes de commitar, perguntar antes de dar push. Nunca criar versão numerada nem tocar no `package.json` sem pedido explícito de "versionar".
