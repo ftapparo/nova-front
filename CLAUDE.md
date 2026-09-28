@@ -1,25 +1,66 @@
-# nova-front
+# FRONT — Painel Administrativo Nova Residence
 
-Frontend do condomínio Nova Residence. Vite + React + TypeScript + shadcn/ui + TanStack Query (PWA).
+Painel web usado pela portaria/administração do Condomínio Nova Residence. Consome a `nova-api` para controle de acesso, portões, exaustores, central de incêndio, notificações push e configurações de usuário.
+
+## Stack
+
+- **React 18 + TypeScript + Vite**
+- **React Router** (`react-router-dom`) para navegação
+- **TanStack Query** (`@tanstack/react-query` v5) para data fetching/cache — ver `src/queries/`
+- **Tailwind CSS v4** + **shadcn/ui** (Radix UI primitives em `src/components/ui/`)
+- **React Hook Form + Zod** para formulários e validação
+- **next-themes** para dark/light mode
+- **Vitest + Testing Library** para testes
+
+## Estrutura
+
+```
+src/
+  components/
+    ui/          # shadcn/ui — componentes gerados, evitar editar à mão sem necessidade
+    dashboard/   # componentes específicos do painel
+    layout/      # shell da aplicação
+    theme/       # ThemeProvider (next-themes)
+  contexts/      # AuthContext, DashboardContext
+  hooks/
+  lib/           # utilitários (cn(), etc.)
+  pages/
+    dashboard/   # páginas do painel (Controle de Acesso, Exaustores, etc.)
+  queries/       # hooks TanStack Query por domínio (dashboardQueries, exhaustQueries, ...)
+  services/      # cliente HTTP para a nova-api (api.ts)
+  theme/         # tokens de tema
+  test/          # setup de testes
+```
 
 ## Comandos
-- `npm run dev` — Vite na porta 8080 (`vite.config.ts`).
-- `npm run build`, `npm run lint`, `npm test` (vitest).
-- URL da API: `VITE_API_BASE_URL` (padrão `http://192.168.0.250:3030/v2/api`; o `.env` aponta para o domínio de produção).
 
-## Rodar local neste servidor
-O container do front já ocupa a porta 8080. Para o dev local usar outra porta e apontar para a API local:
-`VITE_API_BASE_URL=http://localhost:3030/v2/api npm run dev -- --port 5173 --strictPort`
-Não alterar o `.env` para isso. A `nova-api` (:3030) tem CORS liberado.
+```bash
+npm run dev         # Vite dev server
+npm run build        # build de produção
+npm run build:dev    # build em modo development (debug)
+npm run lint          # ESLint
+npm test              # vitest run
+npm run test:watch    # vitest watch
+```
 
-## Central de Incêndio
-- Página: `src/pages/dashboard/CentralIncendio.tsx`; chamadas em `cieApi` (`src/services/api.ts`).
-- Fluxo: front → `nova-api` (`/v2/api/cie/*`) → API do CIE (`cie2500-api`, `/v1/api`) → central.
-- O banner de destaque usa `counters` do `/cie/panel`: com `alarme > 0` mostra `latestAlarmEvent` em vermelho; alarme tem prioridade sobre falha (`latestFailureEvent`).
-- O local é montado a partir do nome do dispositivo (`parseEventLocation`), padrão `"12 ANDAR B T-A"` → `TORRE A · 12º ANDAR · LADO B`; `"TERREO T-B"` → `TORRE B · TÉRREO`. Fora do padrão, mostra zona/nome.
-- Horários são formatados no fuso do navegador; a API envia `occurredAt` em UTC (hora da central em UTC-3). Se aparecer 3 h a menos, o problema é na API.
+Rode `npm run lint` e `npm test` antes de considerar uma mudança pronta — ambos rodam rápido e pegam a maioria dos problemas de tipo/regressão de comportamento.
 
-## Cuidados
-- Disparos/falhas de teste geram push real para moradores.
-- `package-lock.json` costuma ficar modificado após `npm install`; não commitar por engano.
-- Commits em português no estilo `feat:` / `fix:`; push direto na `main`.
+## Autenticação atual não é segurança real
+
+`VITE_AUTH_USER`/`VITE_AUTH_PASS` (ver `.env.example`, `src/contexts/AuthContext.tsx`) são só um seletor de operador — **tudo com prefixo `VITE_` é embutido no bundle JS e visível no DevTools**, nunca colocar segredo real aí. A proteção de fato é o **Cloudflare Access** na borda, que autentica antes da aplicação carregar. Isso está planejado para virar login real contra a API (Supabase Auth) numa etapa futura — não tratar o estado atual como definitivo nem reforçar a ilusão de segurança no código.
+
+## Domínio da API em transição
+
+`VITE_API_BASE_URL` pode apontar para `api.novaresidence.com.br` (novo) ou `api.condominionovaresidence.com` (antigo, legado). Ao mexer em URLs hardcoded ou CORS, checar `.env.example` para o estado atual da migração antes de assumir qual domínio é o ativo.
+
+## Convenções
+
+- Toda chamada à API passa por `src/services/api.ts` — não fazer `fetch`/`axios` direto em componentes ou hooks de query.
+- Hooks de polling (dashboard, exaustores) usam `refetchInterval`/`refetchIntervalInBackground` do TanStack Query — ao escrever teste que inspeciona essas opções via `queryCache.find()`, o tipo genérico do v5 não expõe esses campos sem cast (ver `src/queries/*.test.tsx` para o padrão já usado).
+- `ThemeProviderProps` não é exportado publicamente por `next-themes@0.3.0` — usar `React.ComponentProps<typeof NextThemesProvider>` em vez de importar o tipo diretamente (ver `src/components/theme/ThemeProvider.tsx`).
+- Componentes em `components/ui/` seguem o padrão shadcn/ui — ao precisar de um componente novo da mesma família, preferir gerar via CLI do shadcn em vez de escrever à mão, para manter consistência de estilo/acessibilidade.
+
+## Outros serviços do ecossistema
+
+- `nova-api`: backend principal, único consumido diretamente por este painel.
+- `nova-tag`, `nova-cie`: não consumidos diretamente — sempre via gateway da `nova-api`.
