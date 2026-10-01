@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Corrigido
+- `manifest.json` bloqueado por CORS atrás do Cloudflare Access: o navegador buscava o manifest sem cookies, o Access redirecionava para o login (outro domínio) e a resposta era barrada. `<link rel="manifest">` agora usa `crossorigin="use-credentials"`, enviando o cookie de sessão do Access.
+
 ### Adicionado
 - `AGENTS.md` com regras genéricas de processo/arquitetura para agentes de IA, baseado em `AI-Friendly Architecture Specification.md` (raiz do workspace).
 
