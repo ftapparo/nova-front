@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Alterado
+- Licença: de MIT para proprietária (todos os direitos reservados, uso exclusivo do Condomínio Nova Residence). Arquivo `LICENSE` criado; README e `package.json` (`UNLICENSED`) atualizados.
+
 ### Corrigido
 - CSP do `nginx.conf` libera o Cloudflare Web Analytics (`static.cloudflareinsights.com` em `script-src`, `cloudflareinsights.com` em `connect-src`): o script injetado pela Cloudflare era bloqueado e gerava erro no console.
 - `manifest.json` bloqueado por CORS atrás do Cloudflare Access: o navegador buscava o manifest sem cookies, o Access redirecionava para o login (outro domínio) e a resposta era barrada. `<link rel="manifest">` agora usa `crossorigin="use-credentials"`, enviando o cookie de sessão do Access.

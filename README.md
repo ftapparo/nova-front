@@ -70,3 +70,7 @@ As paginas devem seguir o mesmo conceito visual da tela de veiculos.
 - `src/components/layout/PageContainer.tsx`
 - `src/components/layout/PageHeader.tsx`
 - `src/components/layout/SectionCardHeader.tsx`
+
+## Licença
+
+Software proprietário: **todos os direitos reservados**. Uso exclusivo do Condomínio Nova Residence; cópia, modificação, distribuição ou publicação dependem de autorização por escrito do autor. Veja o arquivo [LICENSE](LICENSE).
