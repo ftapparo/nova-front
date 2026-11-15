@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { ApiError, errorMessage } from "@/core/api/http";
+import { formatCpf, onlyDigits } from "@/core/format/documents";
 import CommandButton from "@/core/ui/components/CommandButton";
 import SectionCard from "@/core/ui/components/SectionCard";
 import StatusChip from "@/core/ui/components/StatusChip";
@@ -20,13 +21,6 @@ import { gateKeys, type GateView } from "../gatesQueries";
 const DEFAULT_AUTO_CLOSE_SECONDS = 15;
 // Forma de acesso gravada no ERP, a mesma que o painel anterior registrava.
 const REGISTER_FORMA_ACESSO = "TAG";
-
-const formatCpf = (digits: string) =>
-  digits
-    .slice(0, 11)
-    .replace(/^(\d{3})(\d)/, "$1.$2")
-    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
 
 type Verification = { row: AccessVerifyRow; allowed: boolean } | { notFound: true };
 
@@ -128,7 +122,7 @@ export default function OpenGatePanel({ gates }: OpenGatePanelProps) {
             label="CPF"
             value={formatCpf(cpf)}
             onChange={(event) => {
-              setCpf(event.target.value.replace(/\D/g, "").slice(0, 11));
+              setCpf(onlyDigits(event.target.value).slice(0, 11));
               resetVerification();
             }}
             slotProps={{ htmlInput: { inputMode: "numeric", autoComplete: "off" } }}
