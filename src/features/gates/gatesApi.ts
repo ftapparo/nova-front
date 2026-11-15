@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { api } from "@/core/api/api";
 import type { components } from "@/core/api/schema.gen";
 import type { Sentido } from "@/features/access/accessApi";
@@ -26,6 +27,12 @@ export const AUTO_CLOSE_MIN_SECONDS = 1;
 export const AUTO_CLOSE_MAX_SECONDS = 120;
 
 export const fetchGates = (signal?: AbortSignal) => api.get<Gate[]>("/tag/gates", { signal });
+
+/** Cadastro de portões, compartilhado por Portões e Portas e Acessos (mesmo cache). */
+export const gatesListQuery = queryOptions({
+  queryKey: ["gates", "list"],
+  queryFn: ({ signal }) => fetchGates(signal),
+});
 export const fetchGatesStatus = (signal?: AbortSignal) => api.get<GatesStatus>("/tag/status", { signal });
 export const fetchGateState = (numeroDispositivo: number, signal?: AbortSignal) =>
   api.get<GateState>("/tag/gate/state", { query: { numeroDispositivo }, signal });

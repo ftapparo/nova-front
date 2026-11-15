@@ -4,7 +4,7 @@ import { useRealtimeEvent, useRealtimeFallbackInterval } from "@/core/realtime/u
 import {
   fetchDoors,
   fetchDoorsStatus,
-  fetchGates,
+  gatesListQuery,
   fetchGateState,
   fetchGatesStatus,
   type Door,
@@ -15,7 +15,7 @@ import {
 } from "./gatesApi";
 
 export const gateKeys = {
-  list: ["gates", "list"] as const,
+  list: gatesListQuery.queryKey,
   status: ["gates", "status"] as const,
   state: (numeroDispositivo: number) => ["gates", "state", numeroDispositivo] as const,
 };
@@ -41,7 +41,7 @@ export interface DoorView extends Door {
 
 export function useGates() {
   const statusInterval = useRealtimeFallbackInterval(STATUS_FALLBACK_MS);
-  const list = useQuery({ queryKey: gateKeys.list, queryFn: ({ signal }) => fetchGates(signal) });
+  const list = useQuery(gatesListQuery);
   const status = useQuery({
     queryKey: gateKeys.status,
     queryFn: ({ signal }) => fetchGatesStatus(signal),

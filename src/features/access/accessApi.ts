@@ -27,8 +27,29 @@ export interface AccessVerifyRow {
   PANICO?: string;
   IDENT?: string;
   SEQVEICULO?: string | number | null;
+  /** Meio de identificação (ex.: "TAG VEICULAR"). */
+  DESCMIDIA?: string | null;
 }
 
+/** Passagem gravada no ERP (`GET /access/recent`). */
+export interface AccessRecentRow {
+  NOME?: string | null;
+  TORRE?: string | null;
+  APARTAMENTO?: string | null;
+  /** Data e hora do ERP, sem fuso: já está no horário local do condomínio. */
+  DATAHORA?: string | null;
+  DISPOSITIVO?: number | null;
+  SENTIDO?: string | null;
+  DESCRICAO?: string | null;
+  IDACESSO?: string | null;
+  VEICULO?: number | null;
+}
+
+/** `limit` vai até 50 por portão. */
+export const fetchRecentAccess = (numeroDispositivo: number, limit: number, signal?: AbortSignal) =>
+  api.get<AccessRecentRow[]>("/access/recent", { query: { numeroDispositivo, limit }, signal });
+
+/** `id` aceita CPF, placa, TAG de 10 dígitos ou ID numérico. */
 export const verifyAccess = (input: { id: string; numeroDispositivo: number; sentido: Sentido }) =>
   api.get<AccessVerifyRow[]>("/access/verify", { query: input });
 

@@ -57,7 +57,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Telas prontas: **Contas** (`features/accounts`, antecipada da Fase 4) e **Portões e Portas** (`features/gates`, Fase 3); as demais ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Telas prontas: **Contas** (`features/accounts`, antecipada da Fase 4), **Portões e Portas** (`features/gates`) e **Acessos** (`features/access`), da Fase 3; as demais ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
 
 Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
 
@@ -85,6 +85,14 @@ Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, co
 - Depois de abrir, a passagem é registrada no ERP (`POST /access/register`, `formaAcesso: "TAG"`, como no painel anterior). Se o registro falhar, o aviso diz que o portão abriu mas a passagem não foi registrada.
 - "Fechar" vale para toda a equipe; "Manter aberto" e "Reiniciar serviço" só para síndico/admin, com confirmação.
 - O estado das antenas só vem por evento (`antenna.connection.changed`); não há rota REST para ele.
+
+## Acessos — regras
+
+- Últimas passagens: `GET /access/recent` por portão (20 de cada), juntas e ordenadas; mostra as 30 mais recentes. São consultadas a cada 15 s mesmo com o tempo real conectado: o TAG grava a passagem segundos depois de o portão fechar e não há evento dessa gravação. Cada `tag.read` antecipa a consulta do portão.
+- `DATAHORA` do ERP vem sem fuso, já no horário do condomínio: formatar o texto (`formatErpDateTime`), nunca passar por `new Date()`.
+- Conferir acesso só consulta (`GET /access/verify`); não abre nem registra.
+- Leituras ao vivo (`tag.read`, inclusive recusadas) ficam só em memória, enquanto a tela está aberta.
+- Registro manual de passagem (sem abrir portão) ainda não existe: falta definir a `formaAcesso` gravada no ERP para esse caso.
 
 ## Tempo real — como usar
 
