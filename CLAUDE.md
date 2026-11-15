@@ -55,9 +55,9 @@ Antes de dar uma mudança por pronta: `npm run lint`, `npm test` e `npm run buil
 
 ## Estado atual
 
-Fases 0 (fundação) e 1 (API e sessão) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota e menu pelo papel da conta. Do menu, só **Contas** (`features/accounts`) está pronta, antecipada da Fase 4; as demais telas ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Do menu, só **Contas** (`features/accounts`) está pronta, antecipada da Fase 4; as demais telas ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
 
-Fases seguintes: 2 tempo real (WebSocket) · 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
+Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
 
 ## API e sessão — como usar
 
@@ -69,7 +69,17 @@ Fases seguintes: 2 tempo real (WebSocket) · 3 paridade com o painel atual · 4 
 - O refresh token é de uso único: a renovação é serializada dentro da aba e, entre abas, por Web Lock. Não chamar `/auth/refresh` por fora do `sessionStore`.
 - Mutations nunca repetem sozinhas (`queryClient.ts`): incluem comandos em equipamento físico.
 - Formulário: `useForm` + `zodResolver`, campos com `FormTextField`/`FormPasswordField`, erros de campo do servidor com `applyValidationErrors`. As mensagens de validação da API vêm em inglês — validar no cliente com mensagem em português.
-- Testes: `fakeApi({ "POST /auth/login": () => okResponse(...) })` de `src/test/fakeApi.ts` e `renderApp(path)` de `src/test/renderApp.tsx`.
+- Testes: `fakeApi({ "POST /auth/login": () => okResponse(...) })` de `src/test/fakeApi.ts`, `renderApp(path)` de `src/test/renderApp.tsx` e `installFakeWebSocket()`/`lastSocket()` de `src/test/fakeWebSocket.ts`.
+
+## Tempo real — como usar
+
+- Uma conexão por aba (`core/realtime/realtime.ts`), ligada pelo `AppLayout` enquanto há sessão. Telas não abrem socket.
+- Receber evento: `useRealtimeEvent<Exhaust>("exhaust.changed", (data) => ...)`. Eventos são deltas: a tela carrega o estado pela REST e aplica o evento no cache (`queryClient.setQueryData`). O `data` não é validado: tratar como o formato da rota REST equivalente.
+- A cada conexão aberta (inclusive reconexão) as consultas ativas são recarregadas: o que chegou com o socket fora se perdeu.
+- Consulta que depende de eventos usa `refetchInterval: useRealtimeFallbackInterval(15_000)`: sem polling com o socket conectado, polling enquanto ele estiver fora.
+- O navegador não informa por que o upgrade foi recusado (401, 429 com mais de 3 sockets por conta, 503): toda falha vira nova tentativa, de 1 s dobrando até 30 s. Fechamento 4001 (token do ticket expirou) renova a sessão e reconecta na hora.
+- Aba em segundo plano solta o socket depois de 60 s e reconecta ao voltar, para abas esquecidas não ocuparem as 3 vagas da conta.
+- `upstream.connection.changed` alimenta o aviso "Dados podem estar desatualizados"; esse estado é zerado a cada reconexão, e cada tela mostra a situação real do seu equipamento pela REST.
 
 ## Convenções
 

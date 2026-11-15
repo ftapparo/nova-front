@@ -1,10 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 import { afterEach } from "vitest";
+import { realtime } from "@/core/realtime/realtime";
 import { endSession } from "@/core/session/sessionStore";
 
-// A sessão é um singleton do módulo: sem isto, o login de um teste vazaria
-// para o seguinte.
+// Sessão e tempo real são singletons do módulo: sem isto, o login e o socket
+// de um teste vazariam para o seguinte.
 afterEach(() => {
+  realtime.stop();
   endSession();
   window.localStorage.clear();
 });
