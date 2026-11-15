@@ -73,7 +73,7 @@ Pages orchestrate; they do not hold the whole screen. Split a page into componen
 
 ### Boundaries
 
-- Dependency direction: `app → features → core`. `core` never imports from `features` or `app`; features do not import from each other's internals.
+- Dependency direction: `app → features → core`. `core` never imports from `features` or `app`; features do not import from each other's internals. A feature's `<feature>Api.ts` (calls, types, pure rules) is its public surface and may be imported by another feature (e.g. `gates` uses `access/accessApi.ts` to verify and register a passage); components, pages and query hooks may not.
 - UI does not know HTTP details: pages use query hooks, hooks use the feature's `*Api.ts`.
 - Only `core/api` knows the response envelope and HTTP status codes; features receive typed data or an `ApiError`.
 - Only `core/session` reads or writes tokens.

@@ -55,7 +55,7 @@ Antes de dar uma mudança por pronta: `npm run lint`, `npm test` e `npm run buil
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Do menu, só **Contas** (`features/accounts`) está pronta, antecipada da Fase 4; as demais telas ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Telas prontas: **Contas** (`features/accounts`, antecipada da Fase 4) e **Portões e Portas** (`features/gates`, Fase 3); as demais ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
 
 Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
 
@@ -70,6 +70,19 @@ Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, co
 - Mutations nunca repetem sozinhas (`queryClient.ts`): incluem comandos em equipamento físico.
 - Formulário: `useForm` + `zodResolver`, campos com `FormTextField`/`FormPasswordField`, erros de campo do servidor com `applyValidationErrors`. As mensagens de validação da API vêm em inglês — validar no cliente com mensagem em português.
 - Testes: `fakeApi({ "POST /auth/login": () => okResponse(...) })` de `src/test/fakeApi.ts`, `renderApp(path)` de `src/test/renderApp.tsx` e `installFakeWebSocket()`/`lastSocket()` de `src/test/fakeWebSocket.ts`.
+
+## Comandos físicos — como usar
+
+- Todo comando em equipamento (portão, porta, exaustor, central) usa `useCommand` + `CommandButton` (`core/ui`): botão carregando durante o envio, travado com "Aguarde N s" no 429, aviso com o `detail` do servidor no erro e **nunca repete sozinho** (vários comandos alternam estado).
+- Ação destrutiva ou de exceção (manter portão aberto, reiniciar serviço, alarme geral) passa antes por `ConfirmDialog`.
+- Se a resposta do comando traz o estado do equipamento, aplicar no cache (`setQueryData`) em vez de esperar o evento do tempo real.
+
+## Portões e Portas — regras da portaria
+
+- O portão só abre depois de conferir o CPF (`GET /access/verify`): cadastro liberado (`PERMITIDO = S`) e pessoa proprietária, locatária ou moradora. Regra herdada do painel anterior.
+- Depois de abrir, a passagem é registrada no ERP (`POST /access/register`, `formaAcesso: "TAG"`, como no painel anterior). Se o registro falhar, o aviso diz que o portão abriu mas a passagem não foi registrada.
+- "Fechar" vale para toda a equipe; "Manter aberto" e "Reiniciar serviço" só para síndico/admin, com confirmação.
+- O estado das antenas só vem por evento (`antenna.connection.changed`); não há rota REST para ele.
 
 ## Tempo real — como usar
 

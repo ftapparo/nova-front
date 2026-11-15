@@ -14,6 +14,7 @@ import { navigation } from "./navigation";
 // placeholder.
 const pages: Record<string, LazyExoticComponent<ComponentType>> = {
   "/contas": lazy(() => import("@/features/accounts/AccountsPage")),
+  "/portoes-portas": lazy(() => import("@/features/gates/GatesPage")),
 };
 
 const menuRoutes: RouteObject[] = navigation.flatMap((section) =>
