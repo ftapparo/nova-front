@@ -6,13 +6,13 @@ import {
   fetchBlockCounters,
   fetchInstallation,
   fetchLogs,
-  fetchPanel,
+  panelQuery,
   type LogType,
 } from "./fireApi";
 
 export const fireKeys = {
   all: ["cie"] as const,
-  panel: ["cie", "panel"] as const,
+  panel: panelQuery.queryKey,
   active: ["cie", "active"] as const,
   blocks: ["cie", "blocks"] as const,
   installation: ["cie-installation"] as const,
@@ -25,7 +25,7 @@ const INVALIDATE_DEBOUNCE_MS = 500;
 
 export function usePanel() {
   const refetchInterval = useRealtimeFallbackInterval(FALLBACK_REFRESH_MS);
-  return useQuery({ queryKey: fireKeys.panel, queryFn: ({ signal }) => fetchPanel(signal), refetchInterval });
+  return useQuery({ ...panelQuery, refetchInterval });
 }
 
 export function useActiveEvents() {

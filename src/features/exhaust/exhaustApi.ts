@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { api } from "@/core/api/api";
 import type { components } from "@/core/api/schema.gen";
 
@@ -14,6 +15,12 @@ export const MIN_MINUTES = 30;
 export const MAX_MINUTES = 1440;
 
 export const fetchExhausts = (signal?: AbortSignal) => api.get<Exhaust[]>("/exhausts", { signal });
+
+/** Compartilhada com Equipamentos e Painel Operacional (mesmo cache). */
+export const exhaustsQuery = queryOptions({
+  queryKey: ["exhausts"],
+  queryFn: ({ signal }) => fetchExhausts(signal),
+});
 
 /** Liga, ou reinicia o tempo se já estiver ligado. A equipe não envia localização. */
 export const turnOnExhaust = (id: string, minutes: number) => api.post<Exhaust>(`/exhausts/${id}/on`, { minutes });

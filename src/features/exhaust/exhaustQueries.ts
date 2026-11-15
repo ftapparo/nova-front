@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRealtimeEvent, useRealtimeFallbackInterval } from "@/core/realtime/useRealtime";
-import { fetchExhausts, type Exhaust } from "./exhaustApi";
+import { exhaustsQuery, type Exhaust } from "./exhaustApi";
 
-export const exhaustKeys = { list: ["exhausts"] as const };
+export const exhaustKeys = { list: exhaustsQuery.queryKey };
 
 const FALLBACK_REFRESH_MS = 15_000;
 
 export function useExhausts() {
   const refetchInterval = useRealtimeFallbackInterval(FALLBACK_REFRESH_MS);
-  return useQuery({
-    queryKey: exhaustKeys.list,
-    queryFn: ({ signal }) => fetchExhausts(signal),
-    refetchInterval,
-  });
+  return useQuery({ ...exhaustsQuery, refetchInterval });
 }
 
 /** Troca um exaustor da lista pelo estado novo (resposta de comando ou evento). */

@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { api } from "@/core/api/api";
 import type { components } from "@/core/api/schema.gen";
 
@@ -21,6 +22,12 @@ export type ActiveType = "alarme" | "falha" | "supervisao";
 export const LOGS_PAGE_SIZE = 30;
 
 export const fetchPanel = (signal?: AbortSignal) => api.get<Panel>("/cie/panel", { signal });
+
+/** Compartilhada com Equipamentos e Painel Operacional (mesmo cache). */
+export const panelQuery = queryOptions({
+  queryKey: ["cie", "panel"],
+  queryFn: ({ signal }) => fetchPanel(signal),
+});
 export const fetchActiveEvents = (signal?: AbortSignal) => api.get<ActiveEvents>("/cie/events/active", { signal });
 export const fetchInstallation = (signal?: AbortSignal) => api.get<Installation>("/cie/installation", { signal });
 export const fetchBlockCounters = (signal?: AbortSignal) => api.get<BlockCounters>("/cie/counters/blocks", { signal });

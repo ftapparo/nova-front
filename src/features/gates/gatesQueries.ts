@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRealtimeEvent, useRealtimeFallbackInterval } from "@/core/realtime/useRealtime";
 import {
-  fetchDoors,
-  fetchDoorsStatus,
-  gatesListQuery,
+  doorsListQuery,
+  doorsStatusQuery,
   fetchGateState,
-  fetchGatesStatus,
+  gatesListQuery,
+  gatesStatusQuery,
   type Door,
   type DoorsStatus,
   type Gate,
@@ -16,13 +16,13 @@ import {
 
 export const gateKeys = {
   list: gatesListQuery.queryKey,
-  status: ["gates", "status"] as const,
+  status: gatesStatusQuery.queryKey,
   state: (numeroDispositivo: number) => ["gates", "state", numeroDispositivo] as const,
 };
 
 export const doorKeys = {
-  list: ["doors", "list"] as const,
-  status: ["doors", "status"] as const,
+  list: doorsListQuery.queryKey,
+  status: doorsStatusQuery.queryKey,
 };
 
 // Polling só enquanto o tempo real está fora. O status de online vem do
@@ -42,11 +42,7 @@ export interface DoorView extends Door {
 export function useGates() {
   const statusInterval = useRealtimeFallbackInterval(STATUS_FALLBACK_MS);
   const list = useQuery(gatesListQuery);
-  const status = useQuery({
-    queryKey: gateKeys.status,
-    queryFn: ({ signal }) => fetchGatesStatus(signal),
-    refetchInterval: statusInterval,
-  });
+  const status = useQuery({ ...gatesStatusQuery, refetchInterval: statusInterval });
 
   const online = new Map(status.data?.gates.map((gate) => [gate.numeroDispositivo, gate.online]));
   const gates: GateView[] = (list.data ?? [])
@@ -73,12 +69,8 @@ export function useGateStates(numerosDispositivo: number[]) {
 
 export function useDoors() {
   const statusInterval = useRealtimeFallbackInterval(STATUS_FALLBACK_MS);
-  const list = useQuery({ queryKey: doorKeys.list, queryFn: ({ signal }) => fetchDoors(signal) });
-  const status = useQuery({
-    queryKey: doorKeys.status,
-    queryFn: ({ signal }) => fetchDoorsStatus(signal),
-    refetchInterval: statusInterval,
-  });
+  const list = useQuery(doorsListQuery);
+  const status = useQuery({ ...doorsStatusQuery, refetchInterval: statusInterval });
 
   const online = new Map(status.data?.doors.map((door) => [door.id, door.online]));
   const doors: DoorView[] = (list.data ?? [])

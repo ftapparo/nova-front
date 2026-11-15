@@ -28,7 +28,8 @@ export const AUTO_CLOSE_MAX_SECONDS = 120;
 
 export const fetchGates = (signal?: AbortSignal) => api.get<Gate[]>("/tag/gates", { signal });
 
-/** Cadastro de portões, compartilhado por Portões e Portas e Acessos (mesmo cache). */
+// Consultas compartilhadas com outras telas (Acessos, Equipamentos, Painel):
+// mesma chave = mesmo cache, e a atualização pelo tempo real vale para todas.
 export const gatesListQuery = queryOptions({
   queryKey: ["gates", "list"],
   queryFn: ({ signal }) => fetchGates(signal),
@@ -53,6 +54,19 @@ export const restartGate = (numeroDispositivo: number) =>
 
 export const fetchDoors = (signal?: AbortSignal) => api.get<Door[]>("/doors", { signal });
 export const fetchDoorsStatus = (signal?: AbortSignal) => api.get<DoorsStatus>("/doors/status", { signal });
+
+export const gatesStatusQuery = queryOptions({
+  queryKey: ["gates", "status"],
+  queryFn: ({ signal }) => fetchGatesStatus(signal),
+});
+export const doorsListQuery = queryOptions({
+  queryKey: ["doors", "list"],
+  queryFn: ({ signal }) => fetchDoors(signal),
+});
+export const doorsStatusQuery = queryOptions({
+  queryKey: ["doors", "status"],
+  queryFn: ({ signal }) => fetchDoorsStatus(signal),
+});
 export const openDoor = (id: number) => api.post<{ id: number; nome: string; porta: number }>(`/doors/${id}/open`);
 
 /** Sentido cadastrado do portão; qualquer coisa que não seja saída conta como entrada. */

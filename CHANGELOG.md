@@ -7,6 +7,8 @@
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado
+- Tela **Equipamentos** (Fase 3): comunicação com a API de portões, portas, módulos de exaustor (agrupados por torre e finais 1 a 4 / 5 a 8) e central de incêndio, com quantos estão fora do ar e quando a API verificou. Recarrega com os avisos do tempo real.
+- Consultas de portões, portas, exaustores e central expostas como `queryOptions` nos `*Api.ts`, para as telas que mostram o mesmo dado dividirem o cache.
 - Tela **Histórico de comandos** (Fase 3): últimos 50, 100 ou 200 comandos enviados a portões, portas, exaustores e à central (pelo painel anterior, pelo novo e pelo aplicativo), com a ação em português e o equipamento quando o caminho indica, quem enviou e o resultado. Filtro "Só falhas"; comando novo entra no topo pelo tempo real.
 - Telas **Consultas** e **Veículos** (Fase 3). Consultas: cadastro do condomínio por CPF (pessoa, foto, aviso para a portaria, unidades e vínculo), placa ou TAG (veículo, unidade, proprietário e credenciais de acesso). Veículos, no fluxo do painel anterior: busca do proprietário por CPF com conferência do vínculo, lista dos veículos, cadastro de placa (recusa placa de outro proprietário, busca marca/modelo/cor nas fontes externas ou deixa digitar), vincular ou trocar TAG (troca só com confirmação), remover TAG e desvincular do proprietário, com confirmação.
 - Formatação de CPF, placa e TAG compartilhada em `core/format/documents.ts`.
