@@ -1,4 +1,7 @@
+import { queryOptions } from "@tanstack/react-query";
 import { api } from "@/core/api/api";
+
+export { erpDateTimeKey, formatErpDateTime, sentidoLabel, unitLabel } from "./accessFormat";
 
 // Conferência e registro de passagem no sistema do condomínio. Usados pela
 // abertura de portão (Portões e Portas) e pela tela Acessos.
@@ -48,6 +51,15 @@ export interface AccessRecentRow {
 /** `limit` vai até 50 por portão. */
 export const fetchRecentAccess = (numeroDispositivo: number, limit: number, signal?: AbortSignal) =>
   api.get<AccessRecentRow[]>("/access/recent", { query: { numeroDispositivo, limit }, signal });
+
+const RECENT_PER_GATE = 20;
+
+/** Últimas passagens de um portão; compartilhada com o Painel Operacional. */
+export const recentAccessQuery = (numeroDispositivo: number) =>
+  queryOptions({
+    queryKey: ["access", "recent", numeroDispositivo],
+    queryFn: ({ signal }) => fetchRecentAccess(numeroDispositivo, RECENT_PER_GATE, signal),
+  });
 
 /** `id` aceita CPF, placa, TAG de 10 dígitos ou ID numérico. */
 export const verifyAccess = (input: { id: string; numeroDispositivo: number; sentido: Sentido }) =>

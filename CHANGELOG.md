@@ -7,6 +7,9 @@
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado
+- **Painel Operacional** (Fase 3), a tela inicial: resumo da central de incêndio, dos equipamentos fora do ar e dos exaustores ligados (cada bloco leva à tela do assunto); atalhos por conta, gravados nas preferências da conta sem apagar as do aplicativo (porta abre direto, portão leva à conferência do CPF com ele já escolhido); últimas passagens e últimos comandos. Atualiza pelo tempo real.
+- Preferências da conta (`/me/settings`) em `core/settings/userSettings.ts` (`useSetting`), com as chaves do painel no prefixo `painel.`.
+- Portões e Portas aceita `?portao=N` para abrir com o portão já escolhido.
 - Tela **Equipamentos** (Fase 3): comunicação com a API de portões, portas, módulos de exaustor (agrupados por torre e finais 1 a 4 / 5 a 8) e central de incêndio, com quantos estão fora do ar e quando a API verificou. Recarrega com os avisos do tempo real.
 - Consultas de portões, portas, exaustores e central expostas como `queryOptions` nos `*Api.ts`, para as telas que mostram o mesmo dado dividirem o cache.
 - Tela **Histórico de comandos** (Fase 3): últimos 50, 100 ou 200 comandos enviados a portões, portas, exaustores e à central (pelo painel anterior, pelo novo e pelo aplicativo), com a ação em português e o equipamento quando o caminho indica, quem enviou e o resultado. Filtro "Só falhas"; comando novo entra no topo pelo tempo real.

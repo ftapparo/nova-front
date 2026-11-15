@@ -26,6 +26,8 @@ type Verification = { row: AccessVerifyRow; allowed: boolean } | { notFound: tru
 
 interface OpenGatePanelProps {
   gates: GateView[];
+  /** Portão já escolhido (atalho do Painel Operacional). */
+  initialGate?: number | null;
 }
 
 /**
@@ -33,10 +35,12 @@ interface OpenGatePanelProps {
  * do condomínio (regra do painel anterior), e a passagem é registrada no ERP
  * logo depois de abrir. O resultado da conferência fica só neste componente.
  */
-export default function OpenGatePanel({ gates }: OpenGatePanelProps) {
+export default function OpenGatePanel({ gates, initialGate = null }: OpenGatePanelProps) {
   const notify = useNotify();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<number | "">(gates[0]?.numeroDispositivo ?? "");
+  const [selected, setSelected] = useState<number | "">(
+    gates.find((gate) => gate.numeroDispositivo === initialGate)?.numeroDispositivo ?? gates[0]?.numeroDispositivo ?? "",
+  );
   const [cpf, setCpf] = useState("");
   const [autoClose, setAutoClose] = useState(String(DEFAULT_AUTO_CLOSE_SECONDS));
   const [verification, setVerification] = useState<Verification | null>(null);

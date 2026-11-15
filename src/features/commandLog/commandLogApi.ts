@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { api } from "@/core/api/api";
 
 // Histórico de comandos em equipamento, do painel anterior (v2) e do novo
@@ -21,6 +22,13 @@ export const COMMAND_LOG_LIMITS = [50, 100, 200] as const;
 
 export const fetchCommandLogs = (limit: number, signal?: AbortSignal) =>
   api.get<CommandLog[]>("/commands/logs", { query: { limit }, signal });
+
+/** Compartilhada com o Painel Operacional (mesmo cache dos últimos 50). */
+export const commandLogsQuery = (limit: number) =>
+  queryOptions({
+    queryKey: ["commands", "logs", limit],
+    queryFn: ({ signal }) => fetchCommandLogs(limit, signal),
+  });
 
 const CIE_ACTIONS: Record<string, string> = {
   silence: "Central silenciada",

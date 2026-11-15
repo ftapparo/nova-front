@@ -13,6 +13,7 @@ import { navigation } from "./navigation";
 // baixado quando a tela é aberta. Entrada do menu sem tela aqui mostra o
 // placeholder.
 const pages: Record<string, LazyExoticComponent<ComponentType>> = {
+  "/": lazy(() => import("@/features/dashboard/DashboardPage")),
   "/contas": lazy(() => import("@/features/accounts/AccountsPage")),
   "/portoes-portas": lazy(() => import("@/features/gates/GatesPage")),
   "/acessos": lazy(() => import("@/features/access/AccessPage")),

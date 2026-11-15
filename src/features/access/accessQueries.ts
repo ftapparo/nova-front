@@ -3,9 +3,8 @@ import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRealtimeEvent } from "@/core/realtime/useRealtime";
 import { gatesListQuery, type Gate } from "@/features/gates/gatesApi";
 import { erpDateTimeKey } from "./accessFormat";
-import { fetchRecentAccess, type AccessRecentRow } from "./accessApi";
+import { recentAccessQuery, type AccessRecentRow } from "./accessApi";
 
-const RECENT_PER_GATE = 20;
 const RECENT_SHOWN = 30;
 // A passagem é gravada pelo TAG segundos depois de o portão fechar, sem
 // evento próprio: por isso as últimas passagens são consultadas
@@ -13,7 +12,7 @@ const RECENT_SHOWN = 30;
 const RECENT_REFRESH_MS = 15_000;
 const LIVE_READS_KEPT = 15;
 
-const recentKey = (numeroDispositivo: number) => ["access", "recent", numeroDispositivo] as const;
+const recentKey = (numeroDispositivo: number) => recentAccessQuery(numeroDispositivo).queryKey;
 
 export function useActiveGates() {
   const query = useQuery(gatesListQuery);
@@ -29,11 +28,7 @@ export interface RecentAccess extends AccessRecentRow {
 /** Últimas passagens dos portões informados, juntas e da mais recente para a mais antiga. */
 export function useRecentAccess(gates: Gate[]) {
   const results = useQueries({
-    queries: gates.map((gate) => ({
-      queryKey: recentKey(gate.numeroDispositivo),
-      queryFn: ({ signal }: { signal: AbortSignal }) => fetchRecentAccess(gate.numeroDispositivo, RECENT_PER_GATE, signal),
-      refetchInterval: RECENT_REFRESH_MS,
-    })),
+    queries: gates.map((gate) => ({ ...recentAccessQuery(gate.numeroDispositivo), refetchInterval: RECENT_REFRESH_MS })),
   });
 
   const rows: RecentAccess[] = results

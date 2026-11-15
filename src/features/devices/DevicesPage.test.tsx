@@ -4,8 +4,7 @@ import { startSession } from "@/core/session/sessionStore";
 import { fakeApi, okResponse, sessionData, sessionUser } from "@/test/fakeApi";
 import { FakeWebSocket, installFakeWebSocket, lastSocket } from "@/test/fakeWebSocket";
 import { renderApp } from "@/test/renderApp";
-import type { Exhaust } from "@/features/exhaust/exhaustApi";
-import { groupExhaustModules } from "./devicesStatus";
+import { groupExhaustModules, type Exhaust } from "@/features/exhaust/exhaustApi";
 
 const exhaust = (id: string, moduleOnline = true): Exhaust => ({
   id,

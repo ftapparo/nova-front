@@ -14,10 +14,9 @@ import SectionCard from "@/core/ui/components/SectionCard";
 import StatusChip from "@/core/ui/components/StatusChip";
 import PageContainer from "@/core/ui/layout/PageContainer";
 import PageHeader from "@/core/ui/layout/PageHeader";
-import { exhaustsQuery } from "@/features/exhaust/exhaustApi";
+import { exhaustsQuery, groupExhaustModules } from "@/features/exhaust/exhaustApi";
 import { panelQuery } from "@/features/fire/fireApi";
 import { doorsListQuery, doorsStatusQuery, gatesListQuery, gatesStatusQuery } from "@/features/gates/gatesApi";
-import { groupExhaustModules } from "./devicesStatus";
 
 const FALLBACK_REFRESH_MS = 30_000;
 const INVALIDATE_DEBOUNCE_MS = 500;

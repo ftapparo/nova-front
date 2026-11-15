@@ -57,9 +57,9 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Telas prontas: **Contas** (`features/accounts`, antecipada da Fase 4), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Consultas** e **Veículos** (`features/registry`) , **Histórico de comandos** (`features/commandLog`) e **Equipamentos** (`features/devices`), da Fase 3; as demais ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`, antecipada da Fase 4). Ainda são placeholders os menus da Fase 4: Comunicados, Notificações, Vínculos, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
 
-Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
+Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
 
 ## API e sessão — como usar
 
@@ -121,6 +121,12 @@ Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, co
 - Placa já ligada a outro proprietário ou unidade é recusada antes da busca externa (`plateOwnedByOther`). A busca externa (`/vehicles/plate/lookup`) é lenta e limitada a 5 por minuto; se falhar, a portaria digita marca, modelo e cor.
 - TAG: 10 dígitos, validada no portão de entrada, com o CPF do proprietário. 409 com título "Confirmação necessária" pede confirmação e reenvia com `forceSwap: true`.
 - CPF, placa e TAG: formatação em `core/format/documents.ts`.
+
+## Painel Operacional — regras
+
+- Resumo da central, equipamentos fora do ar e exaustores ligados, com as mesmas consultas (`queryOptions`) das telas de cada assunto.
+- Atalhos por conta em `/me/settings`, chave `painel.atalhos` (JSON), via `useSetting` (`core/settings/userSettings.ts`). O PUT substitui todas as preferências: `useSetting` relê do servidor e mescla antes de gravar, para não apagar as do aplicativo.
+- Atalho de porta abre direto; atalho de portão leva a `/portoes-portas?portao=N`, porque a abertura exige a conferência do CPF.
 
 ## Tempo real — como usar
 

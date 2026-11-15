@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
@@ -14,6 +15,9 @@ import { useDoors, useGateStates, useGates, useGatesRealtime } from "./gatesQuer
 
 export default function GatesPage() {
   const role = useSession()?.user.role;
+  // ?portao=9 vem do atalho do Painel Operacional: já deixa o portão escolhido.
+  const [searchParams] = useSearchParams();
+  const initialGate = Number(searchParams.get("portao")) || null;
   const canManage = role === "sindico" || role === "admin";
 
   const { gates, list: gatesList } = useGates();
@@ -34,8 +38,12 @@ export default function GatesPage() {
           {gatesList.isSuccess && gates.length === 0 && <EmptyState title="Nenhum portão ativo" />}
           {gates.length > 0 && (
             <>
-              {/* key: a lista de portões muda raramente; ao mudar, o painel recomeça com o primeiro selecionado. */}
-              <OpenGatePanel key={gates.map((gate) => gate.numeroDispositivo).join(",")} gates={gates} />
+              {/* key: muda com a lista de portões ou com outro atalho; o painel recomeça com o portão certo. */}
+              <OpenGatePanel
+                key={`${gates.map((gate) => gate.numeroDispositivo).join(",")}:${initialGate ?? ""}`}
+                gates={gates}
+                initialGate={initialGate}
+              />
               <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" } }}>
                 {gates.map((gate) => (
                   <GateCard

@@ -27,7 +27,7 @@ import {
   commandLabel,
   commandSucceeded,
   commandTarget,
-  fetchCommandLogs,
+  commandLogsQuery,
   type CommandLog,
 } from "./commandLogApi";
 
@@ -44,8 +44,8 @@ export default function CommandLogPage() {
   const [limit, setLimit] = useState<number>(COMMAND_LOG_LIMITS[0]);
   const [onlyFailures, setOnlyFailures] = useState(false);
   const refetchInterval = useRealtimeFallbackInterval(FALLBACK_REFRESH_MS);
-  const key = ["commands", "logs", limit] as const;
-  const logs = useQuery({ queryKey: key, queryFn: ({ signal }) => fetchCommandLogs(limit, signal), refetchInterval });
+  const key = commandLogsQuery(limit).queryKey;
+  const logs = useQuery({ ...commandLogsQuery(limit), refetchInterval });
 
   // Comando novo entra no topo sem recarregar a lista inteira.
   useRealtimeEvent<CommandLog>("command.logged", (entry) => {
