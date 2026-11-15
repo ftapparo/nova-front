@@ -1,76 +1,42 @@
-# Nova Residence Frontend
+# Nova Residence — Painel Administrativo v3
 
-Frontend web do portal administrativo da portaria.
+Painel web da equipe do condomínio (portaria, síndico, administração) sobre a `nova-api` v3, com Material UI.
+
+Projeto independente do painel atual (`FRONT/`), que continua em produção até o corte.
 
 ## Stack
 
-- Vite
-- React + TypeScript
-- Tailwind CSS
-- shadcn/ui
+- Vite + React 19 + TypeScript
+- Material UI 9
+- React Router 7
+- Vitest + Testing Library
 
-## Execucao local
+## Execução local
 
 ```bash
-npm i
-npm run dev
+npm install
+cp .env.example .env   # ajuste V3_PROXY_TARGET
+npm run dev            # http://localhost:8081
 ```
 
-## Build
+O painel fala sempre com a própria origem (`/v3/api`, `/v3/ws`). Em desenvolvimento o Vite repassa `/v3` para `V3_PROXY_TARGET`.
+
+**Atenção:** com o proxy configurado o painel fala com a API real — comandos acionam portões, portas, exaustores e a central de incêndio de verdade.
+
+## Validação
 
 ```bash
+npm run lint
+npm test
 npm run build
 ```
 
-## Web Push
+## Documentação
 
-- O app registra Service Worker via `vite-plugin-pwa`.
-- No login, tenta registrar subscription de push no endpoint `/v2/api/push/subscriptions`.
-- No logout, remove a subscription via `/v2/api/push/subscriptions`.
-- Em producao, Web Push exige HTTPS e permissao de notificacao concedida pelo navegador.
-
-## UI/UX Guidelines (padrao global)
-
-As paginas devem seguir o mesmo conceito visual da tela de veiculos.
-
-### 1) Estrutura de pagina
-
-- Use `PageContainer` (`@/components/layout/PageContainer`) como raiz da pagina.
-- Use `size="default"` (`max-w-5xl`) por padrao.
-- Use `size="wide"` (`max-w-6xl` e `2xl:max-w-7xl`) apenas para conteudo naturalmente denso (tabelas/relatorios).
-- Espacamento vertical principal: `space-y-6`.
-
-### 2) Cabecalho
-
-- Use `PageHeader` (`@/components/layout/PageHeader`) com:
-  - titulo: `text-2xl font-bold text-foreground`
-  - descricao: `text-muted-foreground`
-- Acoes globais da pagina devem entrar na prop `actions`.
-
-### 3) Secoes em card
-
-- Use `Card` + `SectionCardHeader` (`@/components/layout/SectionCardHeader`) para secoes principais.
-- Titulos de secao devem usar `text-base`.
-- Acoes da secao devem ficar ao lado direito no header do card.
-
-### 4) Formularios e acoes
-
-- Campos e selects com altura padrao `h-9`.
-- Botoes principais de formulario com altura `h-9` (ou `h-11` quando semantica pedir CTA maior).
-- Em buscas, manter input e botao juntos e evitar acao primaria somente por icone.
-
-### 5) Cores e superficies
-
-- Use tokens de tema (`bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `border-*`).
-- Evite hex inline em paginas (`#...`).
-- Estados de feedback devem seguir tokens semanticos (`destructive`, tons `emerald/rose` quando aplicavel).
-
-## Componentes de layout compartilhados
-
-- `src/components/layout/PageContainer.tsx`
-- `src/components/layout/PageHeader.tsx`
-- `src/components/layout/SectionCardHeader.tsx`
+- `CLAUDE.md` — contexto do projeto, regras e estado atual.
+- `AGENTS.md` — arquitetura e processo.
+- `CHANGELOG.md` — histórico.
 
 ## Licença
 
-Software proprietário: **todos os direitos reservados**. Uso exclusivo do Condomínio Nova Residence; cópia, modificação, distribuição ou publicação dependem de autorização por escrito do autor. Veja o arquivo [LICENSE](LICENSE).
+Proprietária — todos os direitos reservados, uso exclusivo do Condomínio Nova Residence.

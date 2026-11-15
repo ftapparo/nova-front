@@ -1,78 +1,82 @@
-# FRONT — Painel Administrativo Nova Residence
+# FRONT_V3 — Painel Administrativo Nova Residence (v3)
 
-Painel web usado pela portaria/administração do Condomínio Nova Residence. Consome a `nova-api` para controle de acesso, portões, exaustores, central de incêndio, notificações push e configurações de usuário.
+Painel web da equipe do Condomínio Nova Residence (`porteiro`, `sindico`, `admin`), construído do zero sobre a `nova-api` **v3** com Material UI. Substituirá o painel atual (`FRONT/`, que fala com a v2) quando o corte for decidido; até lá os dois rodam lado a lado.
 
-Veja `CHANGELOG.md` para o histórico de versões. Este arquivo é o contexto real do projeto; `AGENTS.md` tem as regras genéricas de processo/arquitetura (cohesion, boundaries, validation) — leia os dois, começando por este.
+Este arquivo é o contexto do projeto; `AGENTS.md` tem as regras de arquitetura e processo. Leia os dois, começando por este. O histórico está em `CHANGELOG.md`.
 
-## 🔴 Regra absoluta: nunca tocar em `src/v2/` dos backends
+## 🔴 Regras absolutas
 
-Ao trabalhar em integração com `nova-api`, `nova-tag` ou `nova-cie` a partir daqui (ex.: ajustar `src/services/api.ts` para uma nova rota), nunca editar arquivos dentro de `src/v2/` desses projetos, em nenhuma circunstância. `v2/` é a superfície em produção real de cada backend. Qualquer mudança de contrato deve vir de uma rota v3 nova, nunca de alteração na v2 existente.
+- **Nunca editar `FRONT/`** (o painel em produção) nem `src/v2/` de qualquer backend. `FRONT/` serve só de referência de comportamento.
 
-## Commits
+## Repositório e branches
 
-Este projeto usa um fluxo de commit específico — ver skill `commit` (`.claude/skills/commit/SKILL.md`). Resumo: separar commits por grupo lógico de mudança, mensagem com subject curto + corpo completo, atualizar `CHANGELOG.md` (seção `[Unreleased]`) antes do commit, apresentar para aprovação antes de commitar, perguntar antes de dar push. Nunca criar versão numerada nem tocar no `package.json` sem pedido explícito de "versionar".
+O painel v3 vive no mesmo repositório do painel atual (`nova-front`), na branch **`nova-versao`**. No workspace são duas pastas do mesmo repositório (git worktree):
+
+- `FRONT/` → branch `main`, painel em produção (v2);
+- `FRONT_V3/` → branch `nova-versao`, este painel.
+
+Commit e push feitos em `FRONT_V3/` vão para `nova-versao`. Não trocar de branch dentro das pastas (`git checkout`/`switch`): cada uma fica presa à sua. O corte para produção é juntar `nova-versao` na `main`, decisão do usuário. A stack do Portainer usa a `main`; `nova-versao` não tem Dockerfile até a Fase 5.
+- **O painel fala só com `/v3/api` e `/v3/ws`, sempre na própria origem.** A v3 não tem CORS: em desenvolvimento o Vite repassa `/v3` (`V3_PROXY_TARGET` no `.env`), em produção o nginx do container. Não existe `VITE_API_BASE_URL` e não se chama a API por URL absoluta.
+- **Comandos acionam equipamento físico** (portões, portas, exaustores, central de incêndio). Testes automatizados nunca apontam para a API real — usam `fetch` falso com respostas no formato do envelope da v3.
+
+## Contrato da API
+
+- Fonte de verdade: `../API/src/v3/openapi.json` (ao vivo em `/v3/apispec_1.json`). Guia de uso: `../API/src/v3/APP-GUIDE.md` — escrito para o app Android, mas o contrato é o mesmo.
+- Envelope `{ success, data, meta }` / `{ success: false, error, meta }`; ramificar por `error.type` (conjunto fechado), nunca pelo texto de `detail`.
+- Papéis: `user.role` é `porteiro`, `sindico`, `admin` ou `null` (morador). Este painel é da equipe; conta sem papel não usa o painel.
 
 ## Stack
 
-- **React 18 + TypeScript + Vite**
-- **React Router** (`react-router-dom`) para navegação
-- **TanStack Query** (`@tanstack/react-query` v5) para data fetching/cache — ver `src/queries/`
-- **Tailwind CSS v4** + **shadcn/ui** (Radix UI primitives em `src/components/ui/`)
-- **React Hook Form + Zod** para formulários e validação
-- **next-themes** para dark/light mode
-- **Vitest + Testing Library** para testes
+- **React 19 + TypeScript estrito + Vite**
+- **Material UI 9** (`@mui/material`, Emotion, `@mui/icons-material`) — sem Tailwind/shadcn
+- **React Router 7** (`react-router`)
+- **TanStack Query v5** para dados e mutations
+- **React Hook Form + Zod 4** para formulários
+- **Vitest + Testing Library**
+- A entrar nas próximas fases, só quando forem usados: MUI X (Data Grid, Date Pickers), `vite-plugin-pwa`.
 
-## Estrutura
-
-```
-src/
-  components/
-    ui/          # shadcn/ui — componentes gerados, evitar editar à mão sem necessidade
-    dashboard/   # componentes específicos do painel
-    layout/      # shell da aplicação
-    theme/       # ThemeProvider (next-themes)
-  contexts/      # AuthContext, DashboardContext
-  hooks/
-  lib/           # utilitários (cn(), etc.)
-  pages/
-    dashboard/   # páginas do painel (Controle de Acesso, Exaustores, etc.)
-  queries/       # hooks TanStack Query por domínio (dashboardQueries, exhaustQueries, ...)
-  services/      # cliente HTTP para a nova-api (api.ts)
-  theme/         # tokens de tema
-  test/          # setup de testes
-```
+TypeScript fica em `~6.0` enquanto o `typescript-eslint` não aceitar a 7. O `openapi-typescript` exige TypeScript 5, por isso roda via `npx` (`npm run gen:api`) e não é dependência do projeto.
 
 ## Comandos
 
 ```bash
-npm run dev         # Vite dev server
-npm run build        # build de produção
-npm run build:dev    # build em modo development (debug)
-npm run lint          # ESLint
-npm test              # vitest run
-npm run test:watch    # vitest watch
+npm run dev      # Vite em http://localhost:8081 (proxy /v3 → V3_PROXY_TARGET)
+npm run lint     # ESLint
+npm test         # vitest run
+npm run build    # tsc -b + build de produção
+npm run gen:api  # regenera src/core/api/schema.gen.ts a partir de ../API/src/v3/openapi.json
 ```
 
-Rode `npm run lint` e `npm test` antes de considerar uma mudança pronta — ambos rodam rápido e pegam a maioria dos problemas de tipo/regressão de comportamento.
+Rodar `npm run gen:api` sempre que o contrato da v3 mudar; o arquivo gerado é versionado e nunca editado à mão.
 
-## Autenticação atual não é segurança real
+Antes de dar uma mudança por pronta: `npm run lint`, `npm test` e `npm run build`.
 
-`VITE_AUTH_USER`/`VITE_AUTH_PASS` (ver `.env.example`, `src/contexts/AuthContext.tsx`) são só um seletor de operador — **tudo com prefixo `VITE_` é embutido no bundle JS e visível no DevTools**, nunca colocar segredo real aí. A proteção de fato é o **Cloudflare Access** na borda, que autentica antes da aplicação carregar. Isso está planejado para virar login real contra a API (Supabase Auth) numa etapa futura — não tratar o estado atual como definitivo nem reforçar a ilusão de segurança no código.
+`npm run dev` com `V3_PROXY_TARGET` configurado fala com a **API real**. Não usar para "testar" comandos.
 
-## Domínio da API em transição
+## Estado atual
 
-`VITE_API_BASE_URL` pode apontar para `api.novaresidence.com.br` (novo) ou `api.condominionovaresidence.com` (antigo, legado). Ao mexer em URLs hardcoded ou CORS, checar `.env.example` para o estado atual da migração antes de assumir qual domínio é o ativo.
+Fases 0 (fundação) e 1 (API e sessão) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota e menu pelo papel da conta. Do menu, só **Contas** (`features/accounts`) está pronta, antecipada da Fase 4; as demais telas ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+
+Fases seguintes: 2 tempo real (WebSocket) · 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
+
+## API e sessão — como usar
+
+- Chamada autenticada: `api.get/post/put/patch/delete` de `src/core/api/api.ts`, com caminho relativo a `/v3/api` e o tipo do `data` (`api.get<Exhaust[]>("/exhausts")`). Tipos vêm de `components["schemas"]` em `schema.gen.ts`.
+- Chamada pública (login, recuperar senha, `/legal`): `sendRequest` de `src/core/api/http.ts`.
+- Todo erro é um `ApiError`; a tela decide por `error.type` e mostra `errorMessage(error)`.
+- 401 numa chamada autenticada renova a sessão uma vez e repete a chamada uma vez. Rota em que 401 é resposta de negócio (ex.: "Senha atual incorreta") passa `{ noRefreshOn401: true }`.
+- Sessão: `useSession()` para ler; `signIn`/`signOut` em `core/session/sessionActions.ts`; rota que devolve `SessionData` (troca/recuperação de senha) entrega para `startSession`. Tokens ficam no `localStorage` e só `core/session/sessionStore.ts` os toca.
+- O refresh token é de uso único: a renovação é serializada dentro da aba e, entre abas, por Web Lock. Não chamar `/auth/refresh` por fora do `sessionStore`.
+- Mutations nunca repetem sozinhas (`queryClient.ts`): incluem comandos em equipamento físico.
+- Formulário: `useForm` + `zodResolver`, campos com `FormTextField`/`FormPasswordField`, erros de campo do servidor com `applyValidationErrors`. As mensagens de validação da API vêm em inglês — validar no cliente com mensagem em português.
+- Testes: `fakeApi({ "POST /auth/login": () => okResponse(...) })` de `src/test/fakeApi.ts` e `renderApp(path)` de `src/test/renderApp.tsx`.
 
 ## Convenções
 
-- Toda chamada à API passa por `src/services/api.ts` — não fazer `fetch`/`axios` direto em componentes ou hooks de query.
-- Hooks de polling (dashboard, exaustores) usam `refetchInterval`/`refetchIntervalInBackground` do TanStack Query — ao escrever teste que inspeciona essas opções via `queryCache.find()`, o tipo genérico do v5 não expõe esses campos sem cast (ver `src/queries/*.test.tsx` para o padrão já usado).
-- `ThemeProviderProps` não é exportado publicamente por `next-themes@0.3.0` — usar `React.ComponentProps<typeof NextThemesProvider>` em vez de importar o tipo diretamente (ver `src/components/theme/ThemeProvider.tsx`).
-- Componentes em `components/ui/` seguem o padrão shadcn/ui — ao precisar de um componente novo da mesma família, preferir gerar via CLI do shadcn em vez de escrever à mão, para manter consistência de estilo/acessibilidade.
-
-## Outros serviços do ecossistema
-
-- `nova-api`: backend principal, único consumido diretamente por este painel.
-- `nova-tag`, `nova-cie`: não consumidos diretamente — sempre via gateway da `nova-api`.
-
-Os três backends estão migrando para uma v3 (Fastify + Zod), ainda não consumida por este painel (`src/services/api.ts` fala com `/v2/api`). Quando isso mudar, o formato de resposta é diferente do atual — ver `docs/PADRAO-RESPOSTA-V3.md` (raiz do workspace) antes de integrar.
+- Tema: cores e tipografia só em `src/core/ui/theme/`. Componentes usam a paleta (`primary.main`, `text.secondary`, `theme.vars.palette.soft.*`), nunca hex solto.
+- No `Typography`, a prop `color` aceita `textPrimary`/`textSecondary`/`textDisabled`; caminho de paleta com ponto (`text.secondary`) só funciona dentro de `sx`.
+- Menu: `src/app/navigation.ts` é a lista única de telas e papéis. Tela nova = entrada ali + rota em `src/app/router.tsx`.
+- Papel: `user.role` pode ser `porteiro`, `sindico`, `admin`, `morador` ou `null`. Só os três primeiros entram no painel (`staffRoleOf`); os demais veem a tela "Painel de uso da equipe".
+- Texto para o usuário em português do Brasil, com acentuação.
+- Termo de Uso e Política de Privacidade são do aplicativo dos moradores (Google Play). O painel é interno da equipe: não pede aceite e ignora `mustAcceptTerms` (decisão de 15/11/2026).
+- Dockerfile (Fase 5): usar `npm install`, não `npm ci` — o `npm ci` falha no build do Portainer do servidor.

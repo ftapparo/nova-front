@@ -4,21 +4,19 @@
 
 This file is the operational guide for AI coding agents working in this repository.
 
-Keep the working context minimal. Do not read large parts of the repository unless the task requires it.
+Keep the working context minimal. Do not read large parts of the repository unless the task requires it. Prefer local discovery over global exploration.
 
-Prefer local discovery over global exploration.
-
-For project-specific context (what this app does, stack, known bugs, ecosystem), see `CLAUDE.md` — read it first, always.
+For project-specific context (what this app does, hard rules, current state), see `CLAUDE.md` — read it first, always.
 
 ---
 
 ## Stack
 
-- Framework: React 18 + Vite
-- Language: TypeScript
-- Routing: React Router
+- Framework: React 19 + Vite
+- Language: TypeScript (strict)
+- UI: Material UI 9 (Emotion) — no Tailwind, no shadcn/ui
+- Routing: React Router 7
 - Data fetching: TanStack Query v5
-- Styling: Tailwind CSS v4 + shadcn/ui
 - Forms: React Hook Form + Zod
 - Tests: Vitest + Testing Library
 - Package manager: npm
@@ -27,45 +25,39 @@ For project-specific context (what this app does, stack, known bugs, ecosystem),
 
 ## Repository Structure
 
+Feature-first, the same principle used by the backend v3 projects.
+
 ```text
 src/
-├── components/
-│   ├── ui/          # shadcn/ui — generated, avoid hand-editing without reason
-│   ├── dashboard/
-│   ├── layout/
-│   └── theme/
-├── contexts/         # AuthContext, DashboardContext
-├── hooks/
-├── lib/               # cn() and generic utilities — not a dumping ground, see below
-├── pages/
-│   └── dashboard/
-├── queries/           # TanStack Query hooks, one file per domain
-├── services/          # api.ts — the ONLY place that talks HTTP to nova-api
-├── theme/
-└── test/
-
-docs/                          # workspace root, shared across all 4 projects
-└── PADRAO-RESPOSTA-V3.md      # response envelope of the backends' v3 (not consumed here yet)
-
-AI-Friendly Architecture Specification.md   # workspace root — architectural rationale
+├── app/                 # Composition: App, router, navigation (menu by role), layout wiring
+├── core/                # Genuinely shared infrastructure
+│   ├── api/             # HTTP client, envelope parsing, ApiError, generated types
+│   ├── session/         # Tokens, refresh, roles, route guards
+│   ├── realtime/        # WebSocket (ticket, reconnection)
+│   └── ui/
+│       ├── theme/       # Brand tokens, MUI theme, color scheme
+│       ├── layout/      # AppShell, Sidebar, TopBar, PageHeader, PageContainer
+│       └── components/  # Shared building blocks (StatusChip, ConfirmDialog, ...)
+├── features/            # One folder per business feature
+│   └── <feature>/       # <Feature>Page.tsx, components/, <feature>Api.ts, <feature>Queries.ts
+└── test/                # Test setup
 ```
+
+Folders are created when their first file exists — do not scaffold empty features.
 
 ---
 
 ## Context Strategy
 
-For every task, minimize the amount of unrelated context loaded.
+For every task:
 
-Use this discovery order:
+1. Read `CLAUDE.md`.
+2. Identify the feature involved and inspect `src/features/<feature>/`.
+3. Read the contract only for the endpoints the task touches (`../API/src/v3/APP-GUIDE.md`, then `../API/src/v3/openapi.json`).
+4. Inspect `core/` or other features only when a dependency requires it.
+5. Use repository-wide search only when local discovery is insufficient.
 
-1. Read `CLAUDE.md` (project context, hard rules).
-2. Identify the relevant area (`components/`, `queries/`, `services/`, `pages/`).
-3. Inspect files inside that area.
-4. Check whether the module contains its own `AGENTS.md` (rare).
-5. Read `docs/PADRAO-RESPOSTA-V3.md` only if the task involves integrating a `v3/` endpoint from a backend.
-6. Use repository-wide search when local discovery is insufficient.
-
-Do not explore the entire repository by default.
+`../FRONT/` (the current panel) is a behavior reference only. Never edit it and do not port its code line by line.
 
 ---
 
@@ -73,45 +65,73 @@ Do not explore the entire repository by default.
 
 ### Feature Locality
 
-Keep query hooks grouped by domain in `queries/` (`dashboardQueries.ts`, `exhaustQueries.ts`). Keep page-specific components inside `pages/dashboard/` rather than promoting them to `components/` unless reused.
+Feature-specific code stays in `features/<name>/`. Move code to `core/` only when two or more features genuinely use it.
 
-### Cohesion
+### Componentization
 
-Keep related code together. Separate code when responsibilities differ, not merely because a pattern allows another file.
+Pages orchestrate; they do not hold the whole screen. Split a page into components inside the feature's `components/` by responsibility (a card, a dialog, a table), not by line count. A component moves to `core/ui/components/` only when a second feature needs it.
 
 ### Boundaries
 
-- All HTTP calls to `nova-api` go through `services/api.ts` — never `fetch`/`axios` directly in a component or query hook.
-- `nova-tag`/`nova-cie` are never called directly — always via `nova-api`'s gateway.
-- `v2/` of any backend project is production surface. **Never edit it** — see the hard rule in `CLAUDE.md`.
+- Dependency direction: `app → features → core`. `core` never imports from `features` or `app`; features do not import from each other's internals.
+- UI does not know HTTP details: pages use query hooks, hooks use the feature's `*Api.ts`.
+- Only `core/api` knows the response envelope and HTTP status codes; features receive typed data or an `ApiError`.
+- Only `core/session` reads or writes tokens.
+- The app talks only to same-origin `/v3/api` and `/v3/ws`. Never call an absolute API URL, never call `/v2`.
 
-### Abstractions
+### Progressive Complexity
 
-Do not create interfaces or wrappers without concrete value. Prefer shadcn/ui's CLI to generate new `components/ui/` primitives rather than hand-writing them, for consistency.
+Start with the simplest structure that correctly represents the feature. Do not add layers, mappers, wrappers or dependencies preemptively.
 
 ---
 
-## Shared Code
+## UI Rules
 
-`lib/` here holds truly generic utilities (`cn()` and similar). Feature-specific logic belongs in its own domain folder (`queries/`, `pages/dashboard/`), not `lib/`.
+- Colors, typography and component defaults live in `core/ui/theme/`. No raw hex colors or font stacks in components.
+- Use MUI components and the `sx` prop; do not add another styling system.
+- User-facing text is Brazilian Portuguese, correctly accented.
+- Commands that act on physical equipment: disable the control while in flight, never retry automatically, honor `Retry-After`, and confirm destructive ones in a dialog.
+
+---
+
+## Error Handling
+
+- Never silently swallow errors.
+- Map backend errors to UI states by `error.type`, never by parsing `detail`.
+- Never show stack traces, tokens or internal identifiers to the user.
+
+---
+
+## Security
+
+- Never hardcode credentials or tokens. Everything prefixed `VITE_` ships in the bundle — never a secret.
+- Never log tokens, passwords or temporary passwords.
+- Staff-only data (CPF, phone, photos, TAG cache) stays in memory: no `localStorage`, no logs.
+- Treat everything from the server as untrusted input for rendering.
 
 ---
 
 ## Naming
 
-Prefer descriptive, domain-specific names. Avoid vague names like `helper.ts`, `common.ts` when a more specific name is possible.
+Predictable, domain-specific names: `GatesPage`, `exhaustApi`, `sessionStore`. Avoid `Manager`, `Helper`, `Utils`, `Common` when a specific name is possible. Domain vocabulary follows the workspace root `AGENTS.md` (unidade, prumada, vínculo, CIE...).
 
 ---
 
 ## Scope Discipline
 
-Keep changes focused on the requested task. Do not perform unrelated refactoring, rename unrelated files, or edit a backend's `v2/` as a side effect of a frontend change.
+Keep changes focused on the requested task. No unrelated refactoring, no new libraries without necessity, no architecture change as a side effect of a small feature.
+
+---
+
+## Comments
+
+Comments explain **why**, not **what**.
 
 ---
 
 ## Validation
 
-Before considering a change complete, run:
+Before considering a change complete:
 
 ```bash
 npm run lint
@@ -119,44 +139,9 @@ npm test
 npm run build
 ```
 
-All three are fast and catch most type/regression issues — run them before reporting a change as done.
+Test behavior, not implementation details. Never point automated tests at the real API — use a fake `fetch` with responses shaped like the v3 envelope.
 
----
-
-## Dependencies
-
-Before adding a new dependency, verify the requirement cannot reasonably be implemented with what is already installed. Prefer established, maintained libraries.
-
----
-
-## Comments
-
-Comments explain **why**, not **what**. Known gotchas (TanStack Query v5 generic cache typing, `next-themes` not exporting `ThemeProviderProps`) are already documented near the affected code — follow that pattern for new non-obvious constraints.
-
----
-
-## Error Handling
-
-- Never hardcode credentials or log tokens.
-- `VITE_*` env vars are embedded in the JS bundle and visible in DevTools — never put a real secret there. The real protection is Cloudflare Access at the edge.
-
----
-
-## Security
-
-Treat all external input as untrusted where relevant (forms via React Hook Form + Zod).
-
-Current auth (`VITE_AUTH_USER`/`VITE_AUTH_PASS`) is an operator selector, not real security — see `CLAUDE.md`. Do not reinforce the illusion of security in new code; real user authentication (Supabase Auth) is planned separately.
-
----
-
-## Before Creating a New File
-
-Ask:
-
-1. Does this represent a distinct responsibility?
-2. Could it remain coherently with existing code in the same domain folder?
-3. Does separation improve context locality?
+If a validation step cannot be run, state explicitly which one was skipped.
 
 ---
 
@@ -165,20 +150,14 @@ Ask:
 Verify:
 
 - the requested behavior is implemented;
-- no backend's `v2/` was touched;
-- `npm run lint` passes;
-- `npm test` passes;
-- `npm run build` passes;
-- CHANGELOG.md was updated (see the `commit` skill for the full flow).
+- changes stay within the right feature boundaries;
+- nothing in `../FRONT/` or in any backend was touched;
+- lint, tests and build pass;
+- `CHANGELOG.md` (`[Unreleased]`) was updated;
+- `CLAUDE.md` was updated if the project state or a hard rule changed.
 
 ---
 
 ## Primary Principle
 
-When choosing between two implementations, prefer the one that allows a future developer or agent to understand and modify the feature while loading the least amount of unrelated context.
-
-> Keep related code together.
-> Preserve meaningful boundaries.
-> Prefer explicit, simple structures.
-> Load context progressively.
-> Optimize for relevant context, not minimum file count.
+When choosing between two implementations, prefer the one that lets a future developer or agent understand and modify the feature while loading the least amount of unrelated context.

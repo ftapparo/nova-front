@@ -1,53 +1,43 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import { VitePWA } from "vite-plugin-pwa";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { readFileSync } from "node:fs";
+import { defineConfig } from "vitest/config";
+import { loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  define: {
-    "import.meta.env.BUILD_VERSION": JSON.stringify(process.env.BUILD_VERSION || "dev"),
-  },
-  server: {
-    host: "::",
-    port: 8080,
-    hmr: {
-      overlay: false,
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf-8")) as {
+  version: string;
+};
+
+export default defineConfig(({ mode }) => {
+  // Prefixo "" para ler V3_PROXY_TARGET, que não tem VITE_ de propósito:
+  // é configuração do servidor de desenvolvimento, não entra no bundle.
+  const env = loadEnv(mode, process.cwd(), "");
+  const proxyTarget = env.V3_PROXY_TARGET?.trim();
+
+  return {
+    define: {
+      "import.meta.env.APP_VERSION": JSON.stringify(version),
+      "import.meta.env.BUILD_VERSION": JSON.stringify(process.env.BUILD_VERSION || "dev"),
     },
-  },
-  plugins: [
-    react(),
-    mode === "development" && componentTagger(),
-    VitePWA({
-      strategies: "injectManifest",
-      srcDir: "src",
-      filename: "sw.ts",
-      registerType: "autoUpdate",
-      injectRegister: "auto",
-      includeAssets: [
-        "favicon.ico",
-        "icons/icon-192.png",
-        "icons/icon-512.png",
-      ],
-      manifest: false,
-      injectManifest: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        globIgnores: [
-          "favicon.ico",
-          "icons/icon-192.png",
-          "icons/icon-512.png",
-          "screenshots/*.png",
-        ],
-      },
-      devOptions: {
-        enabled: mode === "development",
-      },
-    }),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+    plugins: [react()],
+    resolve: {
+      tsconfigPaths: true,
     },
-  },
-}));
+    server: {
+      host: "::",
+      port: 8081,
+      // A v3 da nova-api não tem CORS: o navegador fala sempre com a própria
+      // origem e o /v3 (REST e WebSocket) é repassado. Em produção quem faz
+      // isso é o nginx do container.
+      proxy: proxyTarget
+        ? { "/v3": { target: proxyTarget, changeOrigin: true, ws: true } }
+        : undefined,
+    },
+    test: {
+      environment: "jsdom",
+      globals: true,
+      unstubGlobals: true,
+      setupFiles: ["./src/test/setup.ts"],
+      include: ["src/**/*.test.{ts,tsx}"],
+    },
+  };
+});
