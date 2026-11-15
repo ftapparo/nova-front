@@ -57,7 +57,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Telas prontas: **Contas** (`features/accounts`, antecipada da Fase 4), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`) e **Exaustores** (`features/exhaust`), da Fase 3; as demais ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+Fases 0 (fundação), 1 (API e sessão) e 2 (tempo real) concluídas: tema, layout, componentes base, cliente HTTP, sessão com refresh, login, troca de senha, recuperação de senha, guardas de rota, menu pelo papel da conta e conexão WebSocket com indicador na barra superior. Telas prontas: **Contas** (`features/accounts`, antecipada da Fase 4), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Exaustores** (`features/exhaust`) e **Central de Incêndio** (`features/fire`), da Fase 3; as demais ainda são placeholders. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
 
 Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, contas, vínculos, notificações) · 5 entrega (PWA, Docker, nginx).
 
@@ -102,6 +102,16 @@ Fases seguintes: 3 paridade com o painel atual · 4 menus novos (comunicados, co
 - "Ligando…"/"Desligando…" vêm de `processStatus = iniciando` + `command`. Desligar continua disponível com "Ligando…", para um comando travado não prender o relé ligado.
 - Manutenção (síndico/admin) só bloqueia ligar (409); não desliga quem já está ligado.
 - `expiresAt` do exaustor é epoch em **milissegundos**.
+
+## Central de Incêndio — regras
+
+- O backend interpreta cada evento: nunca ler `eventType` nem desmontar `deviceName`. Usar `event` (rótulo, natureza, gravidade) e `display` (cada dado no seu campo); local por `placeLabel`, que só junta os rótulos prontos.
+- A manchete é `situation` (`/cie/panel`). Cor por `severity`.
+- Ativos agora: `/cie/events/active`. Bloqueio não tem lista (a central não fornece): mostrar `/cie/counters/blocks`.
+- Histórico paginado por cursor (`nextCursor` dentro de `data`); "Só ocorrências" = `kind=ativacao`.
+- Qualquer evento `cie.*` recarrega painel, ativos e histórico pela REST (com espera de 500 ms para juntar a rajada), em vez de aplicar cada evento.
+- Comandos: os quatro do painel anterior (silenciar bip, silenciar/reativar sirenes pelo LED `sireneSilenciada`, alarme geral, reiniciar). Alarme geral e reinício passam por confirmação e mandam `confirm: true`. Bloqueio e saída por dispositivo não estão no painel.
+- `dataHora.timestamp` do painel é epoch em milissegundos.
 
 ## Tempo real — como usar
 
