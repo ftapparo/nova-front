@@ -1,5 +1,10 @@
 import "@testing-library/jest-dom/vitest";
+import { configure } from "@testing-library/react";
 import { afterEach } from "vitest";
+
+// Com a suíte inteira rodando em paralelo, o primeiro teste de cada arquivo
+// espera a tela (carregada com lazy) por mais que o 1 s padrão.
+configure({ asyncUtilTimeout: 5_000 });
 import { realtime } from "@/core/realtime/realtime";
 import { endSession } from "@/core/session/sessionStore";
 

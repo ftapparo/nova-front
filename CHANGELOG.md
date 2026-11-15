@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Alterado
+- Testes esperam até 5 s pela tela (`asyncUtilTimeout`) e até 20 s por teste: com a suíte em paralelo, a primeira tela carregada sob demanda em cada arquivo passava do prazo padrão de 1 s e o teste falhava de forma intermitente.
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado

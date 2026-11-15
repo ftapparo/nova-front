@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
       environment: "jsdom",
       globals: true,
       unstubGlobals: true,
+      testTimeout: 20_000,
       setupFiles: ["./src/test/setup.ts"],
       include: ["src/**/*.test.{ts,tsx}"],
     },

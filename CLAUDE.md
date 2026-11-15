@@ -51,6 +51,8 @@ Rodar `npm run gen:api` sempre que o contrato da v3 mudar; o arquivo gerado é v
 
 Antes de dar uma mudança por pronta: `npm run lint`, `npm test` e `npm run build`.
 
+Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a suíte em paralelo, a primeira tela carregada com `lazy()` em cada arquivo passa de 1 s.
+
 `npm run dev` com `V3_PROXY_TARGET` configurado fala com a **API real**. Não usar para "testar" comandos.
 
 ## Estado atual
