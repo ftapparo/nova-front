@@ -57,7 +57,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`) pronto; ainda são placeholders Notificações, Vínculos, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
+Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`) e **Vínculos** (`features/links`) prontos; ainda são placeholders Notificações, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
 Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
 
@@ -135,6 +135,13 @@ Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notifica
 - A lista (`GET /messages`) só traz os visíveis agora: agendado aparece quando chegar a data, e arquivado ou vencido some. A tela avisa isso ao agendar.
 - Fixado tem sempre tempo 0 no carrossel; para mudar o tempo, desafixar antes.
 - Datas do formulário (`datetime-local`) são no horário do computador e vão para a API em ISO.
+
+## Vínculos — regras
+
+- Vínculo = conta do aplicativo ligada a `PESSOAS.SEQUENCIA` do ERP; é o que dá acesso de morador. Uma pessoa, uma conta (409 se já tiver outra).
+- A API não informa o nome da pessoa no vínculo nem tem busca por número: a lista mostra o número do cadastro, e o nome aparece só ao vincular (busca por CPF).
+- "Sem vínculo" = contas sem vínculo e sem papel de equipe. O e-mail vem de `allAccountsQuery` (todas as páginas de `/auth/users`).
+- Autovínculo: `linkedBy` igual ao `accountId`.
 
 ## Tempo real — como usar
 
