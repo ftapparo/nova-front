@@ -13,7 +13,9 @@ const person = {
   cpf: "12345678900",
   telCelular: "11999990000",
   email: "fulano@exemplo.com",
-  alertaPortaria: "Encomendas só com o morador",
+  // Campos longos do ERP chegam como bytes (Buffer serializado), em Windows-1252.
+  alertaPortaria: { type: "Buffer", data: [..."Encomendas s"].map((char) => char.charCodeAt(0)).concat(0xf3, ...[..." com o morador"].map((char) => char.charCodeAt(0))) },
+  observacoes: { type: "Buffer", data: [] },
   foto: null,
 };
 

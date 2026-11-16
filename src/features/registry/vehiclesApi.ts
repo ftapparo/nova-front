@@ -1,4 +1,5 @@
 import { api } from "@/core/api/api";
+import { joinErpText } from "@/core/format/erpText";
 
 // Cadastro de veículos e TAG veicular no ERP. Campos em MAIÚSCULAS são
 // colunas do ERP, como a API entrega; ficam aqui, nunca na tela.
@@ -74,4 +75,4 @@ export function plateOwnedByOther(vehicle: Vehicle, ownerSeq: number, unitSeq: n
 }
 
 export const vehicleDescription = (vehicle: Pick<Vehicle, "MARCA" | "MODELO" | "COR">) =>
-  [vehicle.MARCA, vehicle.MODELO, vehicle.COR].filter(Boolean).join(" · ") || "Sem marca, modelo e cor";
+  joinErpText([vehicle.MARCA, vehicle.MODELO, vehicle.COR], " · ") || "Sem marca, modelo e cor";

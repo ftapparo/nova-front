@@ -6,6 +6,7 @@ import RecoverPasswordPage from "@/features/auth/RecoverPasswordPage";
 import AppLayout from "./AppLayout";
 import NotFoundPage from "./NotFoundPage";
 import PlaceholderPage from "./PlaceholderPage";
+import RouteErrorPage from "./RouteErrorPage";
 import { PublicOnly, RequireRole, RequireSession, RequireStaff } from "./RouteGuards";
 import { navigation } from "./navigation";
 
@@ -31,7 +32,9 @@ const menuRoutes: RouteObject[] = navigation.flatMap((section) =>
     const element = (
       <RequireRole roles={item.roles}>{Page ? <Page /> : <PlaceholderPage title={item.title} />}</RequireRole>
     );
-    return item.path === "/" ? { index: true, element } : { path: item.path, element };
+    // errorElement por tela: um erro numa tela mantém o menu e as demais funcionando.
+    const errorElement = <RouteErrorPage />;
+    return item.path === "/" ? { index: true, element, errorElement } : { path: item.path, element, errorElement };
   }),
 );
 

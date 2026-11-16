@@ -18,9 +18,10 @@ export interface Person {
   classificacao?: string | null;
   empresa?: string | null;
   funcao?: string | null;
-  observacoes?: string | null;
+  /** Texto longo do ERP: pode chegar como bytes. Ler com `erpText`. */
+  observacoes?: unknown;
   /** Aviso cadastrado para a portaria ver ao atender esta pessoa. */
-  alertaPortaria?: string | null;
+  alertaPortaria?: unknown;
   prop?: Flag;
   loc?: Flag;
   mor?: Flag;

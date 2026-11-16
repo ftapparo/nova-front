@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Corrigido
+- Consultas e Veículos quebravam a tela ("person.alertaPortaria?.trim is not a function") ao mostrar uma pessoa: aviso para a portaria e observações são campos de texto longo do ERP e chegam da API como bytes, não como texto. Todo texto do ERP nessas telas passa a ser lido por `erpText`, que aceita texto, número ou bytes (UTF-8 ou Windows-1252).
+- Erro inesperado numa tela mostrava a página técnica do React Router; agora cada tela mostra uma mensagem do painel com "Recarregar", mantendo o menu, e o detalhe vai só para o console.
+
 ### Alterado
 - Testes esperam até 5 s pela tela (`asyncUtilTimeout`) e até 20 s por teste: com a suíte em paralelo, a primeira tela carregada sob demanda em cada arquivo passava do prazo padrão de 1 s e o teste falhava de forma intermitente.
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.

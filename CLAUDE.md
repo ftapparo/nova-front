@@ -57,7 +57,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`, antecipada da Fase 4). Ainda são placeholders os menus da Fase 4: Comunicados, Notificações, Vínculos, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`.
+Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`, antecipada da Fase 4). Ainda são placeholders os menus da Fase 4: Comunicados, Notificações, Vínculos, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
 Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
 
@@ -121,6 +121,7 @@ Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notifica
 - Placa já ligada a outro proprietário ou unidade é recusada antes da busca externa (`plateOwnedByOther`). A busca externa (`/vehicles/plate/lookup`) é lenta e limitada a 5 por minuto; se falhar, a portaria digita marca, modelo e cor.
 - TAG: 10 dígitos, validada no portão de entrada, com o CPF do proprietário. 409 com título "Confirmação necessária" pede confirmação e reenvia com `forceSwap: true`.
 - CPF, placa e TAG: formatação em `core/format/documents.ts`.
+- **Campos de texto longo do ERP chegam como bytes** (`{ type: "Buffer", data: [...] }`), não como texto: observações, aviso para a portaria e afins. Todo texto do ERP exibido passa por `erpText`/`joinErpText` (`core/format/erpText.ts`), que lê texto, número ou bytes (UTF-8, ou Windows-1252 se não for UTF-8 válido). Nunca chamar `.trim()` ou renderizar campo do ERP sem passar por ele.
 
 ## Painel Operacional — regras
 
