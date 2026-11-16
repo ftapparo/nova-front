@@ -72,3 +72,22 @@ export const openDoor = (id: number) => api.post<{ id: number; nome: string; por
 /** Sentido cadastrado do portão; qualquer coisa que não seja saída conta como entrada. */
 export const gateSentido = (gate: Pick<Gate, "sentido">): Sentido =>
   gate.sentido.trim().toUpperCase() === "S" ? "S" : "E";
+
+// Cache de TAGs de cada antena: as já conferidas ficam guardadas por um
+// tempo (liberadas 5 min, recusadas 1 min) para o portão abrir sem
+// consultar o ERP de novo. Tem dado de morador: nunca guardar no navegador.
+
+export type TagCacheList = components["schemas"]["ListCacheData"];
+export type TagCacheItem = components["schemas"]["TagCacheItem"];
+export type TagCacheFilter = "all" | "positive" | "negative";
+
+export const fetchTagCache = (numeroDispositivo: number, type: TagCacheFilter, signal?: AbortSignal) =>
+  api.get<TagCacheList>("/tag/cache", { query: { numeroDispositivo, type }, signal });
+
+/** Só síndico/admin. */
+export const clearTagCache = (numeroDispositivo: number, type: TagCacheFilter) =>
+  api.delete<{ type: TagCacheFilter; stats: TagCacheList["stats"] }>("/tag/cache", undefined, { query: { numeroDispositivo, type } });
+
+/** Só síndico/admin: a próxima leitura dessa TAG volta a consultar o ERP. */
+export const removeTagFromCache = (numeroDispositivo: number, tag: string) =>
+  api.delete<{ tag: string }>(`/tag/cache/${encodeURIComponent(tag)}`, undefined, { query: { numeroDispositivo } });

@@ -14,6 +14,9 @@ import SectionCard from "@/core/ui/components/SectionCard";
 import StatusChip from "@/core/ui/components/StatusChip";
 import PageContainer from "@/core/ui/layout/PageContainer";
 import PageHeader from "@/core/ui/layout/PageHeader";
+import ModuleConfigCard from "./components/ModuleConfigCard";
+import TagCacheCard from "./components/TagCacheCard";
+import { useSession } from "@/core/session/useSession";
 import { exhaustsQuery, groupExhaustModules } from "@/features/exhaust/exhaustApi";
 import { panelQuery } from "@/features/fire/fireApi";
 import { doorsListQuery, doorsStatusQuery, gatesListQuery, gatesStatusQuery } from "@/features/gates/gatesApi";
@@ -89,6 +92,8 @@ export default function DevicesPage() {
   const doorsStatus = useQuery({ ...doorsStatusQuery, refetchInterval });
   const exhausts = useQuery({ ...exhaustsQuery, refetchInterval });
   const panel = useQuery({ ...panelQuery, refetchInterval });
+  const role = useSession()?.user.role;
+  const activeGates = (gates.data ?? []).filter((gate) => gate.ativo);
 
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -106,9 +111,7 @@ export default function DevicesPage() {
   useRealtimeEvent("upstream.connection.changed", refresh);
 
   const gateOnline = new Map(gatesStatus.data?.gates.map((gate) => [gate.numeroDispositivo, gate.online]));
-  const gateRows: DeviceRow[] = (gates.data ?? [])
-    .filter((gate) => gate.ativo)
-    .map((gate) => ({
+  const gateRows: DeviceRow[] = activeGates.map((gate) => ({
       key: gate.numeroDispositivo,
       name: gate.nome,
       detail: `Portão · dispositivo ${gate.numeroDispositivo}`,
@@ -141,7 +144,7 @@ export default function DevicesPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Equipamentos" subtitle="Comunicação de portões, portas, exaustores e central de incêndio com a API." />
+      <PageHeader title="Equipamentos" subtitle="Comunicação dos equipamentos com a API, cache de TAGs das antenas e configuração de módulos." />
       <Box sx={{ display: "grid", gap: 3, gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" } }}>
         <DeviceSection
           title="Portões"
@@ -185,6 +188,9 @@ export default function DevicesPage() {
           </Typography>
         </Stack>
       </Box>
+
+      {activeGates.length > 0 && <TagCacheCard gates={activeGates} canManage={role === "sindico" || role === "admin"} />}
+      {role === "admin" && <ModuleConfigCard />}
     </PageContainer>
   );
 }

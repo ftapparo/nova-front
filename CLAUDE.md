@@ -58,9 +58,9 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`), **Vínculos** (`features/links`) , **Reset de senha** (`features/accounts/ResetPasswordPage.tsx`), **Notificações** (`features/notifications`) e **Minha conta** (`features/account`) prontos. Faltam a configuração de módulo de exaustor (admin) e o cache de TAGs. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
+Fases 0 a 4 concluídas: fundação, API e sessão, tempo real, paridade com o painel atual e menus novos. Todas as telas do menu estão prontas: Painel Operacional, Portões e Portas, Acessos, Consultas, Veículos, Exaustores, Central de Incêndio, Comunicados, Notificações, Contas, Vínculos, Reset de senha, Histórico de comandos, Equipamentos (com cache de TAGs e configuração de módulo) e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
-Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
+Fase seguinte: 5 entrega (manifesto do PWA, Docker, nginx com proxy `/v3` e CSP, subdomínio). Itens abertos e decisões pendentes ficam em `../CHECKLIST-FRONT-V3.md`.
 
 ## API e sessão — como usar
 
@@ -156,6 +156,11 @@ Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notifica
 - `core/push/webPush.ts`: a inscrição é da conta logada. `signOut` tira o navegador **antes** do `/auth/logout` (precisa do token); no login, `useResumePush` reinscreve sem perguntar se a permissão já foi dada. Pedir permissão só a partir de clique (`PushBrowserCard`).
 - O service worker converte os endereços antigos que a central manda (`/dashboard/incendio`) para os do painel novo (`/incendio`).
 - "Aviso para a equipe" (síndico/admin) usa `/push/send`; "Teste no aplicativo" usa `/notifications/test` (aparelhos da própria conta). O teste do alarme por aparelho (`/notifications/test/fire-alarm`) não está no painel: exige o identificador da instalação do app.
+
+## Equipamentos — cache de TAGs e módulos
+
+- Cache de TAGs (`/tag/cache`, por antena): toda a equipe consulta; síndico/admin removem uma TAG ou limpam (com confirmação). Tem dado de morador: consulta com `gcTime: 0`. Tempos de guarda vêm em ms no `stats` (liberada 5 min, recusada 1 min).
+- Configuração de módulo (`/exhausts/modules/{modulo}/config`): só admin, comando backlog do Tasmota já codificado para URL, com confirmação; a resposta do módulo é mostrada como veio.
 
 ## Tempo real — como usar
 

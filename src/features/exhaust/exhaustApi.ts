@@ -84,3 +84,14 @@ export function groupExhaustModules(exhausts: Exhaust[]): ExhaustModule[] {
   }
   return [...modules.values()].sort((a, b) => a.id.localeCompare(b.id, "pt-BR"));
 }
+
+/** Módulos Tasmota aceitos pela API (relés dos exaustores e fontes). */
+export const EXHAUST_MODULE_IDS = ["A_14", "A_58", "B_14", "B_58", "C_14", "C_58", "PWR_14", "PWR_58"] as const;
+export type ExhaustModuleId = (typeof EXHAUST_MODULE_IDS)[number];
+
+/**
+ * Comando direto ao módulo (backlog do Tasmota, já codificado para URL).
+ * Só admin. A resposta é a do próprio módulo, sem formato fixo.
+ */
+export const configureExhaustModule = (modulo: ExhaustModuleId, comando: string) =>
+  api.post<unknown>(`/exhausts/modules/${modulo}/config`, { comando });
