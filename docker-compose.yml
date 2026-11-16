@@ -1,0 +1,30 @@
+services:
+  front-v3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nova-front-v3
+    # Porta no servidor, ao lado do painel atual (nova-front, 8080). Ajustável
+    # na stack do Portainer com FRONT_V3_PORT.
+    ports:
+      - "${FRONT_V3_PORT:-8081}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Mesma rede da nova-api: o nginx repassa /v3 para nova-api:3031.
+    networks:
+      - nova-network
+
+networks:
+  nova-network:
+    external: true
+    name: nova-network

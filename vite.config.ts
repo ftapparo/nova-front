@@ -22,14 +22,38 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       // Service worker próprio (src/sw/sw.ts): precache do build e Web Push.
-      // O manifesto do app instalável fica para a entrega (Fase 5).
+      // O manifesto torna o painel instalável (atalho na área de trabalho da portaria).
       VitePWA({
         strategies: "injectManifest",
         srcDir: "src/sw",
         filename: "sw.ts",
         registerType: "autoUpdate",
         injectRegister: "auto",
-        manifest: false,
+        // O Cloudflare Access protege o painel: sem o cookie dele, o pedido do
+        // manifesto seria redirecionado para o login e bloqueado.
+        useCredentials: true,
+        manifest: {
+          id: "/",
+          name: "Nova Residence - Portal Administrativo",
+          short_name: "Nova Residence",
+          description: "Portal Administrativo para Portaria e Zeladoria",
+          lang: "pt-BR",
+          start_url: "/",
+          scope: "/",
+          display: "standalone",
+          theme_color: "#4b1e74",
+          background_color: "#f5f6fc",
+          icons: [
+            { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+            { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          ],
+          shortcuts: [
+            { name: "Portões e Portas", url: "/portoes-portas" },
+            { name: "Central de Incêndio", url: "/incendio" },
+            { name: "Acessos", url: "/acessos" },
+          ],
+        },
         injectManifest: { globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"], globIgnores: ["background-nova-residence.png"] },
         // Em desenvolvimento o service worker também roda, para testar o push.
         devOptions: { enabled: true, type: "module" },

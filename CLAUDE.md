@@ -58,9 +58,9 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 a 4 concluídas: fundação, API e sessão, tempo real, paridade com o painel atual e menus novos. Todas as telas do menu estão prontas: Painel Operacional, Portões e Portas, Acessos, Consultas, Veículos, Exaustores, Central de Incêndio, Comunicados, Notificações, Contas, Vínculos, Reset de senha, Histórico de comandos, Equipamentos (com cache de TAGs e configuração de módulo) e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
+Fases 0 a 5 concluídas: fundação, API e sessão, tempo real, paridade com o painel atual, menus novos e entrega (Docker, nginx, PWA). Todas as telas do menu estão prontas: Painel Operacional, Portões e Portas, Acessos, Consultas, Veículos, Exaustores, Central de Incêndio, Comunicados, Notificações, Contas, Vínculos, Reset de senha, Histórico de comandos, Equipamentos (com cache de TAGs e configuração de módulo) e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
-Fase seguinte: 5 entrega (manifesto do PWA, Docker, nginx com proxy `/v3` e CSP, subdomínio). Itens abertos e decisões pendentes ficam em `../CHECKLIST-FRONT-V3.md`.
+Falta só a implantação no servidor (stack no Portainer, hostname e Access no Cloudflare), que é do usuário — passo a passo no `README.md`. Itens abertos e decisões pendentes ficam em `../CHECKLIST-FRONT-V3.md`.
 
 ## API e sessão — como usar
 
@@ -181,4 +181,5 @@ Fase seguinte: 5 entrega (manifesto do PWA, Docker, nginx com proxy `/v3` e CSP,
 - Papel: `user.role` pode ser `porteiro`, `sindico`, `admin`, `morador` ou `null`. Só os três primeiros entram no painel (`staffRoleOf`); os demais veem a tela "Painel de uso da equipe".
 - Texto para o usuário em português do Brasil, com acentuação.
 - Termo de Uso e Política de Privacidade são do aplicativo dos moradores (Google Play). O painel é interno da equipe: não pede aceite e ignora `mustAcceptTerms` (decisão de 15/11/2026).
-- Dockerfile (Fase 5): usar `npm install`, não `npm ci` — o `npm ci` falha no build do Portainer do servidor.
+- Dockerfile: usar `npm install`, não `npm ci` — o `npm ci` falha no build do Portainer do servidor.
+- nginx: todo `location` com `add_header` próprio precisa de `include /etc/nginx/snippets/security-headers.conf;` — um `add_header` no location descarta os do server, e a CSP sumiria.
