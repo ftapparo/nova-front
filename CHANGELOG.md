@@ -11,6 +11,8 @@
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado
+- Tela **Minha conta** (Fase 4, toda a equipe): e-mail e perfil, trocar senha, sair, tema deste navegador, alertas neste navegador e as preferências das notificações do aplicativo da própria conta (alertas da central além do alarme, comunicado novo, avisos do exaustor). "Minha conta" também no menu do usuário.
+- Painel Operacional lembra de ativar os alertas de incêndio quando estão desativados ou bloqueados neste navegador.
 - Tela **Notificações** (Fase 4, síndico/admin): alertas neste navegador (ativar e desativar o Web Push que recebe alarme e falha da central e os avisos à equipe), aviso para a equipe com confirmação e o resultado da entrega, e teste nos aparelhos do aplicativo da própria conta.
 - Service worker (`src/sw/sw.ts`, `vite-plugin-pwa`) com precache do build e Web Push, antecipado da Fase 5 porque os alertas dependem dele. Clicar na notificação abre o painel na tela indicada (Central de Incêndio por padrão), convertendo os endereços antigos que a central ainda envia.
 - Os alertas do navegador seguem a conta: saem no logout e voltam sozinhos no login quando a permissão já foi dada, como no painel anterior.

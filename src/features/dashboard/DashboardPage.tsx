@@ -20,6 +20,7 @@ import { panelQuery, SEVERITY_TONE } from "@/features/fire/fireApi";
 import { doorsListQuery, doorsStatusQuery, gatesListQuery, gatesStatusQuery } from "@/features/gates/gatesApi";
 import ActivityCard, { type ActivityItem } from "./components/ActivityCard";
 import EditShortcutsDialog, { type Equipment } from "./components/EditShortcutsDialog";
+import PushReminder from "./components/PushReminder";
 import ShortcutButton from "./components/ShortcutButton";
 import SummaryTiles, { type Tile } from "./components/SummaryTiles";
 import { sanitizeShortcuts, SHORTCUTS_SETTING, type Shortcut } from "./shortcuts";
@@ -143,6 +144,7 @@ export default function DashboardPage() {
   return (
     <PageContainer>
       <PageHeader title="Painel Operacional" subtitle="Situação do condomínio e acesso rápido aos equipamentos." />
+      <PushReminder />
       <SummaryTiles tiles={tiles} />
 
       <SectionCard

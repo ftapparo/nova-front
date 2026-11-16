@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link as RouterLink } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
@@ -11,6 +12,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import AccountCircleOutlined from "@mui/icons-material/AccountCircleOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
+import ManageAccountsOutlined from "@mui/icons-material/ManageAccountsOutlined";
 import { STAFF_ROLE_LABEL, staffRoleOf } from "@/core/session/roles";
 import { signOut } from "@/core/session/sessionActions";
 import { useSession } from "@/core/session/useSession";
@@ -42,6 +44,12 @@ export default function UserMenu() {
           )}
         </Box>
         <Divider />
+        <MenuItem component={RouterLink} to="/conta" onClick={() => setAnchor(null)}>
+          <ListItemIcon>
+            <ManageAccountsOutlined fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Minha conta</ListItemText>
+        </MenuItem>
         <MenuItem disabled={logout.isPending} onClick={() => logout.mutate()}>
           <ListItemIcon>
             <LogoutOutlined fontSize="small" />
