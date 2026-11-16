@@ -38,9 +38,17 @@ export const allAccountsQuery = queryOptions({
 export const createAccount = (input: { email: string; password: string; role: StaffRole }) =>
   api.post<Account>("/auth/users", input);
 
-/** Gera uma senha provisória; a pessoa é obrigada a trocá-la no próximo login. */
+/**
+ * Gera uma senha provisória; a pessoa é obrigada a trocá-la no próximo login.
+ * Hierarquia: porteiro reseta morador, síndico reseta morador e porteiro,
+ * admin reseta qualquer conta (403 fora disso).
+ */
 export const resetAccountPassword = (accountId: string) =>
   api.post<TemporaryPassword>("/auth/password/staff-reset", { accountId });
+
+/** Reset pela pessoa do cadastro: vale para a conta vinculada a ela (404 se não houver). */
+export const resetPersonPassword = (personSequencia: number) =>
+  api.post<TemporaryPassword>("/auth/password/staff-reset", { personSequencia });
 
 /** `null` tira o papel: a conta volta a ser comum. */
 export const updateAccountRole = (accountId: string, role: StaffRole | null) =>

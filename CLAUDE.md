@@ -57,7 +57,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`) e **Vínculos** (`features/links`) prontos; ainda são placeholders Notificações, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
+Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`), **Vínculos** (`features/links`) e **Reset de senha** (`features/accounts/ResetPasswordPage.tsx`) prontos; ainda são placeholders Notificações e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
 Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
 
@@ -142,6 +142,12 @@ Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notifica
 - A API não informa o nome da pessoa no vínculo nem tem busca por número: a lista mostra o número do cadastro, e o nome aparece só ao vincular (busca por CPF).
 - "Sem vínculo" = contas sem vínculo e sem papel de equipe. O e-mail vem de `allAccountsQuery` (todas as páginas de `/auth/users`).
 - Autovínculo: `linkedBy` igual ao `accountId`.
+
+## Reset de senha — regras
+
+- Parte do CPF do morador (`/queries/cpf` → `POST /auth/password/staff-reset { personSequencia }`), porque o porteiro não lista contas. 404 = pessoa sem conta vinculada.
+- Hierarquia da API: porteiro reseta morador; síndico, morador e porteiro; admin, qualquer conta. 403 vira "Seu perfil não pode resetar a senha desta conta".
+- A senha provisória aparece uma vez, só no diálogo (`ResetPasswordDialog`, o mesmo da tela Contas), e some ao fechar.
 
 ## Tempo real — como usar
 

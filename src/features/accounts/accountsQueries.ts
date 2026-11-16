@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { StaffRole } from "@/core/session/roles";
-import { createAccount, deleteAccount, listAccounts, resetAccountPassword, updateAccountRole } from "./accountsApi";
+import { createAccount, deleteAccount, listAccounts, updateAccountRole } from "./accountsApi";
 
 const ACCOUNTS_KEY = ["accounts"] as const;
 
@@ -20,9 +20,6 @@ export const useCreateAccount = () => {
   const invalidate = useInvalidateAccounts();
   return useMutation({ mutationFn: createAccount, onSuccess: invalidate });
 };
-
-// Sem invalidar a lista: a senha provisória não muda nada do que ela mostra.
-export const useResetAccountPassword = () => useMutation({ mutationFn: resetAccountPassword });
 
 export const useUpdateAccountRole = () => {
   const invalidate = useInvalidateAccounts();

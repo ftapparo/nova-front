@@ -26,6 +26,7 @@ const pages: Record<string, LazyExoticComponent<ComponentType>> = {
   "/equipamentos": lazy(() => import("@/features/devices/DevicesPage")),
   "/comunicados": lazy(() => import("@/features/messages/MessagesPage")),
   "/vinculos": lazy(() => import("@/features/links/LinksPage")),
+  "/reset-senha": lazy(() => import("@/features/accounts/ResetPasswordPage")),
 };
 
 const menuRoutes: RouteObject[] = navigation.flatMap((section) =>

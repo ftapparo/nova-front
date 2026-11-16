@@ -21,7 +21,7 @@ import StatusChip from "@/core/ui/components/StatusChip";
 import { useNotify } from "@/core/ui/components/useNotify";
 import PageContainer from "@/core/ui/layout/PageContainer";
 import PageHeader from "@/core/ui/layout/PageHeader";
-import { ACCOUNTS_PER_PAGE, type Account } from "./accountsApi";
+import { ACCOUNTS_PER_PAGE, resetAccountPassword, type Account } from "./accountsApi";
 import { canManageAccount, grantableRoles, roleLabel } from "./accountRules";
 import { useAccounts, useDeleteAccount } from "./accountsQueries";
 import AccountActionsMenu, { type AccountAction } from "./components/AccountActionsMenu";
@@ -141,7 +141,13 @@ export default function AccountsPage() {
       )}
 
       {dialog?.kind === "create" && <CreateAccountDialog roles={roles} onClose={closeDialog} />}
-      {dialog?.kind === "reset-password" && <ResetPasswordDialog account={dialog.account} onClose={closeDialog} />}
+      {dialog?.kind === "reset-password" && (
+        <ResetPasswordDialog
+          targetLabel={dialog.account.email ?? "a conta"}
+          reset={() => resetAccountPassword(dialog.account.id)}
+          onClose={closeDialog}
+        />
+      )}
       {dialog?.kind === "change-role" && <ChangeRoleDialog account={dialog.account} roles={roles} onClose={closeDialog} />}
       {dialog?.kind === "delete" && (
         <ConfirmDialog
