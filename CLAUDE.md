@@ -57,7 +57,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`, antecipada da Fase 4). Ainda são placeholders os menus da Fase 4: Comunicados, Notificações, Vínculos, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
+Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`) pronto; ainda são placeholders Notificações, Vínculos, Reset de senha e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
 Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
 
@@ -128,6 +128,13 @@ Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notifica
 - Resumo da central, equipamentos fora do ar e exaustores ligados, com as mesmas consultas (`queryOptions`) das telas de cada assunto.
 - Atalhos por conta em `/me/settings`, chave `painel.atalhos` (JSON), via `useSetting` (`core/settings/userSettings.ts`). O PUT substitui todas as preferências: `useSetting` relê do servidor e mescla antes de gravar, para não apagar as do aplicativo.
 - Atalho de porta abre direto; atalho de portão leva a `/portoes-portas?portao=N`, porque a abertura exige a conferência do CPF.
+
+## Comunicados — regras
+
+- São os mesmos comunicados do aplicativo dos moradores. Toda a equipe lê; publicar, fixar, mudar o tempo no carrossel e arquivar são de síndico/admin.
+- A lista (`GET /messages`) só traz os visíveis agora: agendado aparece quando chegar a data, e arquivado ou vencido some. A tela avisa isso ao agendar.
+- Fixado tem sempre tempo 0 no carrossel; para mudar o tempo, desafixar antes.
+- Datas do formulário (`datetime-local`) são no horário do computador e vão para a API em ISO.
 
 ## Tempo real — como usar
 

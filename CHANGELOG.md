@@ -11,6 +11,7 @@
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado
+- Tela **Comunicados** (Fase 4): comunicados do condomínio com categoria, etiqueta, datas e situação no carrossel do aplicativo, com "Ler tudo" e "Carregar mais". Síndico/admin publicam (categoria, etiqueta, título, texto, agendamento, validade, fixar ou horas no carrossel, aviso pelo aplicativo), fixam e desafixam, mudam o tempo no carrossel e arquivam, com confirmação.
 - **Painel Operacional** (Fase 3), a tela inicial: resumo da central de incêndio, dos equipamentos fora do ar e dos exaustores ligados (cada bloco leva à tela do assunto); atalhos por conta, gravados nas preferências da conta sem apagar as do aplicativo (porta abre direto, portão leva à conferência do CPF com ele já escolhido); últimas passagens e últimos comandos. Atualiza pelo tempo real.
 - Preferências da conta (`/me/settings`) em `core/settings/userSettings.ts` (`useSetting`), com as chaves do painel no prefixo `painel.`.
 - Portões e Portas aceita `?portao=N` para abrir com o portão já escolhido.
