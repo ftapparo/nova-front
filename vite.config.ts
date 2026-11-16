@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { defineConfig } from "vitest/config";
 import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf-8")) as {
   version: string;
@@ -18,7 +19,22 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.APP_VERSION": JSON.stringify(version),
       "import.meta.env.BUILD_VERSION": JSON.stringify(process.env.BUILD_VERSION || "dev"),
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      // Service worker próprio (src/sw/sw.ts): precache do build e Web Push.
+      // O manifesto do app instalável fica para a entrega (Fase 5).
+      VitePWA({
+        strategies: "injectManifest",
+        srcDir: "src/sw",
+        filename: "sw.ts",
+        registerType: "autoUpdate",
+        injectRegister: "auto",
+        manifest: false,
+        injectManifest: { globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"], globIgnores: ["background-nova-residence.png"] },
+        // Em desenvolvimento o service worker também roda, para testar o push.
+        devOptions: { enabled: true, type: "module" },
+      }),
+    ],
     resolve: {
       tsconfigPaths: true,
     },

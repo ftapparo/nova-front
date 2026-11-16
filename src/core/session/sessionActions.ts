@@ -1,5 +1,6 @@
 import { api } from "@/core/api/api";
 import { sendRequest } from "@/core/api/http";
+import { disablePush } from "@/core/push/webPush";
 import {
   endSession,
   getSession,
@@ -17,6 +18,9 @@ export async function signIn(email: string, password: string): Promise<Session> 
 
 export async function signOut(): Promise<void> {
   try {
+    // Antes do logout, que ainda tem o token: este navegador para de receber
+    // os alertas da conta que está saindo.
+    await disablePush().catch(() => {});
     if (getSession()) await api.post("/auth/logout");
   } catch {
     // O logout no servidor só revoga o refresh token. Se a chamada falhar, a

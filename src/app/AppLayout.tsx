@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Outlet } from "react-router";
 import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
+import { useResumePush } from "@/core/push/usePush";
 import { useRealtimeConnection } from "@/core/realtime/useRealtime";
 import { staffRoleOf } from "@/core/session/roles";
 import { useSession } from "@/core/session/useSession";
@@ -17,6 +18,7 @@ export default function AppLayout() {
   // Liga o tempo real só dentro do painel: telas de login e de senha
   // provisória não têm o que receber.
   useRealtimeConnection();
+  useResumePush();
 
   return (
     <AppShell

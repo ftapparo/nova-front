@@ -33,7 +33,8 @@ Commit e push feitos em `FRONT_V3/` vão para `nova-versao`. Não trocar de bran
 - **TanStack Query v5** para dados e mutations
 - **React Hook Form + Zod 4** para formulários
 - **Vitest + Testing Library**
-- A entrar nas próximas fases, só quando forem usados: MUI X (Data Grid, Date Pickers), `vite-plugin-pwa`.
+- `vite-plugin-pwa` com service worker próprio (`src/sw/sw.ts`, `injectManifest`): precache do build e Web Push. Tipado à parte em `tsconfig.sw.json` (lib WebWorker). O manifesto do app instalável fica para a Fase 5.
+- A entrar só quando forem usados: MUI X (Data Grid, Date Pickers).
 
 TypeScript fica em `~6.0` enquanto o `typescript-eslint` não aceitar a 7. O `openapi-typescript` exige TypeScript 5, por isso roda via `npx` (`npm run gen:api`) e não é dependência do projeto.
 
@@ -57,7 +58,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 ## Estado atual
 
-Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`), **Vínculos** (`features/links`) e **Reset de senha** (`features/accounts/ResetPasswordPage.tsx`) prontos; ainda são placeholders Notificações e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
+Fases 0 (fundação), 1 (API e sessão), 2 (tempo real) e 3 (paridade com o painel atual) concluídas. Telas prontas: **Painel Operacional** (`features/dashboard`), **Portões e Portas** (`features/gates`), **Acessos** (`features/access`), **Consultas** e **Veículos** (`features/registry`), **Exaustores** (`features/exhaust`), **Central de Incêndio** (`features/fire`), **Histórico de comandos** (`features/commandLog`), **Equipamentos** (`features/devices`) e **Contas** (`features/accounts`). Fase 4 em andamento: **Comunicados** (`features/messages`), **Vínculos** (`features/links`) , **Reset de senha** (`features/accounts/ResetPasswordPage.tsx`) e **Notificações** (`features/notifications`) prontos; ainda é placeholder Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
 Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notificações, minha conta, cache de TAGs, configuração de módulo) · 5 entrega (PWA, Docker, nginx).
 
@@ -148,6 +149,13 @@ Fases seguintes: 4 menus novos (comunicados, vínculos, reset de senha, notifica
 - Parte do CPF do morador (`/queries/cpf` → `POST /auth/password/staff-reset { personSequencia }`), porque o porteiro não lista contas. 404 = pessoa sem conta vinculada.
 - Hierarquia da API: porteiro reseta morador; síndico, morador e porteiro; admin, qualquer conta. 403 vira "Seu perfil não pode resetar a senha desta conta".
 - A senha provisória aparece uma vez, só no diálogo (`ResetPasswordDialog`, o mesmo da tela Contas), e some ao fechar.
+
+## Notificações e Web Push — regras
+
+- Web Push é dos navegadores do painel (equipe): a central de incêndio avisa alarme e falha por `/push/send`. Moradores recebem pelo aplicativo (FCM), não por aqui.
+- `core/push/webPush.ts`: a inscrição é da conta logada. `signOut` tira o navegador **antes** do `/auth/logout` (precisa do token); no login, `useResumePush` reinscreve sem perguntar se a permissão já foi dada. Pedir permissão só a partir de clique (`PushBrowserCard`).
+- O service worker converte os endereços antigos que a central manda (`/dashboard/incendio`) para os do painel novo (`/incendio`).
+- "Aviso para a equipe" (síndico/admin) usa `/push/send`; "Teste no aplicativo" usa `/notifications/test` (aparelhos da própria conta). O teste do alarme por aparelho (`/notifications/test/fire-alarm`) não está no painel: exige o identificador da instalação do app.
 
 ## Tempo real — como usar
 
