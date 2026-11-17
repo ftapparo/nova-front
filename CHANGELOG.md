@@ -12,6 +12,7 @@
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado
+- Central de Incêndio: bloquear e desbloquear dispositivo, zona ou regra e ativar e desativar saída (sirene, saída, atuador), só para admin (decisão de 16/11/2026). O alvo é escolhido pelo nome no cadastro da central, cada envio pede confirmação e nunca se repete sozinho.
 - Portões e Portas: cada pessoa pode dar nome próprio às portas de pedestre (o cadastro continua visível ao lado). O nome fica nas preferências da conta, no banco, vale em qualquer computador e aparece também nos atalhos do Painel Operacional.
 - Entrega (Fase 5): Dockerfile (Node 22, `npm install`, sem variáveis de build), `docker-compose.yml` com o container `nova-front-v3` na `nova-network` (porta `FRONT_V3_PORT`, padrão 8081) e nginx que repassa `/v3/` e `/v3/ws` (WebSocket) para `nova-api:3031`, resolvendo o nome a cada requisição para subir mesmo com a API fora do ar. CSP e cabeçalhos de segurança em todas as respostas, inclusive nos locations com cache próprio. Passo a passo de implantação no README.
 - Manifesto do PWA: o painel pode ser instalado, com ícones, cor da marca e atalhos para Portões e Portas, Central de Incêndio e Acessos (com o cookie do Cloudflare Access no pedido do manifesto).

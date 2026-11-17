@@ -61,6 +61,32 @@ export const sendButtonCommand = (action: ButtonAction) =>
     NEEDS_CONFIRM.has(action) ? { confirm: true } : {},
   );
 
+// Bloqueio na central: códigos de tipo do protocolo Intelbras (ProgramadorCIE).
+// Sirene, saída e atuador são bloqueados como dispositivo. O bloqueio de
+// laço inteiro existe no protocolo, mas não é oferecido no painel.
+export const BLOCK_TYPE = { dispositivo: 0, zona: 1, regra: 2 } as const;
+export type BlockTarget = keyof typeof BLOCK_TYPE;
+
+/**
+ * Bloqueia ou desbloqueia na central. Dispositivo: laço + endereço; zona e
+ * regra: só o número. Só admin no painel (decisão de 16/11/2026).
+ */
+export const sendBlockCommand = (input: { target: BlockTarget; laco: number; numero: number; bloquear: boolean }) =>
+  api.post<{ action: string; snapshot: unknown }>("/cie/commands/block", {
+    tipoBloqueio: BLOCK_TYPE[input.target],
+    laco: input.laco,
+    numero: input.numero,
+    bloquear: input.bloquear ? 1 : 0,
+  });
+
+/** Ativa ou desativa uma saída (sirene, saída, atuador) pelo laço e endereço. Só admin no painel. */
+export const sendOutputCommand = (input: { laco: number; numero: number; ativo: boolean }) =>
+  api.post<{ action: string; snapshot: unknown }>("/cie/commands/output", {
+    laco: input.laco,
+    numero: input.numero,
+    ativo: input.ativo ? 1 : 0,
+  });
+
 /** "Torre B · 16º andar · Posição B", ou a área ("Garagem · 2 C"). Só junta os rótulos prontos. */
 export function placeLabel(place: CiePlace | null | undefined): string | null {
   if (!place) return null;

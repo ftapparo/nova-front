@@ -114,6 +114,7 @@ Falta só a implantação no servidor (stack no Portainer, hostname e Access no 
 - Histórico paginado por cursor (`nextCursor` dentro de `data`); "Só ocorrências" = `kind=ativacao`.
 - Qualquer evento `cie.*` recarrega painel, ativos e histórico pela REST (com espera de 500 ms para juntar a rajada), em vez de aplicar cada evento.
 - Comandos: os quatro do painel anterior (silenciar bip, silenciar/reativar sirenes pelo LED `sireneSilenciada`, alarme geral, reiniciar). Alarme geral e reinício passam por confirmação e mandam `confirm: true`. Bloqueio e saída por dispositivo não estão no painel.
+- Bloqueio (dispositivo, zona, regra) e acionamento de saída: **só admin** na tela (decisão de 16/11/2026), com o alvo escolhido no cadastro da central e confirmação. `tipoBloqueio`: 0 dispositivo (inclui sirene, saída, atuador), 1 zona, 2 regra (protocolo Intelbras); zona e regra vão com `laco: 0`. A API ainda aceita toda a equipe nessas rotas — restringir no próximo deploy dela (checklist).
 - `dataHora.timestamp` do painel é epoch em milissegundos.
 
 ## Consultas e Veículos — regras
