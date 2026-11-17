@@ -43,15 +43,12 @@ export default defineConfig(({ mode }) => {
           display: "standalone",
           theme_color: "#4b1e74",
           background_color: "#f5f6fc",
+          // Sem atalhos (shortcuts) e sem o 512 repetido como maskable: com eles
+          // o app instalado pelo Chrome no Android fechava ao abrir ("apresenta
+          // falhas continuamente", 17/11/2026). Atalho só volta com ícone próprio.
           icons: [
             { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
             { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-            { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-          ],
-          shortcuts: [
-            { name: "Portões e Portas", url: "/portoes-portas" },
-            { name: "Central de Incêndio", url: "/incendio" },
-            { name: "Acessos", url: "/acessos" },
           ],
         },
         injectManifest: { globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"], globIgnores: ["background-nova-residence.png"] },
