@@ -39,7 +39,7 @@ O container `nova-front-v3` roda lado a lado com o painel atual (`nova-front`), 
 1. **Stack nova** no Portainer, a partir do Git:
    - repositório `nova-front`, referência `refs/heads/nova-versao`;
    - arquivo `docker-compose.yml`;
-   - variável opcional `FRONT_V3_PORT` (padrão `8081`): porta no servidor.
+   - variável opcional `FRONT_V3_PORT` (padrão `8088`; a 8081 já está ocupada no servidor): porta no servidor.
    - Não há variável de build: nada de `VITE_*`, o painel não tem configuração no bundle.
 2. **Rede:** a `nova-network` já existe (é a mesma da API). O nginx do painel encontra a API pelo nome `nova-api`.
 3. **Cloudflare:** um hostname novo no túnel apontando para `http://<servidor>:<FRONT_V3_PORT>`, e a política do Cloudflare Access para esse hostname, se o painel novo continuar atrás dele.

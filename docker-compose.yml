@@ -4,10 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: nova-front-v3
-    # Porta no servidor, ao lado do painel atual (nova-front, 8080). Ajustável
+    # Porta no servidor, ao lado do painel atual (nova-front, 8080); a 8081
+    # já está ocupada no servidor. Ajustável
     # na stack do Portainer com FRONT_V3_PORT.
     ports:
-      - "${FRONT_V3_PORT:-8081}:80"
+      - "${FRONT_V3_PORT:-8088}:80"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost"]
