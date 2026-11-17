@@ -84,7 +84,9 @@ Falta só a implantação no servidor (stack no Portainer, hostname e Access no 
 
 - O portão só abre depois de conferir o CPF (`GET /access/verify`): cadastro liberado (`PERMITIDO = S`) e pessoa proprietária, locatária ou moradora. Regra herdada do painel anterior.
 - Depois de abrir, a passagem é registrada no ERP (`POST /access/register`, `formaAcesso: "TAG"`, como no painel anterior). Se o registro falhar, o aviso diz que o portão abriu mas a passagem não foi registrada.
+- Fechamento automático padrão de **5 s** (decisão de 16/11/2026); a API aceita de 1 a 120 s.
 - "Fechar" vale para toda a equipe; "Manter aberto" e "Reiniciar serviço" só para síndico/admin, com confirmação.
+- Nome de porta é por pessoa: preferência `painel.nomes-portas` (`{ idDaPorta: nome }`) em `/me/settings`, lida com `doorDisplayName`. Vale também nos atalhos do Painel Operacional.
 - O estado das antenas só vem por evento (`antenna.connection.changed`); não há rota REST para ele.
 
 ## Acessos — regras

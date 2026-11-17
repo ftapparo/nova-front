@@ -7,10 +7,12 @@
 - Erro inesperado numa tela mostrava a página técnica do React Router; agora cada tela mostra uma mensagem do painel com "Recarregar", mantendo o menu, e o detalhe vai só para o console.
 
 ### Alterado
+- Portões e Portas: fechamento automático padrão passa a 5 s (decisão de 16/11/2026).
 - Testes esperam até 5 s pela tela (`asyncUtilTimeout`) e até 20 s por teste: com a suíte em paralelo, a primeira tela carregada sob demanda em cada arquivo passava do prazo padrão de 1 s e o teste falhava de forma intermitente.
 - Painel reescrito do zero na branch `nova-versao`, sobre a `nova-api` v3 e com Material UI no lugar de Tailwind/shadcn. Os arquivos do painel anterior (v2) saem desta branch e seguem na `main`, em produção, até o corte. As memórias de projeto e a skill de commit (`.claude/`) continuam. O histórico do painel anterior está no fim deste arquivo.
 
 ### Adicionado
+- Portões e Portas: cada pessoa pode dar nome próprio às portas de pedestre (o cadastro continua visível ao lado). O nome fica nas preferências da conta, no banco, vale em qualquer computador e aparece também nos atalhos do Painel Operacional.
 - Entrega (Fase 5): Dockerfile (Node 22, `npm install`, sem variáveis de build), `docker-compose.yml` com o container `nova-front-v3` na `nova-network` (porta `FRONT_V3_PORT`, padrão 8081) e nginx que repassa `/v3/` e `/v3/ws` (WebSocket) para `nova-api:3031`, resolvendo o nome a cada requisição para subir mesmo com a API fora do ar. CSP e cabeçalhos de segurança em todas as respostas, inclusive nos locations com cache próprio. Passo a passo de implantação no README.
 - Manifesto do PWA: o painel pode ser instalado, com ícones, cor da marca e atalhos para Portões e Portas, Central de Incêndio e Acessos (com o cookie do Cloudflare Access no pedido do manifesto).
 - **Equipamentos** ganha o cache de TAGs de cada antena (TAG, liberada ou recusada, quando foi conferida e de quem é, com o tempo de guarda; síndico/admin removem uma TAG ou limpam o cache, com confirmação) e, para admin, o envio de comando direto a um módulo de exaustor (Tasmota), com confirmação e a resposta do módulo. Fecha a Fase 4.

@@ -17,7 +17,15 @@ import { erpDateTimeKey, formatErpDateTime, recentAccessQuery, sentidoLabel, uni
 import { commandActor, commandLabel, commandLogsQuery, commandSucceeded, commandTarget } from "@/features/commandLog/commandLogApi";
 import { exhaustsQuery, groupExhaustModules } from "@/features/exhaust/exhaustApi";
 import { panelQuery, SEVERITY_TONE } from "@/features/fire/fireApi";
-import { doorsListQuery, doorsStatusQuery, gatesListQuery, gatesStatusQuery } from "@/features/gates/gatesApi";
+import {
+  DOOR_NAMES_SETTING,
+  doorDisplayName,
+  doorsListQuery,
+  doorsStatusQuery,
+  gatesListQuery,
+  gatesStatusQuery,
+  type DoorNames,
+} from "@/features/gates/gatesApi";
 import ActivityCard, { type ActivityItem } from "./components/ActivityCard";
 import EditShortcutsDialog, { type Equipment } from "./components/EditShortcutsDialog";
 import PushReminder from "./components/PushReminder";
@@ -74,12 +82,14 @@ export default function DashboardPage() {
   useRealtimeEvent("cie.connection.changed", refreshFire);
 
   const shortcutsSetting = useSetting<unknown>(SHORTCUTS_SETTING, []);
+  // Mesmo nome que a pessoa deu à porta em Portões e Portas.
+  const doorNames = useSetting<DoorNames>(DOOR_NAMES_SETTING, {}).value;
   const shortcuts = sanitizeShortcuts(shortcutsSetting.value);
   const equipment: Equipment[] = [
     ...activeGates.map((gate) => ({ key: `gate-${gate.numeroDispositivo}`, kind: "gate" as const, target: gate.numeroDispositivo, name: gate.nome })),
     ...(doors.data ?? [])
       .filter((door) => door.ativo)
-      .map((door) => ({ key: `door-${door.id}`, kind: "door" as const, target: door.id, name: door.nome })),
+      .map((door) => ({ key: `door-${door.id}`, kind: "door" as const, target: door.id, name: doorDisplayName(door, doorNames) })),
   ];
   const equipmentName = (shortcut: Shortcut) =>
     equipment.find((item) => item.kind === shortcut.kind && item.target === shortcut.target)?.name ?? null;

@@ -69,6 +69,15 @@ export const doorsStatusQuery = queryOptions({
 });
 export const openDoor = (id: number) => api.post<{ id: number; nome: string; porta: number }>(`/doors/${id}/open`);
 
+// Nomes de porta escolhidos por cada pessoa (preferência da conta, no banco),
+// no lugar do nome técnico do cadastro. Chave = id da porta.
+export const DOOR_NAMES_SETTING = "nomes-portas";
+export type DoorNames = Record<string, string>;
+export const DOOR_NAME_MAX = 60;
+
+export const doorDisplayName = (door: Pick<Door, "id" | "nome">, names: DoorNames): string =>
+  names[String(door.id)]?.trim() || door.nome;
+
 /** Sentido cadastrado do portão; qualquer coisa que não seja saída conta como entrada. */
 export const gateSentido = (gate: Pick<Gate, "sentido">): Sentido =>
   gate.sentido.trim().toUpperCase() === "S" ? "S" : "E";

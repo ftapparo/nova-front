@@ -95,7 +95,7 @@ describe("Portões e Portas", () => {
     const user = userEvent.setup();
     const requests = openPage("porteiro", {
       "GET /access/verify": () => okResponse([resident]),
-      "POST /tag/gate/open": () => okResponse({ action: "open", autoCloseSeconds: 15, gate: { state: "opening" } }),
+      "POST /tag/gate/open": () => okResponse({ action: "open", autoCloseSeconds: 5, gate: { state: "opening" } }),
       "POST /access/register": () => okResponse({}, 201),
     });
 
@@ -111,7 +111,7 @@ describe("Portões e Portas", () => {
     await user.click(open);
 
     expect(await screen.findByText("PORTÃO ENTRADA aberto e passagem registrada.")).toBeInTheDocument();
-    expect(post(requests, "/tag/gate/open")[0]?.body).toEqual({ numeroDispositivo: 9, autoCloseTime: 15 });
+    expect(post(requests, "/tag/gate/open")[0]?.body).toEqual({ numeroDispositivo: 9, autoCloseTime: 5 });
     expect(post(requests, "/access/register")[0]?.body).toEqual({
       dispositivo: 9,
       pessoa: 91,
@@ -158,7 +158,7 @@ describe("Portões e Portas", () => {
     const user = userEvent.setup();
     openPage("porteiro", {
       "GET /access/verify": () => okResponse([resident]),
-      "POST /tag/gate/open": () => okResponse({ action: "open", autoCloseSeconds: 15, gate: { state: "opening" } }),
+      "POST /tag/gate/open": () => okResponse({ action: "open", autoCloseSeconds: 5, gate: { state: "opening" } }),
       "POST /access/register": () => errorResponse("upstream-error", 502, "Falha ao registrar acesso."),
     });
 
@@ -194,6 +194,34 @@ describe("Portões e Portas", () => {
 
     expect(await screen.findByText("PORTA SOCIAL: aberta.")).toBeInTheDocument();
     expect(post(requests, "/doors/1/open")).toHaveLength(1);
+  });
+
+  it("renomeia a porta só para a conta, gravando nas preferências sem apagar as outras", async () => {
+    const user = userEvent.setup();
+    let settings = { updatedAt: 1, exists: true, items: { "app.tema": "escuro" } as Record<string, string> };
+    const requests = openPage("porteiro", {
+      "GET /me/settings": () => okResponse(settings),
+      "PUT /me/settings": ({ body }) => {
+        settings = { ...(body as typeof settings), exists: true };
+        return okResponse(settings);
+      },
+      "POST /doors/1/open": () => okResponse({ id: 1, nome: "PORTA SOCIAL", porta: 80 }),
+    });
+
+    await user.click(await screen.findByRole("button", { name: "Renomear PORTA SOCIAL" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Nome"), "Social do bloco A");
+    await user.click(within(dialog).getByRole("button", { name: "Salvar" }));
+
+    expect(await screen.findByText("Nome da porta salvo.")).toBeInTheDocument();
+    const saved = requests.find((request) => request.method === "PUT")?.body as { items: Record<string, string> };
+    expect(saved.items["app.tema"]).toBe("escuro");
+    expect(JSON.parse(saved.items["painel.nomes-portas"]!)).toEqual({ "1": "Social do bloco A" });
+    expect(await screen.findByText("Social do bloco A")).toBeInTheDocument();
+    expect(screen.getByText("Cadastro: PORTA SOCIAL")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Abrir" }));
+    expect(await screen.findByText("Social do bloco A: aberta.")).toBeInTheDocument();
   });
 
   it("mostra a recusa do equipamento sem repetir o comando", async () => {

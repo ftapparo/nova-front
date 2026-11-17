@@ -18,7 +18,8 @@ import { isAccessAllowed, registerAccess, verifyAccess, type AccessVerifyRow } f
 import { AUTO_CLOSE_MAX_SECONDS, AUTO_CLOSE_MIN_SECONDS, gateSentido, openGate } from "../gatesApi";
 import { gateKeys, type GateView } from "../gatesQueries";
 
-const DEFAULT_AUTO_CLOSE_SECONDS = 15;
+// Padrão da portaria (decisão de 16/11/2026); a API aceita de 1 a 120 s.
+const DEFAULT_AUTO_CLOSE_SECONDS = 5;
 // Forma de acesso gravada no ERP, a mesma que o painel anterior registrava.
 const REGISTER_FORMA_ACESSO = "TAG";
 
