@@ -8,11 +8,13 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { errorMessage } from "@/core/api/http";
 import PushBrowserCard from "@/core/push/PushBrowserCard";
+import { useSession } from "@/core/session/useSession";
 import ConfirmDialog from "@/core/ui/components/ConfirmDialog";
 import SectionCard from "@/core/ui/components/SectionCard";
 import { useNotify } from "@/core/ui/components/useNotify";
 import PageContainer from "@/core/ui/layout/PageContainer";
 import PageHeader from "@/core/ui/layout/PageHeader";
+import FireAlarmTestCard from "./components/FireAlarmTestCard";
 import { BODY_MAX, sendAppTest, sendStaffBroadcast, TITLE_MAX } from "./notificationsApi";
 
 function StaffBroadcastCard() {
@@ -97,6 +99,7 @@ function AppTestCard() {
 }
 
 export default function NotificationsPage() {
+  const isAdmin = useSession()?.user.role === "admin";
   return (
     <PageContainer>
       <PageHeader title="Notificações" subtitle="Alertas da equipe no navegador, avisos e testes." />
@@ -105,7 +108,10 @@ export default function NotificationsPage() {
           <PushBrowserCard />
           <AppTestCard />
         </Stack>
-        <StaffBroadcastCard />
+        <Stack spacing={3}>
+          <StaffBroadcastCard />
+          {isAdmin && <FireAlarmTestCard />}
+        </Stack>
       </Box>
     </PageContainer>
   );

@@ -158,7 +158,8 @@ Publicado em https://portal.novaresidence.com.br desde 16/11/2026 (stack `nova-f
 - Web Push é dos navegadores do painel (equipe): a central de incêndio avisa alarme e falha por `/push/send`. Moradores recebem pelo aplicativo (FCM), não por aqui.
 - `core/push/webPush.ts`: a inscrição é da conta logada. `signOut` tira o navegador **antes** do `/auth/logout` (precisa do token); no login, `useResumePush` reinscreve sem perguntar se a permissão já foi dada. Pedir permissão só a partir de clique (`PushBrowserCard`).
 - O service worker converte os endereços antigos que a central manda (`/dashboard/incendio`) para os do painel novo (`/incendio`).
-- "Aviso para a equipe" (síndico/admin) usa `/push/send`; "Teste no aplicativo" usa `/notifications/test` (aparelhos da própria conta). O teste do alarme por aparelho (`/notifications/test/fire-alarm`) não está no painel: exige o identificador da instalação do app.
+- "Aviso para a equipe" (síndico/admin) usa `/push/send`; "Teste no aplicativo" usa `/notifications/test` (aparelhos da própria conta).
+- Teste do alarme por aparelho (`FireAlarmTestCard`): **só admin**, na tela e na API. Lista `GET /notifications/devices` (todas as contas, sem token FCM) e envia `POST /notifications/test/fire-alarm { installationId, type }`; aparelho iOS, com token recusado (`tokenValid: false`) ou com notificações desligadas aparece desabilitado com o motivo. Sempre com confirmação; 3 testes a cada 10 min.
 
 ## Equipamentos — cache de TAGs e módulos
 

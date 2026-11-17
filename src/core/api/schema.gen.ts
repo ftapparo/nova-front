@@ -704,7 +704,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bloquear ou desbloquear dispositivo */
+        /**
+         * Bloquear ou desbloquear dispositivo (admin)
+         * @description Bloqueia ou desbloqueia dispositivo, zona, regra ou laço na central. Item bloqueado deixa de gerar alarme e falha. Só admin. `tipoBloqueio`: 0 dispositivo (inclui sirene, saída e atuador), 1 zona, 2 regra, 3 laço.
+         */
         post: operations["executeCieBlockCommand"];
         delete?: never;
         options?: never;
@@ -721,7 +724,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Ativar ou desativar saída */
+        /**
+         * Ativar ou desativar saída (admin)
+         * @description Aciona ou desliga uma saída da central (sirene, saída, atuador) pelo laço e endereço. Só admin.
+         */
         post: operations["executeCieOutputCommand"];
         delete?: never;
         options?: never;
@@ -1435,6 +1441,26 @@ export interface paths {
          *     O socket fecha com código 4001 quando o access token que pediu o ticket expira: renove o token, peça outro ticket e reconecte. Busque o estado atual pelas rotas REST e aplique os eventos por cima. Upgrade recusado: 401 ticket inválido ou já usado, 403 conta sem nada a receber, 429 limite de conexões da conta, 503 limite do servidor.
          */
         post: operations["wsTicket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v3/api/notifications/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar os aparelhos registrados (admin)
+         * @description Somente admin. Todos os aparelhos do app registrados, de todas as contas, vistos por último primeiro, com o e-mail da conta. Serve para escolher o installationId do teste do alarme de incêndio (POST /notifications/test/fire-alarm). Não inclui o token FCM. O teste só chega a aparelho Android com notificationsEnabled e tokenValid.
+         */
+        get: operations["listNotificationDevices"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2366,6 +2392,35 @@ export interface components {
             alarmChannelEnabled?: boolean;
             /** Format: date-time */
             registeredAt?: string;
+        };
+        NotificationDeviceSummary: {
+            /** Format: uuid */
+            accountId: string;
+            /** @description E-mail da conta; nulo se a conta não existe mais ou o serviço de contas falhou. */
+            email: string | null;
+            /** @enum {string} */
+            platform: "android" | "ios";
+            /** Format: uuid */
+            installationId: string;
+            appVersion: string | null;
+            osVersion: string | null;
+            deviceModel: string | null;
+            language: string;
+            /** @description Papel gravado no último registro do aparelho. */
+            role: string | null;
+            /** @description Permissão de notificação do sistema. */
+            notificationsEnabled: boolean;
+            /** @description Canal do alarme de incêndio não bloqueado no aparelho. */
+            alarmChannelEnabled: boolean;
+            /** @description Falso quando o FCM recusou o token; volta a valer quando o app registrar de novo. */
+            tokenValid: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Último registro do app (cada abertura).
+             */
+            lastSeenAt: string;
         };
         NotificationPreferences: {
             /** @description Aviso "faltam X minutos" antes do desligamento automático (só para quem ligou ou reiniciou por último). */
@@ -4496,7 +4551,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description Apenas porteiro, síndico ou admin. */
+            /** @description Apenas admin. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4588,7 +4643,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description Apenas porteiro, síndico ou admin. */
+            /** @description Apenas admin. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6815,6 +6870,41 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
         };
     };
+    listNotificationDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Aparelhos registrados. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: components["schemas"]["NotificationDeviceSummary"][];
+                        meta: components["schemas"]["ResponseMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Conta sem papel admin. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     registerAndroidDevice: {
         parameters: {
             query?: never;
@@ -7112,7 +7202,19 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        success: true;
+                        data: {
+                            /** @description Aparelhos selecionados (1). */
+                            targets: number;
+                            sent: number;
+                            failed: number;
+                        };
+                        meta: components["schemas"]["ResponseMeta"];
+                    };
+                };
             };
             401: components["responses"]["Unauthorized"];
             /** @description Conta sem papel admin. */
