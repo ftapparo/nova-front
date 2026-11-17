@@ -60,7 +60,7 @@ Nos testes, `findBy*`/`waitFor` esperam até 5 s (`src/test/setup.ts`): com a su
 
 Fases 0 a 5 concluídas: fundação, API e sessão, tempo real, paridade com o painel atual, menus novos e entrega (Docker, nginx, PWA). Todas as telas do menu estão prontas: Painel Operacional, Portões e Portas, Acessos, Consultas, Veículos, Exaustores, Central de Incêndio, Comunicados, Notificações, Contas, Vínculos, Reset de senha, Histórico de comandos, Equipamentos (com cache de TAGs e configuração de módulo) e Minha conta. Tela pronta entra no mapa `pages` de `src/app/router.tsx`, com `lazy()`; cada tela tem `errorElement` próprio (`RouteErrorPage`), então um erro inesperado mantém o menu e mostra "Recarregar".
 
-Falta só a implantação no servidor (stack no Portainer, hostname e Access no Cloudflare), que é do usuário — passo a passo no `README.md`. Itens abertos e decisões pendentes ficam em `../CHECKLIST-FRONT-V3.md`.
+Publicado em https://portal.novaresidence.com.br desde 16/11/2026 (stack `nova-front-v3` no Portainer, branch `nova-versao`, porta 8088), ao lado do painel atual; passo a passo no `README.md`. Itens abertos e decisões pendentes ficam em `../CHECKLIST-FRONT-V3.md`.
 
 ## API e sessão — como usar
 
@@ -114,7 +114,7 @@ Falta só a implantação no servidor (stack no Portainer, hostname e Access no 
 - Histórico paginado por cursor (`nextCursor` dentro de `data`); "Só ocorrências" = `kind=ativacao`.
 - Qualquer evento `cie.*` recarrega painel, ativos e histórico pela REST (com espera de 500 ms para juntar a rajada), em vez de aplicar cada evento.
 - Comandos: os quatro do painel anterior (silenciar bip, silenciar/reativar sirenes pelo LED `sireneSilenciada`, alarme geral, reiniciar). Alarme geral e reinício passam por confirmação e mandam `confirm: true`. Bloqueio e saída por dispositivo não estão no painel.
-- Bloqueio (dispositivo, zona, regra) e acionamento de saída: **só admin** na tela (decisão de 16/11/2026), com o alvo escolhido no cadastro da central e confirmação. `tipoBloqueio`: 0 dispositivo (inclui sirene, saída, atuador), 1 zona, 2 regra (protocolo Intelbras); zona e regra vão com `laco: 0`. A API ainda aceita toda a equipe nessas rotas — restringir no próximo deploy dela (checklist).
+- Bloqueio (dispositivo, zona, regra) e acionamento de saída: **só admin** na tela (decisão de 16/11/2026), com o alvo escolhido no cadastro da central e confirmação. `tipoBloqueio`: 0 dispositivo (inclui sirene, saída, atuador), 1 zona, 2 regra (protocolo Intelbras); zona e regra vão com `laco: 0`. A API também exige admin nessas rotas desde 16/11/2026.
 - `dataHora.timestamp` do painel é epoch em milissegundos.
 
 ## Consultas e Veículos — regras
