@@ -49,6 +49,8 @@ O container `nova-front-v3` roda lado a lado com o painel atual (`nova-front`), 
    - `https://<endereço>/v3/api/health` deve responder pela própria origem;
    - em Minha conta, "Ativar alertas" e um aviso de teste em Notificações.
 
+**Instalar no celular:** Chrome → menu ⋮ → "Instalar app". Em Android 8 com Chrome antigo (ex.: Chrome 101), o app gerado pelo Google fecha ao abrir (`Unrecognized version number ... 0 3 9`: o Android 8 não lê o formato DEX 039) — não é o manifesto. Atualizar o Chrome e instalar de novo, ou usar "Adicionar à tela inicial" como atalho.
+
 O que o nginx faz (`nginx.conf`):
 
 - repassa `/v3/` e `/v3/ws` (com upgrade de WebSocket) para a API;

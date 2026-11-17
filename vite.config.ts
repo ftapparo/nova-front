@@ -8,6 +8,8 @@ const { version } = JSON.parse(readFileSync(new URL("./package.json", import.met
   version: string;
 };
 
+const SHORTCUT_ICON = { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" };
+
 export default defineConfig(({ mode }) => {
   // Prefixo "" para ler V3_PROXY_TARGET, que não tem VITE_ de propósito:
   // é configuração do servidor de desenvolvimento, não entra no bundle.
@@ -43,12 +45,17 @@ export default defineConfig(({ mode }) => {
           display: "standalone",
           theme_color: "#4b1e74",
           background_color: "#f5f6fc",
-          // Sem atalhos (shortcuts) e sem o 512 repetido como maskable: com eles
-          // o app instalado pelo Chrome no Android fechava ao abrir ("apresenta
-          // falhas continuamente", 17/11/2026). Atalho só volta com ícone próprio.
           icons: [
             { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
             { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+            { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          ],
+          // Atalhos com ícone (96x96 ou maior): sem ele, algumas ferramentas
+          // que geram o app Android a partir do manifesto recusam o atalho.
+          shortcuts: [
+            { name: "Portões e Portas", url: "/portoes-portas", icons: [SHORTCUT_ICON] },
+            { name: "Central de Incêndio", url: "/incendio", icons: [SHORTCUT_ICON] },
+            { name: "Acessos", url: "/acessos", icons: [SHORTCUT_ICON] },
           ],
         },
         injectManifest: { globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"], globIgnores: ["background-nova-residence.png"] },

@@ -3,7 +3,6 @@
 ## [Unreleased]
 
 ### Corrigido
-- Portal instalado pelo Chrome no Android fechava ao abrir ("apresenta falhas continuamente"). O manifesto deixa de ter os atalhos do ícone (Portões e Portas, Central de Incêndio, Acessos), que não tinham ícone próprio, e o ícone de 512 repetido como `maskable`. Quem já instalou precisa remover o ícone e instalar de novo.
 - Consultas e Veículos quebravam a tela ("person.alertaPortaria?.trim is not a function") ao mostrar uma pessoa: aviso para a portaria e observações são campos de texto longo do ERP e chegam da API como bytes, não como texto. Todo texto do ERP nessas telas passa a ser lido por `erpText`, que aceita texto, número ou bytes (UTF-8 ou Windows-1252).
 - Erro inesperado numa tela mostrava a página técnica do React Router; agora cada tela mostra uma mensagem do painel com "Recarregar", mantendo o menu, e o detalhe vai só para o console.
 
@@ -17,7 +16,7 @@
 - Central de Incêndio: bloquear e desbloquear dispositivo, zona ou regra e ativar e desativar saída (sirene, saída, atuador), só para admin (decisão de 16/11/2026). O alvo é escolhido pelo nome no cadastro da central, cada envio pede confirmação e nunca se repete sozinho.
 - Portões e Portas: cada pessoa pode dar nome próprio às portas de pedestre (o cadastro continua visível ao lado). O nome fica nas preferências da conta, no banco, vale em qualquer computador e aparece também nos atalhos do Painel Operacional.
 - Entrega (Fase 5): Dockerfile (Node 22, `npm install`, sem variáveis de build), `docker-compose.yml` com o container `nova-front-v3` na `nova-network` (porta `FRONT_V3_PORT`, padrão 8088) e nginx que repassa `/v3/` e `/v3/ws` (WebSocket) para `nova-api:3031`, resolvendo o nome a cada requisição para subir mesmo com a API fora do ar. CSP e cabeçalhos de segurança em todas as respostas, inclusive nos locations com cache próprio. Passo a passo de implantação no README.
-- Manifesto do PWA: o painel pode ser instalado, com ícones, cor da marca e atalhos para Portões e Portas, Central de Incêndio e Acessos (com o cookie do Cloudflare Access no pedido do manifesto).
+- Manifesto do PWA: o painel pode ser instalado, com ícones, cor da marca e atalhos com ícone para Portões e Portas, Central de Incêndio e Acessos (com o cookie do Cloudflare Access no pedido do manifesto).
 - **Equipamentos** ganha o cache de TAGs de cada antena (TAG, liberada ou recusada, quando foi conferida e de quem é, com o tempo de guarda; síndico/admin removem uma TAG ou limpam o cache, com confirmação) e, para admin, o envio de comando direto a um módulo de exaustor (Tasmota), com confirmação e a resposta do módulo. Fecha a Fase 4.
 - Tela **Minha conta** (Fase 4, toda a equipe): e-mail e perfil, trocar senha, sair, tema deste navegador, alertas neste navegador e as preferências das notificações do aplicativo da própria conta (alertas da central além do alarme, comunicado novo, avisos do exaustor). "Minha conta" também no menu do usuário.
 - Painel Operacional lembra de ativar os alertas de incêndio quando estão desativados ou bloqueados neste navegador.
